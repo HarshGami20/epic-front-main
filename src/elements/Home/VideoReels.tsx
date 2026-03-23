@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Modal } from 'react-bootstrap';
 import { getImageUrl } from '@/lib/imageUtils';
+import { getPublicApiUrl } from '@/lib/env';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -82,7 +83,7 @@ const VideoReels = ({ data }: { data?: any }) => {
         if (!rawItems?.some((i: any) => i?.productSlug)) return;
         const load = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+                const url = getPublicApiUrl();
                 const res = await fetch(`${url}/products?limit=500`);
                 const json = await res.json();
                 const list = json?.data ?? (Array.isArray(json) ? json : []);

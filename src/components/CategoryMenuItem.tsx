@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getPublicApiUrl } from "@/lib/env";
 
 interface Category {
     id: string;
@@ -16,7 +17,7 @@ export default function CategoryMenuItem() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+                const url = getPublicApiUrl();
                 const res = await fetch(`${url}/public/categories`);
                 const json = await res.json();
                 

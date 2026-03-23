@@ -5,6 +5,7 @@ import Link from "next/link";
 import ProductRollup from "../../components/ProductRollup";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/imageUtils";
+import { getPublicApiUrl } from "@/lib/env";
 import { useEffect, useMemo, useState } from "react";
 
 const singleProductData = [
@@ -61,7 +62,7 @@ const AllProduction = ({ data }: { data?: any }) => {
         }
         const load = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+                const url = getPublicApiUrl();
                 const response = await fetch(`${url}/products?limit=500`);
                 const json = await response.json();
                 const list = json?.data ?? (Array.isArray(json) ? json : []);

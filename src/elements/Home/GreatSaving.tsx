@@ -6,6 +6,7 @@ import { GreatSavindData } from "../../constant/Alldata";
 import SaleDiscountShopCard from "../../components/SaleDiscountShopCard";
 import Image, { type StaticImageData } from "next/image";
 import { getImageUrl } from "@/lib/imageUtils";
+import { getPublicApiUrl } from "@/lib/env";
 import { useEffect, useMemo, useState } from "react";
 
 function pickProductImage(p: any): string {
@@ -50,7 +51,7 @@ const GreatSaving = ({ data }: { data?: any }) => {
         }
         const load = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+                const url = getPublicApiUrl();
                 const res = await fetch(`${url}/products?limit=500`);
                 const json = await res.json();
                 const list = json?.data ?? (Array.isArray(json) ? json : []);

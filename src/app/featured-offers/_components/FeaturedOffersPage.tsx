@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { FeaturedOfferCard, type FeaturedOfferItem } from "@/elements/Home/FeaturedOfferCard";
 import IMAGES from "@/constant/theme";
+import { getPublicApiUrl } from "@/lib/env";
 
 const LAYOUT_SLUG = "startupkit-home-layout";
 const FALLBACK_OFFER_SLUG = "startupkit-featured-offers";
@@ -35,7 +36,7 @@ export default function FeaturedOffersPage() {
     const [loadState, setLoadState] = useState<LoadState>("loading");
 
     useEffect(() => {
-        const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+        const api = getPublicApiUrl();
 
         (async () => {
             try {

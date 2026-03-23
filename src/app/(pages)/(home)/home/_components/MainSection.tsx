@@ -28,6 +28,7 @@ import VideoReels from "@/elements/Home/VideoReels";
 import TrandingSlider from "@/elements/Home2/TrandingSlider";
 import VideoSection from "@/elements/Home2/VideoSection";
 import { getImageUrl } from "@/lib/imageUtils";
+import { getPublicApiUrl } from "@/lib/env";
 
 /** CMS explore / modal video URL (string path or `{ url }` from upload). */
 function resolveExploreVideoSrc(video: unknown): string {
@@ -397,7 +398,7 @@ const MainSection = () => {
     useEffect(() => {
         const fetchHomeLayout = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+                const url = getPublicApiUrl();
                 const headers = { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' };
                 const res = await fetch(`${url}/cms/slug/startupkit-home-layout`, { headers });
 

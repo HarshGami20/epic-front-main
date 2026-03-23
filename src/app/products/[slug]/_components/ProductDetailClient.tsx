@@ -5,6 +5,7 @@ import IMAGES from "@/constant/theme";
 import ProductDefaultSlider from "@/elements/Shop/ProductDefaultSlider";
 import ThumbnailRightProductDetail from "@/elements/Shop/ThumbnailRightProductDetail";
 import ProductTabStyleOne from "@/elements/Shop/ProductTabStyleOne";
+import { getPublicApiUrl } from "@/lib/env";
 
 export default function ProductDetailClient({ slug }: { slug: string }) {
     const [productData, setProductData] = useState<any>(null);
@@ -13,7 +14,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+                const url = getPublicApiUrl();
                 const res = await fetch(`${url}/public/products?limit=2000`);
                 const json = await res.json();
 

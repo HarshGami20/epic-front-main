@@ -6,6 +6,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { FeaturedSliderData } from "../../constant/Alldata";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/imageUtils";
+import { getPublicApiUrl } from "@/lib/env";
 import { useEffect, useMemo, useState } from "react";
 import type { StaticImageData } from "next/image";
 
@@ -40,7 +41,7 @@ const FeaturedCategorySlider = ({ data }: { data?: any }) => {
         }
         const load = async () => {
             try {
-                const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+                const base = getPublicApiUrl();
                 const res = await fetch(`${base}/public/categories`);
                 const json = await res.json();
                 const list = json?.data ?? [];

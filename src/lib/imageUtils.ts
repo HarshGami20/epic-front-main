@@ -1,3 +1,5 @@
+import { getPublicAssetOrigin } from "@/lib/env";
+
 export function getImageUrl(imagePath: string | any | null | undefined): string | any {
     if (!imagePath) {
         return '/assets/images/default.jpg'; // Just a fallback
@@ -23,8 +25,7 @@ export function getImageUrl(imagePath: string | any | null | undefined): string 
 
     // If it's a relative path starting with /uploads, prepend the API base URL
     if (imagePath.startsWith('/uploads/')) {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001';
-        return `${apiBaseUrl}${imagePath}`;
+        return `${getPublicAssetOrigin()}${imagePath}`;
     }
 
     // Return as-is for other relative paths

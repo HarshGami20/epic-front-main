@@ -16,6 +16,7 @@ import ProductInputButton from "@/elements/Shop/ProductInputButton";
 import ModalSlider from "@/components/ModalSlider";
 import BasicModalData from "@/components/BasicModalData";
 import { getImageUrl } from '@/lib/imageUtils';
+import { getPublicApiUrl } from '@/lib/env';
 import { TabData } from "@/constant/Alldata";
 
 function ShopStandardContent() {
@@ -48,7 +49,7 @@ function ShopStandardContent() {
     useEffect(() => {
         const fetchFilters = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+                const url = getPublicApiUrl();
                 const [catRes, colorsRes, sizesRes, pRes] = await Promise.all([
                     fetch(`${url}/public/categories`),
                     fetch(`${url}/colors`),
@@ -101,7 +102,7 @@ function ShopStandardContent() {
         const fetchProducts = async () => {
             setLoading(true);
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+                const url = getPublicApiUrl();
                 
                 const queryParams = new URLSearchParams({
                     page: String(page),

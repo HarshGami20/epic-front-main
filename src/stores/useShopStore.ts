@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getPublicApiUrl } from '@/lib/env';
 
 interface ShopState {
   products: any[];
@@ -69,7 +70,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
 
   fetchConfigData: async () => {
     try {
-      const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+      const url = getPublicApiUrl();
       const [colorsRes, sizesRes] = await Promise.all([
         fetch(`${url}/colors`),
         fetch(`${url}/sizes`)
@@ -89,7 +90,7 @@ export const useShopStore = create<ShopState>((set, get) => ({
   fetchData: async () => {
     try {
       set({ loading: true });
-      const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+      const url = getPublicApiUrl();
       const state = get();
       
       const queryParams = new URLSearchParams({

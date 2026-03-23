@@ -78,6 +78,7 @@ function reducer(state: typeof initialState, action: any) {
 
 import { useEffect, useMemo, useState } from "react";
 import { getImageUrl } from "@/lib/imageUtils";
+import { getPublicApiUrl } from "@/lib/env";
 
 function pickProductImage(p: any): string {
     const imgs = p?.images;
@@ -107,7 +108,7 @@ function TrandingSlider({ showdetailModal, data }: modelType) {
         if (!rawItems?.some((i: any) => i?.productSlug)) return;
         const load = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+                const url = getPublicApiUrl();
                 const res = await fetch(`${url}/products?limit=500`);
                 const json = await res.json();
                 const list = json?.data ?? (Array.isArray(json) ? json : []);

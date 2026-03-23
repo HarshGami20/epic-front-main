@@ -7,6 +7,7 @@ import ModalSlider from "../../components/ModalSlider";
 import ProductInputButton from "../Shop/ProductInputButton";
 import Image from "next/image";
 import { getImageUrl } from '@/lib/imageUtils';
+import { getPublicApiUrl } from '@/lib/env';
 
 import { masonryData, headfilterData } from "../../constant/Alldata";
 
@@ -25,7 +26,7 @@ const ProductSection = ({ data }: { data?: any }) => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+                const url = getPublicApiUrl();
                 const response = await fetch(`${url}/products?limit=100`);
                 const json = await response.json();
                 if (json && json.data) {
