@@ -137,7 +137,7 @@ const FeaturedCategorySlider = ({ data }: { data?: any }) => {
                             >
                                 <div className="dz-media">
                                     <Link href={item.link}>
-                                        <Image
+                                        <img
                                             src={src}
                                             alt=""
                                             width={300}

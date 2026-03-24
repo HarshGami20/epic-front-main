@@ -400,7 +400,8 @@ const MainSection = () => {
             try {
                 const url = getPublicApiUrl();
                 const headers = { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' };
-                const res = await fetch(`${url}/cms/slug/startupkit-home-layout`, { headers });
+                const timestamp = new Date().getTime();
+                const res = await fetch(`${url}/cms/slug/startupkit-home-layout?t=${timestamp}`, { headers, cache: 'no-store' });
 
                 if (res.ok) {
                     const data = await res.json();
@@ -411,7 +412,7 @@ const MainSection = () => {
                             fetchedSections.map(async (sec: any) => {
                                 if (!sec.enabled) return sec;
                                 try {
-                                    const secRes = await fetch(`${url}/cms/slug/${sec.slug}`, { headers });
+                                    const secRes = await fetch(`${url}/cms/slug/${sec.slug}?t=${timestamp}`, { headers, cache: 'no-store' });
                                     if (secRes.ok) {
                                         const secData = await secRes.json();
                                         return { ...sec, data: secData?.data?.content || secData?.content || {} };
