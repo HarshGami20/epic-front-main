@@ -5,9 +5,14 @@ import { Button } from '@pixel/components/ui/button';
 import { Input } from '@pixel/components/ui/input';
 import { toast } from 'sonner';
 import { FabricImage } from 'fabric';
+import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
+
+function isUserImageLayer(obj: unknown): obj is FabricImage {
+  return obj instanceof FabricImage && !(obj as { isBackground?: boolean }).isBackground;
+}
 
 export const AppsPanel: React.FC = () => {
-  const { setActiveTool, canvas, pushHistory, originalImage } = useEditor();
+  const { setActiveTool, canvas, pushHistory, selectedObject, editableZones } = useEditor();
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -21,12 +26,14 @@ export const AppsPanel: React.FC = () => {
       return;
     }
 
-    // Get the first image object from canvas
+    // Never process the product mockup (also a FabricImage). Prefer the selected layer if it's a user image.
     const objects = canvas.getObjects();
-    const imageObject = objects.find(obj => obj instanceof FabricImage) as FabricImage | undefined;
+    const fromSelection = selectedObject && isUserImageLayer(selectedObject) ? selectedObject : undefined;
+    const imageObject =
+      fromSelection ?? (objects.filter(isUserImageLayer).pop() as FabricImage | undefined);
 
     if (!imageObject) {
-      toast.error('No image found. Please upload an image first.');
+      toast.error('Select an uploaded or sticker image (not the product), or add a picture first.');
       return;
     }
 
@@ -90,6 +97,8 @@ export const AppsPanel: React.FC = () => {
       // Remove the old image
       canvas.remove(imageObject);
 
+      const zoneId = (imageObject as { editableZoneId?: string }).editableZoneId;
+
       // Create new fabric image with removed background
       const fabricImg = new FabricImage(newImg, {
         left: originalLeft,
@@ -97,8 +106,15 @@ export const AppsPanel: React.FC = () => {
         scaleX: originalScaleX,
         scaleY: originalScaleY,
       });
+      if (zoneId) {
+        (fabricImg as { editableZoneId?: string }).editableZoneId = zoneId;
+      }
 
       canvas.add(fabricImg);
+      if (zoneId) {
+        const zone = editableZones.find((z) => z.id === zoneId);
+        if (zone) fitObjectInZone(fabricImg, zone);
+      }
       canvas.setActiveObject(fabricImg);
       canvas.renderAll();
       pushHistory();
@@ -182,7 +198,7 @@ export const AppsPanel: React.FC = () => {
         <div className="mt-8 p-4 rounded-lg bg-muted">
           <h4 className="text-sm font-medium mb-2">Background Removal</h4>
           <p className="text-xs text-muted-foreground">
-            Powered by img.ly AI. Upload an image and click the Remove Background app to automatically remove the background from your image.
+            Powered by img.ly AI. Select your uploaded image on the canvas (not the product mockup), then run Remove Background.
           </p>
         </div>
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Undo2, Redo2, ZoomIn, ZoomOut, Download, Menu, Trash2, Copy, RotateCcw } from 'lucide-react';
+import { Point } from 'fabric';
+import { Undo2, Redo2, ZoomIn, ZoomOut, Download, Menu, Trash2, Copy, RotateCcw, Maximize2 } from 'lucide-react';
 import { useEditor } from '@pixel/contexts/EditorContext';
 import { Button } from '@pixel/components/ui/button';
 import {
@@ -29,24 +30,30 @@ export const TopBar: React.FC = () => {
     duplicateSelectedObject,
     selectionArea,
     selectedProduct,
+    editorProduct,
+    editorSource,
+    fitCanvasToView,
   } = useEditor();
 
+  /** Toolbar zoom is anchored to the viewport center (Fabric’s setZoom uses top-left and drifts the artboard). */
   const handleZoomIn = () => {
-    const newZoom = Math.min(zoom + 10, 200);
-    setZoom(newZoom);
-    if (canvas) {
-      canvas.setZoom(newZoom / 100);
-      canvas.renderAll();
-    }
+    if (!canvas) return;
+    const nextPct = Math.min(Math.round(canvas.getZoom() * 100) + 10, 400);
+    const z = nextPct / 100;
+    const center = new Point(canvas.getWidth() / 2, canvas.getHeight() / 2);
+    canvas.zoomToPoint(center, z);
+    setZoom(nextPct);
+    canvas.requestRenderAll();
   };
 
   const handleZoomOut = () => {
-    const newZoom = Math.max(zoom - 10, 10);
-    setZoom(newZoom);
-    if (canvas) {
-      canvas.setZoom(newZoom / 100);
-      canvas.renderAll();
-    }
+    if (!canvas) return;
+    const nextPct = Math.max(Math.round(canvas.getZoom() * 100) - 10, 10);
+    const z = nextPct / 100;
+    const center = new Point(canvas.getWidth() / 2, canvas.getHeight() / 2);
+    canvas.zoomToPoint(center, z);
+    setZoom(nextPct);
+    canvas.requestRenderAll();
   };
 
   const handleExport = (format: 'png' | 'jpg' | 'webp') => {
@@ -66,7 +73,10 @@ export const TopBar: React.FC = () => {
     });
     
     const link = document.createElement('a');
-    const productName = selectedProduct?.name.replace(/\s+/g, '-').toLowerCase() || 'design';
+    const productName =
+      (editorSource === 'product' ? editorProduct?.name : selectedProduct?.name)
+        ?.replace(/\s+/g, '-')
+        .toLowerCase() || 'design';
     link.download = `${productName}-design.${format}`;
     link.href = dataURL;
     link.click();
@@ -84,7 +94,10 @@ export const TopBar: React.FC = () => {
     });
     
     const link = document.createElement('a');
-    const productName = selectedProduct?.name.replace(/\s+/g, '-').toLowerCase() || 'mockup';
+    const productName =
+      (editorSource === 'product' ? editorProduct?.name : selectedProduct?.name)
+        ?.replace(/\s+/g, '-')
+        .toLowerCase() || 'mockup';
     link.download = `${productName}-mockup.${format}`;
     link.href = dataURL;
     link.click();
@@ -109,7 +122,7 @@ export const TopBar: React.FC = () => {
   };
 
   return (
-    <div className="h-14 bg-editor-panel border-b border-border flex items-center justify-between px-4">
+    <div className="h-14 shrink-0 bg-editor-panel/95 backdrop-blur-sm border-b border-border/80 flex items-center justify-between px-3 sm:px-5 shadow-sm">
       {/* Left section */}
       <div className="flex items-center gap-2">
         {isMobile && (
@@ -172,8 +185,10 @@ export const TopBar: React.FC = () => {
 
       {/* Center - Title */}
       <div className="hidden sm:flex items-center gap-2">
-        <h1 className="text-foreground font-semibold text-lg">
-          {selectedProduct?.name || 'Product Editor'}
+        <h1 className="text-foreground font-semibold text-base sm:text-lg tracking-tight truncate max-w-[min(280px,40vw)]">
+          {editorSource === 'product' && editorProduct?.name
+            ? editorProduct.name
+            : selectedProduct?.name || 'Design studio'}
         </h1>
       </div>
 
@@ -197,6 +212,16 @@ export const TopBar: React.FC = () => {
           <span className="text-sm text-foreground min-w-[50px] text-center">{zoom}%</span>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn}>
             <ZoomIn className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 hidden sm:inline-flex"
+            title="Fit mockup to canvas"
+            disabled={!imageLoaded}
+            onClick={fitCanvasToView}
+          >
+            <Maximize2 className="w-4 h-4" />
           </Button>
         </div>
 

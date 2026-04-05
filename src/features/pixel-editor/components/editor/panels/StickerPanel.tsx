@@ -5,6 +5,7 @@ import { Button } from '@pixel/components/ui/button';
 import { Input } from '@pixel/components/ui/input';
 import { FabricImage } from 'fabric';
 import { ScrollArea } from '@pixel/components/ui/scroll-area';
+import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
 
 interface StickerCategory {
   id: string;
@@ -56,7 +57,17 @@ const stickerCategories: StickerCategory[] = [
 ];
 
 export const StickerPanel: React.FC = () => {
-  const { setActiveTool, canvas, pushHistory, selectionArea, updateLayers, isMobile, setIsPanelOpen } = useEditor();
+  const {
+    setActiveTool,
+    canvas,
+    pushHistory,
+    selectionArea,
+    updateLayers,
+    isMobile,
+    setIsPanelOpen,
+    activeEditableZoneId,
+    editableZones,
+  } = useEditor();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
@@ -113,8 +124,16 @@ export const StickerPanel: React.FC = () => {
       });
       
       (fabricImg as any).customName = 'Sticker';
-      
+      const zone =
+        editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
+      if (zone) {
+        (fabricImg as any).editableZoneId = zone.id;
+      }
+
       canvas.add(fabricImg);
+      if (zone) {
+        fitObjectInZone(fabricImg, zone);
+      }
       canvas.setActiveObject(fabricImg);
       canvas.renderAll();
       pushHistory();

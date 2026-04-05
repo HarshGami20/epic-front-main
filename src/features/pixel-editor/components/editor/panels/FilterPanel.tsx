@@ -27,7 +27,7 @@ const filterPresets: FilterPreset[] = [
   { 
     id: 'none', 
     name: 'Original', 
-    gradient: 'linear-gradient(135deg, #2a2a35 0%, #1a1a1f 100%)',
+    gradient: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
     filters: {}
   },
   { 
@@ -283,8 +283,17 @@ export const FilterPanel: React.FC = () => {
               className="absolute inset-0"
               style={{ background: preset.gradient }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
-            <span className="absolute bottom-2 left-3 text-white text-sm font-medium drop-shadow-lg">
+            {preset.id !== 'none' && (
+              <div className="absolute inset-0 bg-gradient-to-r from-black/25 to-transparent" />
+            )}
+            <span
+              className={cn(
+                'absolute bottom-2 left-3 text-sm font-semibold',
+                preset.id === 'none'
+                  ? 'text-slate-800'
+                  : 'text-white drop-shadow-md'
+              )}
+            >
               {preset.name}
             </span>
             {filter.name === preset.id && (

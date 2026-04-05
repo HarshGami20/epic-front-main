@@ -1,16 +1,66 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import ProductInputButton from "./ProductInputButton";
 import ShopCardColour from "./ShopCardColour";
 import StarRating from "./StarRating";
+import { normalizeProductSizes, normalizeVariations } from "@/lib/productOptions";
 
 interface thumbnailCardtype {
     productData?: any;
     title?: string;
     para?: string;
+    selectedVariationIndex?: number | null;
+    onVariationChange?: (index: number | null) => void;
 }
 
 export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
     const product = props.productData || {};
+    const slug = String(product?.slug || "product");
+    const sizeOptions = normalizeProductSizes(product?.sizes);
+    const variations = normalizeVariations(product?.variation);
+    const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(null);
+    const [localColorIndex, setLocalColorIndex] = useState<number | null>(null);
+
+    const parentControlsColor = props.onVariationChange != null;
+    const colorIndex: number | null = parentControlsColor
+        ? (props.selectedVariationIndex ?? null)
+        : localColorIndex;
+
+    useEffect(() => {
+        setSelectedSizeIndex(null);
+        setLocalColorIndex(null);
+    }, [product?.id, slug]);
+
+    const handleColorSelect = (index: number) => {
+        if (parentControlsColor) props.onVariationChange?.(index);
+        else setLocalColorIndex(index);
+    };
+
+    const customizeHref = (() => {
+        if (!product?.slug || !product?.hasCustomization || !product?.customization) {
+            return `/customize/${product?.slug || ""}`;
+        }
+        const idx = colorIndex;
+        const vid =
+            idx !== null && variations[idx]?.id ? String(variations[idx].id) : null;
+        const variantMap = product.customization?.variants;
+        if (
+            vid &&
+            variantMap &&
+            typeof variantMap === "object" &&
+            vid in variantMap
+        ) {
+            return `/customize/${product.slug}?variant=${encodeURIComponent(vid)}`;
+        }
+        return `/customize/${product.slug}`;
+    })();
+
+    const clearColor = () => {
+        if (parentControlsColor) props.onVariationChange?.(null);
+        else setLocalColorIndex(null);
+    };
     const name = product?.name || props.title || 'Product Name';
     const description = product?.shortDescription || product?.description || props.para || '';
     const price = product?.basePrice || product?.price || 125.75;
@@ -42,32 +92,85 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                     <span className="form-label">Price</span>
                     <span className="price">₹{price} {comparePrice && <del className="text-muted ms-2" style={{ fontSize: '16px' }}>₹{comparePrice}</del>}</span>
                 </div>
-                <div className="product-num gap-md-2 gap-xl-0">
-                    <div className="btn-quantity light">
-                        <label className="form-label">Quantity</label>
-                        <ProductInputButton />
-                    </div>
-                    <div className="d-block">
-                        <label className="form-label">Size</label>
-                        <div className="btn-group product-size m-0">
-                            <input type="radio" className="btn-check" name="btnradio1" id="btnradio101" defaultChecked />
-                            <label className="btn" htmlFor="btnradio101">S</label>
-
-                            <input type="radio" className="btn-check" name="btnradio1" id="btnradiol02" />
-                            <label className="btn" htmlFor="btnradiol02">M</label>
-
-                            <input type="radio" className="btn-check" name="btnradio1" id="btnradiol03" />
-                            <label className="btn" htmlFor="btnradiol03">L</label>
+                <div className="product-num product-detail-options d-flex  flex-lg-row align-items-start flex-wrap gap-4 gap-xl-5 w-100">
+                    <div className="btn-quantity light d-flex flex-column gap-2  product-detail-option">
+                        <label className="form-label mb-0">Quantity</label>
+                        <div className="d-flex align-items-center">
+                            <ProductInputButton />
                         </div>
                     </div>
-                    <div className="meta-content">
-                        <label className="form-label">Color</label>
-                        <div className="d-flex align-items-center color-filter">
-                            <ShopCardColour />
+                    {sizeOptions.length > 0 && (
+                        <div className="d-flex flex-column gap-2  product-detail-option">
+                            <div className="d-flex align-items-center justify-content-between gap-2 w-100">
+                                <label className="form-label mb-0">Size</label>
+                                {selectedSizeIndex !== null && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-link btn-sm text-secondary text-decoration-none p-0 flex-shrink-0"
+                                        onClick={() => setSelectedSizeIndex(null)}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <div className="btn-group product-size m-0" role="group" aria-label="Size">
+                                {sizeOptions.map((label, index) => {
+                                    const id = `${slug}-size-${index}`;
+                                    return (
+                                        <span key={`${label}-${index}`}>
+                                            <input
+                                                type="radio"
+                                                className="btn-check"
+                                                name={`${slug}-size`}
+                                                id={id}
+                                                checked={selectedSizeIndex !== null && selectedSizeIndex === index}
+                                                onChange={() => setSelectedSizeIndex(index)}
+                                            />
+                                            <label className="btn" htmlFor={id}>{label}</label>
+                                        </span>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
+                    )}
+                    {variations.length > 0 && (
+                        <div className="d-flex flex-column gap-2  product-detail-option">
+                            <div className="d-flex align-items-center justify-content-between gap-2 w-100">
+                                <label className="form-label mb-0">Color</label>
+                                {colorIndex !== null && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-link btn-sm text-secondary text-decoration-none p-0 flex-shrink-0"
+                                        onClick={clearColor}
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <div className="d-flex align-items-center color-filter flex-wrap gap-1">
+                                <ShopCardColour
+                                    variations={variations}
+                                    idPrefix={slug}
+                                    selectedIndex={
+                                        colorIndex === null
+                                            ? null
+                                            : Math.min(Math.max(0, colorIndex), variations.length - 1)
+                                    }
+                                    onSelect={handleColorSelect}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
-                <div className="btn-group cart-btn mt-4">
+                <div className="btn-group cart-btn mt-4 flex-wrap gap-2">
+                    {product?.hasCustomization && product?.customization && product?.slug && (
+                        <Link
+                            href={customizeHref}
+                            className="btn btn-primary text-uppercase"
+                        >
+                            Customize
+                        </Link>
+                    )}
                     <Link href="/shop-cart" className="btn btn-secondary text-uppercase">Add To Cart</Link>
                     <Link href="/shop-wishlist" className="btn btn-outline-secondary btn-icon">
                         <i className="icon feather icon-heart"></i>

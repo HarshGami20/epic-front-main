@@ -1430,6 +1430,27 @@
 		align-items: center;
 		flex-wrap: wrap;
 		margin-bottom: 30px;
+		&.product-detail-options{
+			align-items: flex-start;
+			justify-content: space-between;
+			column-gap: 2rem;
+			row-gap: 1.25rem;
+			& > div{
+				margin-#{$dz-pos-right}: 0;
+				margin-bottom: 0;
+			}
+			@include respond('tab-port'){
+				column-gap: 1.25rem;
+			}
+			@include custommq($min: 992px){
+				flex-wrap: nowrap;
+			}
+			.product-detail-option{
+				flex: 1 1 0;
+				min-width: 0;
+				max-width: 100%;
+			}
+		}
 		& > div{		
 			margin-#{$dz-pos-right}: 45px;
 			&:last-child{

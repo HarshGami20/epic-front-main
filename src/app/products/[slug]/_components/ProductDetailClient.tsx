@@ -1,40 +1,40 @@
 "use client"
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import IMAGES from "@/constant/theme";
 import ProductDefaultSlider from "@/elements/Shop/ProductDefaultSlider";
 import ThumbnailRightProductDetail from "@/elements/Shop/ThumbnailRightProductDetail";
 import ProductTabStyleOne from "@/elements/Shop/ProductTabStyleOne";
-import { getPublicApiUrl } from "@/lib/env";
+import { fetchPublicProductBySlug } from "@/lib/publicProductApi";
+import { normalizeVariations } from "@/lib/productOptions";
 
 export default function ProductDetailClient({ slug }: { slug: string }) {
     const [productData, setProductData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedVariationIndex, setSelectedVariationIndex] = useState<number | null>(null);
 
     useEffect(() => {
-        const fetchProduct = async () => {
+        const load = async () => {
             try {
-                const url = getPublicApiUrl();
-                const res = await fetch(`${url}/public/products?limit=2000`);
-                const json = await res.json();
-
-                let matches = [];
-                if (json && Array.isArray(json.data)) matches = json.data;
-                else if (Array.isArray(json)) matches = json;
-
-                const match = matches.find((p: any) => p.slug === slug);
-                if (match) {
-                    setProductData(match);
-                }
-
+                const data = await fetchPublicProductBySlug(slug);
+                if (data) setProductData(data);
             } catch (err) {
                 console.error("Failed to load product", err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchProduct();
+        load();
     }, [slug]);
+
+    const variations = normalizeVariations(productData?.variation);
+    const activeVariation =
+        selectedVariationIndex === null || variations.length === 0
+            ? undefined
+            : variations[Math.min(Math.max(0, selectedVariationIndex), variations.length - 1)];
+
+    useEffect(() => {
+        setSelectedVariationIndex(null);
+    }, [productData?.id, slug]);
 
     if (loading) {
         return (
@@ -104,12 +104,19 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                     <div className="row">
                         <div className="col-xl-6 col-md-6 col-sm-12 mb-4">
                             <div className="dz-product-detail mb-0">
-                                <ProductDefaultSlider productData={productData} />
+                                <ProductDefaultSlider
+                                    productData={productData}
+                                    activeVariation={activeVariation}
+                                />
                             </div>
                         </div>
                         <div className="col-xl-6 col-md-6 col-sm-12 mb-4">
                             <div className="dz-product-detail style-2 p-t20 ps-0">
-                                <ThumbnailRightProductDetail productData={productData} />
+                                <ThumbnailRightProductDetail
+                                    productData={productData}
+                                    selectedVariationIndex={selectedVariationIndex}
+                                    onVariationChange={setSelectedVariationIndex}
+                                />
                             </div>
                         </div>
                     </div>

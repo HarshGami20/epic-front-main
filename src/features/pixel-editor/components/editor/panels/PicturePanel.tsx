@@ -5,9 +5,20 @@ import { Button } from '@pixel/components/ui/button';
 import { FabricImage } from 'fabric';
 import { toast } from 'sonner';
 import { ScrollArea } from '@pixel/components/ui/scroll-area';
+import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
 
 export const PicturePanel: React.FC = () => {
-  const { setActiveTool, canvas, pushHistory, selectionArea, updateLayers, isMobile, setIsPanelOpen } = useEditor();
+  const {
+    setActiveTool,
+    canvas,
+    pushHistory,
+    selectionArea,
+    updateLayers,
+    isMobile,
+    setIsPanelOpen,
+    editableZones,
+    activeEditableZoneId,
+  } = useEditor();
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,6 +65,9 @@ export const PicturePanel: React.FC = () => {
   const addImageToCanvas = (dataUrl: string) => {
     if (!canvas) return;
 
+    const activeZone =
+      editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
+
     const img = new Image();
     img.onload = () => {
       let left = canvas.width! / 2;
@@ -61,12 +75,12 @@ export const PicturePanel: React.FC = () => {
       let maxWidth = canvas.width! * 0.4;
       let maxHeight = canvas.height! * 0.4;
 
-      // If we have a selection area, place and size within it
-      if (selectionArea) {
-        left = selectionArea.x + selectionArea.width / 2;
-        top = selectionArea.y + selectionArea.height / 2;
-        maxWidth = selectionArea.width * 0.9;
-        maxHeight = selectionArea.height * 0.9;
+      const area = selectionArea;
+      if (area) {
+        left = area.x + area.width / 2;
+        top = area.y + area.height / 2;
+        maxWidth = area.width * 0.9;
+        maxHeight = area.height * 0.9;
       }
 
       const scale = Math.min(
@@ -86,8 +100,14 @@ export const PicturePanel: React.FC = () => {
 
       // Give it a custom name for the layers panel
       (fabricImg as any).customName = 'Uploaded Image';
+      if (activeZone) {
+        (fabricImg as any).editableZoneId = activeZone.id;
+      }
 
       canvas.add(fabricImg);
+      if (activeZone) {
+        fitObjectInZone(fabricImg, activeZone);
+      }
       canvas.setActiveObject(fabricImg);
       canvas.renderAll();
       pushHistory();
@@ -187,7 +207,7 @@ export const PicturePanel: React.FC = () => {
                     className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => addImageToCanvas(dataUrl)}
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-slate-900/20 transition-colors flex items-center justify-center gap-2">
                     <Button
                       variant="secondary"
                       size="icon"

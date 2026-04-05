@@ -1,0 +1,110 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Epiclance design studio — light theme (scoped #pixel-editor-root).
+ */
+@layer base {
+  #pixel-editor-root {
+    --background: 0 0% 100%;
+    --foreground: 222 22% 18%;
+
+    --card: 0 0% 99%;
+    --card-foreground: 222 22% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 22% 18%;
+
+    --primary: 187 72% 38%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 18% 28%;
+
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 10% 42%;
+
+    --accent: 187 55% 94%;
+    --accent-foreground: 187 72% 28%;
+
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 88%;
+    --input: 220 13% 94%;
+    --ring: 187 72% 38%;
+
+    --radius: 0.625rem;
+
+    --editor-bg: 220 16% 97%;
+    --editor-panel: 0 0% 100%;
+    --editor-panel-header: 220 14% 96%;
+    --editor-tool-active: 187 72% 38%;
+    --editor-tool-hover: 220 14% 94%;
+    --editor-canvas-bg: 220 18% 93%;
+    --editor-slider-track: 220 12% 88%;
+    --editor-slider-fill: 187 72% 42%;
+  }
+
+  #pixel-editor-root * {
+    @apply border-border;
+  }
+
+  #pixel-editor-root {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  #pixel-editor-root.editor-app-shell {
+    background: linear-gradient(180deg, hsl(220 20% 99%) 0%, hsl(220 16% 96%) 50%, hsl(220 14% 94%) 100%);
+  }
+}
+
+@layer components {
+  #pixel-editor-root .editor-panel {
+    @apply bg-[hsl(var(--editor-panel))] border-r border-border shadow-sm;
+  }
+
+  #pixel-editor-root .editor-tool-btn {
+    @apply flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--editor-tool-hover))];
+  }
+
+  #pixel-editor-root .editor-tool-btn.active {
+    @apply text-primary bg-[hsl(var(--accent))] shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)];
+  }
+
+  #pixel-editor-root .editor-slider {
+    @apply w-full h-1 rounded-full bg-[hsl(var(--editor-slider-track))] appearance-none cursor-pointer;
+  }
+
+  #pixel-editor-root .editor-slider::-webkit-slider-thumb {
+    @apply appearance-none w-3 h-3 rounded-full bg-[hsl(var(--editor-slider-fill))] cursor-pointer;
+  }
+
+  #pixel-editor-root .editor-input {
+    @apply bg-white border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50;
+  }
+
+  #pixel-editor-root .aspect-ratio-card {
+    @apply flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-[hsl(var(--secondary))] hover:border-primary cursor-pointer transition-all;
+  }
+
+  #pixel-editor-root .aspect-ratio-card.selected {
+    @apply border-primary bg-primary/10;
+  }
+
+  #pixel-editor-root .filter-card {
+    @apply relative rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-primary/50 transition-all;
+  }
+
+  #pixel-editor-root .filter-card.selected {
+    @apply border-primary;
+  }
+
+  #pixel-editor-root .sticker-item {
+    @apply p-2 rounded-lg hover:bg-[hsl(var(--editor-tool-hover))] cursor-pointer transition-all;
+  }
+}

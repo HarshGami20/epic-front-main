@@ -11,11 +11,27 @@ import Image from "next/image";
 
 import { getImageUrl } from '@/lib/imageUtils';
 
-export default function ProductDefaultSlider({ productData }: { productData?: any }) {
+type VariationGallery = { images?: string[] };
+
+export default function ProductDefaultSlider({
+    productData,
+    activeVariation,
+}: {
+    productData?: any;
+    /** When the shopper picks a color, show that variation's gallery if present. */
+    activeVariation?: VariationGallery | null;
+}) {
     const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
     let sliderImages: any[] = [];
-    if (productData?.thumbImage?.length > 0) {
+    const variationImages = activeVariation?.images;
+    if (Array.isArray(variationImages) && variationImages.length > 0) {
+        sliderImages = variationImages.map((img: string) => ({
+            url: getImageUrl(img),
+            thumbUrl: getImageUrl(img),
+            isStatic: false
+        }));
+    } else if (productData?.thumbImage?.length > 0) {
         sliderImages = productData.thumbImage.map((img: string) => ({
             url: getImageUrl(img),
             thumbUrl: getImageUrl(img),

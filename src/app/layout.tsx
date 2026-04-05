@@ -13,6 +13,7 @@ import '../../public/assets/vendor/swiper/swiper-bundle.min.css'
 import '../../public/assets/vendor/animate/animate.css'
 import '../../public/assets/css/style.css'
 import '../../public/assets/css/skin/skin-1.css'
+import './pixel-editor.css'
 
 
 export default function RootLayout({children,}: Readonly<{children: React.ReactNode;}>) {

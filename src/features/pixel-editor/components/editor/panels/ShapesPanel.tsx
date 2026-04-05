@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Square, Circle, Minus, Triangle, Star, Hexagon } from 'lucide-react';
 import { useEditor } from '@pixel/contexts/EditorContext';
+import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
 import { Button } from '@pixel/components/ui/button';
 import { Input } from '@pixel/components/ui/input';
 import { Slider } from '@pixel/components/ui/slider';
@@ -22,7 +23,18 @@ const shapes: ShapeConfig[] = [
 ];
 
 export const ShapesPanel: React.FC = () => {
-  const { setActiveTool, canvas, pushHistory, selectedObject, selectionArea, updateLayers, isMobile, setIsPanelOpen } = useEditor();
+  const {
+    setActiveTool,
+    canvas,
+    pushHistory,
+    selectedObject,
+    selectionArea,
+    updateLayers,
+    isMobile,
+    setIsPanelOpen,
+    activeEditableZoneId,
+    editableZones,
+  } = useEditor();
   const [fillColor, setFillColor] = React.useState('#3b82f6');
   const [strokeColor, setStrokeColor] = React.useState('#1e40af');
   const [strokeWidth, setStrokeWidth] = React.useState(2);
@@ -159,7 +171,15 @@ export const ShapesPanel: React.FC = () => {
     }
 
     if (shape) {
+      const zone =
+        editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
+      if (zone) {
+        (shape as any).editableZoneId = zone.id;
+      }
       canvas.add(shape);
+      if (zone) {
+        fitObjectInZone(shape, zone);
+      }
       canvas.setActiveObject(shape);
       canvas.renderAll();
       pushHistory();

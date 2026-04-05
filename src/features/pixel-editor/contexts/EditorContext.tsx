@@ -1,5 +1,22 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import { Canvas as FabricCanvas, FabricObject } from 'fabric';
+import {
+  pickCustomizationSlice,
+  resolveInitialCustomizationVariantId,
+  hasRootCustomizationSlice,
+  type ProductForEditor,
+} from '@pixel/lib/productCustomization';
+import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
 
 export type Tool = 'crop' | 'adjust' | 'filter' | 'text' | 'shapes' | 'sticker' | 'apps' | 'picture' | 'layers';
 
@@ -66,6 +83,20 @@ export interface LayerItem {
   object: FabricObject;
 }
 
+export type EditorSource = 'demo' | 'product';
+
+/** Printable zone in canvas coordinates (from product customization or demo selection rect) */
+export interface EditableZoneCanvas extends SelectionArea {
+  id: string;
+  label: string;
+  type: 'text' | 'image';
+  maxLength?: number;
+  fontSize?: number;
+  textColor?: string;
+  fontFamily?: string;
+  rotation?: number;
+}
+
 interface EditorContextType {
   canvas: FabricCanvas | null;
   setCanvas: (canvas: FabricCanvas | null) => void;
@@ -96,17 +127,30 @@ interface EditorContextType {
   setIsPanelOpen: (open: boolean) => void;
   isMobile: boolean;
   backgroundImage: string | null;
-  setBackgroundImage: (url: string | null) => void;
+  setBackgroundImage: Dispatch<SetStateAction<string | null>>;
   selectionArea: SelectionArea | null;
   setSelectionArea: (area: SelectionArea | null) => void;
   selectedProduct: Product | null;
-  setSelectedProduct: (product: Product | null) => void;
+  setSelectedProduct: Dispatch<SetStateAction<Product | null>>;
   layers: LayerItem[];
   updateLayers: () => void;
   deleteSelectedObject: () => void;
   duplicateSelectedObject: () => void;
   bringForward: () => void;
   sendBackward: () => void;
+  editorSource: EditorSource;
+  editorProduct: ProductForEditor | null;
+  selectedVariantId: string | null;
+  setSelectedVariantId: (id: string | null) => void;
+  editableZones: EditableZoneCanvas[];
+  setEditableZones: (zones: EditableZoneCanvas[]) => void;
+  activeEditableZoneId: string | null;
+  setActiveEditableZoneId: (id: string | null) => void;
+  /** Product customization: text-only storefront → Text + Layers only; otherwise full editor. */
+  productTextOnlyMode: boolean;
+  /** Re-fit mockup to the canvas area and reset viewport (after sidebar resize / “fit view”). */
+  fitCanvasToView: () => void;
+  registerFitCanvasHandler: (fn: (() => void) | null) => void;
 }
 
 const defaultAdjustments: Adjustments = {
@@ -151,7 +195,11 @@ export const products: Product[] = [
 
 const EditorContext = createContext<EditorContextType | null>(null);
 
-export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const EditorProvider: React.FC<{
+  children: React.ReactNode;
+  initialProduct?: ProductForEditor | null;
+  initialVariantId?: string | null;
+}> = ({ children, initialProduct = null, initialVariantId = null }) => {
   const [canvas, setCanvas] = useState<FabricCanvas | null>(null);
   const [activeTool, setActiveTool] = useState<Tool | null>(null);
   const [zoom, setZoom] = useState(100);
@@ -169,21 +217,92 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(window.innerWidth >= 768);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [selectionArea, setSelectionArea] = useState<SelectionArea | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [layers, setLayers] = useState<LayerItem[]>([]);
   const isHistoryAction = useRef(false);
+  const fitCanvasHandlerRef = useRef<(() => void) | null>(null);
 
-  // Handle window resize for mobile detection
+  const registerFitCanvasHandler = useCallback((fn: (() => void) | null) => {
+    fitCanvasHandlerRef.current = fn;
+  }, []);
+
+  const fitCanvasToView = useCallback(() => {
+    fitCanvasHandlerRef.current?.();
+  }, []);
+
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(() =>
+    resolveInitialCustomizationVariantId(initialProduct ?? null, initialVariantId)
+  );
+  const [editableZones, setEditableZones] = useState<EditableZoneCanvas[]>([]);
+
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+    const c = initialProduct?.customization;
+    if (!c) return;
+    const variants = c.variants;
+    const keys = variants && typeof variants === 'object' ? Object.keys(variants) : [];
+    const hasRoot = hasRootCustomizationSlice(c);
+
+    if (selectedVariantId === null) {
+      if (hasRoot || keys.length === 0) return;
+      setSelectedVariantId(keys[0]);
+      return;
+    }
+
+    if (keys.includes(selectedVariantId)) return;
+
+    if (hasRoot) setSelectedVariantId(null);
+    else if (keys.length > 0) setSelectedVariantId(keys[0]);
+  }, [initialProduct?.customization, selectedVariantId]);
+  const [activeEditableZoneId, setActiveEditableZoneId] = useState<string | null>(null);
+
+  const customizationSlice = useMemo(
+    () =>
+      initialProduct
+        ? pickCustomizationSlice(initialProduct.customization ?? null, selectedVariantId)
+        : null,
+    [initialProduct, selectedVariantId]
+  );
+
+  const editorSource: EditorSource = customizationSlice ? 'product' : 'demo';
+
+  /** Admin `textOnly: true` OR every zone in the current slice is text → Text + Layers only */
+  const productTextOnlyMode = useMemo(() => {
+    if (editorSource !== 'product' || !initialProduct?.customization) return false;
+    const c = initialProduct.customization;
+    if (c.textOnly === true) return true;
+    if (c.textOnly === false) return false;
+    const slice = customizationSlice;
+    return (
+      !!slice &&
+      slice.editableAreas.length > 0 &&
+      slice.editableAreas.every((a) => a.type === 'text')
+    );
+  }, [editorSource, initialProduct, customizationSlice]);
+
+  useEffect(() => {
+    if (!imageLoaded || !productTextOnlyMode) return;
+    setActiveTool((t) => {
+      if (!t) return 'text';
+      return ['picture', 'shapes', 'sticker', 'adjust', 'filter', 'crop', 'apps'].includes(t)
+        ? 'text'
+        : t;
+    });
+  }, [productTextOnlyMode, imageLoaded]);
+
+  // Handle window resize for mobile detection (SSR-safe)
+  useEffect(() => {
+    const sync = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setIsPanelOpen(window.innerWidth >= 768);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    sync();
+    window.addEventListener('resize', sync);
+    return () => window.removeEventListener('resize', sync);
   }, []);
 
   const updateLayers = useCallback(() => {
@@ -222,7 +341,7 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
     return names[type] || 'Object';
   };
-
+  
   const pushHistory = useCallback(() => {
     if (!canvas || isHistoryAction.current) return;
     
@@ -284,13 +403,20 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         left: (selectedObject.left || 0) + 20,
         top: (selectedObject.top || 0) + 20,
       });
+      const zid = (selectedObject as { editableZoneId?: string }).editableZoneId;
+      const zone = zid
+        ? editableZones.find((z) => z.id === zid)
+        : editableZones[0];
       canvas.add(cloned);
+      if (zone) {
+        fitObjectInZone(cloned, zone);
+      }
       canvas.setActiveObject(cloned);
       canvas.renderAll();
       pushHistory();
       updateLayers();
     });
-  }, [canvas, selectedObject, pushHistory, updateLayers]);
+  }, [canvas, selectedObject, editableZones, pushHistory, updateLayers]);
 
   const bringForward = useCallback(() => {
     if (!canvas || !selectedObject) return;
@@ -360,6 +486,17 @@ export const EditorProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     duplicateSelectedObject,
     bringForward,
     sendBackward,
+    editorSource,
+    editorProduct: initialProduct ?? null,
+    selectedVariantId,
+    setSelectedVariantId,
+    editableZones,
+    setEditableZones,
+    activeEditableZoneId,
+    setActiveEditableZoneId,
+    productTextOnlyMode,
+    fitCanvasToView,
+    registerFitCanvasHandler,
   };
 
   return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;

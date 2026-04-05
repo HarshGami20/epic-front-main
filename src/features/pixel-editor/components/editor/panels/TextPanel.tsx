@@ -4,6 +4,8 @@ import { useEditor } from '@pixel/contexts/EditorContext';
 import { Button } from '@pixel/components/ui/button';
 import { Input } from '@pixel/components/ui/input';
 import { Textbox } from 'fabric';
+import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
+import { computeAdaptiveFontSizeForZone } from '@pixel/lib/textAdaptiveSizing';
 
 const textPresets = [
   { id: 'title', label: 'Title', fontSize: 72, fontWeight: 'bold' },
@@ -25,7 +27,16 @@ const fonts = [
 ];
 
 export const TextPanel: React.FC = () => {
-  const { setActiveTool, canvas, pushHistory, selectedObject, isMobile, setIsPanelOpen } = useEditor();
+  const {
+    setActiveTool,
+    canvas,
+    pushHistory,
+    selectedObject,
+    isMobile,
+    setIsPanelOpen,
+    editableZones,
+    activeEditableZoneId,
+  } = useEditor();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'text' | 'combinations'>('text');
 
@@ -39,18 +50,52 @@ export const TextPanel: React.FC = () => {
   const addText = (preset: typeof textPresets[0]) => {
     if (!canvas) return;
 
+    const activeZone =
+      editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
+
+    let left = canvas.width! / 2 - 100;
+    let top = canvas.height! / 2 - 50;
+    let width = 200;
+    let fontSize = preset.fontSize;
+    let fill = '#000000';
+    let fontFamily = 'Arial';
+    let originX: 'left' | 'center' = 'left';
+    let originY: 'top' | 'center' = 'top';
+
+    if (activeZone) {
+      width = Math.max(80, activeZone.width * 0.92);
+      fontSize = computeAdaptiveFontSizeForZone(activeZone, preset.fontSize);
+      left = activeZone.x + activeZone.width / 2;
+      top = activeZone.y + activeZone.height / 2;
+      originX = 'center';
+      originY = 'center';
+      if (activeZone.type === 'text') {
+        if (activeZone.textColor) fill = activeZone.textColor;
+        if (activeZone.fontFamily) fontFamily = activeZone.fontFamily;
+      }
+    }
+
     const text = new Textbox(preset.label, {
-      left: canvas.width! / 2 - 100,
-      top: canvas.height! / 2 - 50,
-      fontSize: preset.fontSize,
+      left,
+      top,
+      originX,
+      originY,
+      fontSize,
       fontWeight: preset.fontWeight,
-      fontFamily: 'Arial',
-      fill: '#000000',
-      width: 200,
+      fontFamily,
+      fill,
+      width,
       textAlign: 'center',
     });
 
+    if (activeZone) {
+      (text as any).editableZoneId = activeZone.id;
+    }
+
     canvas.add(text);
+    if (activeZone) {
+      fitObjectInZone(text, activeZone);
+    }
     canvas.setActiveObject(text);
     canvas.renderAll();
     pushHistory();
