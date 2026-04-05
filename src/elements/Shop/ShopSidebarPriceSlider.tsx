@@ -13,6 +13,13 @@ export default function ShopSidebarPriceSlider({ priceRange, setPriceRange, maxP
         }
     }, [priceRange]);
 
+    useEffect(() => {
+        setPriceValue((pv) => ({
+            min: Math.min(pv.min, maxPrice),
+            max: Math.min(pv.max, maxPrice),
+        }));
+    }, [maxPrice]);
+
     function handleChangeVale(values: any[]) {
         const minVal = parseFloat(String(values[0]).replace(/[^0-9.]/g, '')) || 0;
         const maxVal = parseFloat(String(values[1]).replace(/[^0-9.]/g, '')) || maxPrice;
@@ -24,7 +31,11 @@ export default function ShopSidebarPriceSlider({ priceRange, setPriceRange, maxP
         <div className="range-slider style-1">
             <div id="slider-tooltips2" className="mb-3">
                 {maxPrice > 0 && (
-                    <Nouislider range={{ min: 0, max: maxPrice }} start={[priceValue.min, priceValue.max]} connect
+                    <Nouislider
+                        key={maxPrice}
+                        range={{ min: 0, max: maxPrice }}
+                        start={[priceValue.min, priceValue.max]}
+                        connect
                         format={{
                             to: (value: number) => `₹${value.toFixed(0)}`,
                             from: (value: string) => parseFloat(value.replace('₹', ''))

@@ -1,21 +1,56 @@
-"use client"
+"use client";
 
-import {Swiper, SwiperSlide } from "swiper/react";
+import { useEffect, useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
 import Link from "next/link";
-import { ShopCatSlider } from "../constant/Alldata";
-import Image from "next/image";
+import { getPublicApiUrl } from "@/lib/env";
+import { getImageUrl } from "@/lib/imageUtils";
 
-export default function SearchCategorySlider(){
-    return(
-        <Swiper className="category-swiper2"
-            slidesPerView={6}            
-            centeredSlides= {false}
-            spaceBetween = {20}
-            loop= {true}            
-            autoplay= {{
+export default function SearchCategorySlider() {
+    const [products, setProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const url = getPublicApiUrl();
+                const res = await fetch(`${url}/public/products?page=1&limit=12`);
+                const json = await res.json();
+                let list: any[] = [];
+                if (json?.data && Array.isArray(json.data)) list = json.data;
+                else if (Array.isArray(json)) list = json;
+                if (!cancelled) setProducts(list);
+            } catch {
+                if (!cancelled) setProducts([]);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    if (loading) {
+        return <div className="text-center py-3 text-secondary small">Loading products…</div>;
+    }
+
+    if (products.length === 0) {
+        return <div className="text-center py-3 text-secondary small">No products to show.</div>;
+    }
+
+    return (
+        <Swiper
+            className="category-swiper2"
+            slidesPerView={6}
+            centeredSlides={false}
+            spaceBetween={20}
+            loop={products.length > 6}
+            autoplay={{
                 delay: 3000,
-            }}            
-            breakpoints = {{
+            }}
+            breakpoints={{
                 1600: {
                     slidesPerView: 6,
                     spaceBetween: 40,
@@ -29,7 +64,7 @@ export default function SearchCategorySlider(){
                     spaceBetween: 20,
                 },
                 591: {
-                    slidesPerView: 3, 	
+                    slidesPerView: 3,
                     spaceBetween: 15,
                 },
                 320: {
@@ -37,21 +72,33 @@ export default function SearchCategorySlider(){
                     spaceBetween: 15,
                 },
             }}
+        >
+            {products.map((p, ind) => {
+                const name = p?.name || "Product";
+                const thumb = p?.thumbImage?.length
+                    ? getImageUrl(p.thumbImage[0])
+                    : "/assets/images/placeholder.jpg";
+                const price = p?.basePrice ?? p?.price ?? 0;
+                const href = `/products/${p?.slug || ""}`;
 
-        >           
-            {ShopCatSlider.map((elem, ind)=>(
-                <SwiperSlide key={ind}>
-                    <div className="shop-card">
-                        <div className="dz-media">
-                            <Image src={elem.image} alt="cat" />
+                return (
+                    <SwiperSlide key={p?.id ?? ind}>
+                        <div className="shop-card">
+                            <div className="dz-media">
+                                <Link href={href}>
+                                    <img src={thumb} alt={name} width={200} height={250} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                </Link>
+                            </div>
+                            <div className="dz-content">
+                                <h6 className="title">
+                                    <Link href={href}>{name}</Link>
+                                </h6>
+                                <h6 className="price">₹{Number(price).toFixed(2)}</h6>
+                            </div>
                         </div>
-                        <div className="dz-content">
-                            <h6 className="title"><Link href="/shop-list">{elem.name}</Link></h6>
-                            <h6 className="price">$40.00</h6>
-                        </div>
-                    </div>
-                </SwiperSlide>
-            ))}            
+                    </SwiperSlide>
+                );
+            })}
         </Swiper>
-    )
+    );
 }

@@ -223,7 +223,7 @@ const Header6 = () => {
                     >
                     &times;
                 </button>
-                <HeadSearchBar />
+                <HeadSearchBar onAfterNavigate={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })} />
             </Offcanvas>
             {/*  SearchBar  */}
 

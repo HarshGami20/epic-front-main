@@ -10,7 +10,6 @@ import HeadSearchBar from "./HeadSearchBar";
 import HeaderSidbar from "./HeaderSidbar";
 import HeaderSideShoppingCard from "./HeaderSideShopingCard";
 import CategoryMenuItem from "./CategoryMenuItem";
-import Categorydropdown from "./CategoryDropdown";
 
 interface DesignType {
     design: string
@@ -273,7 +272,7 @@ const Header = ({ design }: DesignType) => {
                 >
                     &times;
                 </button>
-                <HeadSearchBar />
+                <HeadSearchBar onAfterNavigate={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })} />
             </Offcanvas>
             {/*  SearchBar  */}
 

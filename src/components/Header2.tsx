@@ -7,7 +7,7 @@ import HeadSearchBar from "./HeadSearchBar";
 import HeaderSideShoppingCard from "./HeaderSideShopingCard";
 import Header2Menus from "./Header2Menus";
 import CategoryMenuItem from "./CategoryMenuItem";
-import Categorydropdown from "./CategoryDropdown";
+import HeaderShopSearchForm from "./HeaderShopSearchForm";
 import Image from "next/image";
 
 
@@ -141,15 +141,10 @@ export default function Header2() {
 
                         {/* <!-- header search nav --> */}
                         <div className="header-search-nav">
-                            <form className="header-item-search">
-                                <div className="input-group search-input">
-                                    <Categorydropdown />  
-                                    <input type="text" className="form-control" aria-label="Text input with dropdown button" placeholder="Search for products" />
-                                    <button className="btn" type="button">
-                                        <i className="iconly-Light-Search text-secondary"/>
-                                    </button>
-                                </div>
-                            </form>
+                            <HeaderShopSearchForm
+                                placeholder="Search for products"
+                                searchIconClassName="text-secondary"
+                            />
                         </div>
                     </div>
                 </div>
@@ -269,7 +264,7 @@ export default function Header2() {
                 >
                     &times;
                 </button>
-                <HeadSearchBar />
+                <HeadSearchBar onAfterNavigate={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })} />
             </Offcanvas>
             {/*  SearchBar  */}
 

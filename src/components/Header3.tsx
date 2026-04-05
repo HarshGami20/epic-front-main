@@ -484,7 +484,7 @@ export default function Header3({ setOpenSidebar, openSidebar }: any) {
                 >
                     &times;
                 </button>
-                <HeadSearchBar />
+                <HeadSearchBar onAfterNavigate={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })} />
             </Offcanvas>
 
             {/*  Sidebar finter */}

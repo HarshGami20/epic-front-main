@@ -1,26 +1,40 @@
 import { Fragment } from "react/jsx-runtime";
+import type { FormEvent } from "react";
 import Link from "next/link";
 import ShopSidebarPriceSlider from "./ShopSidebarPriceSlider";
 
 export default function ShopSidebar({
-    searchQuery, setSearchQuery,
+    searchQuery = "",
+    setSearchQuery = () => {},
+    onSearchSubmit,
     categories, selectedCategory, handleCategoryChange,
     brands, selectedBrand, handleBrandChange,
     colors, selectedColor, handleColorChange,
     sizes, selectedSize, handleSizeChange,
     priceRange, setPriceRange, maxPrice
 }: any) {
+    const handleSearch = (e: FormEvent) => {
+        e.preventDefault();
+        onSearchSubmit?.();
+    };
+
     return (
         <Fragment>
             <div className="widget widget_search">
-                <div className="form-group">
+                <form className="form-group" onSubmit={handleSearch}>
                     <div className="input-group">
-                        <input name="dzSearch" required type="search" className="form-control" placeholder="Search Product"
+                        <input
+                            name="dzSearch"
+                            type="search"
+                            className="form-control"
+                            placeholder="Search products"
+                            autoComplete="off"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            aria-label="Search products"
                         />
                         <div className="input-group-addon">
-                            <button name="submit" value="Submit" type="button" className="btn">
+                            <button type="submit" className="btn" aria-label="Search">
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M9.16667 15.8333C12.8486 15.8333 15.8333 12.8486 15.8333 9.16667C15.8333 5.48477 12.8486 2.5 9.16667 2.5C5.48477 2.5 2.5 5.48477 2.5 9.16667C2.5 12.8486 5.48477 15.8333 9.16667 15.8333Z" stroke="#0D775E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
                                     <path d="M17.5 17.5L13.875 13.875" stroke="#0D775E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
@@ -28,7 +42,7 @@ export default function ShopSidebar({
                             </button>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
             <div className="widget">
                 <h6 className="widget-title">Price</h6>

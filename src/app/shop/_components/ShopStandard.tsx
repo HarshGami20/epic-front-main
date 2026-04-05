@@ -1,8 +1,8 @@
 "use client"
 import Link from "next/link";
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { Modal, Nav, Tab } from "react-bootstrap";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import CommanBanner from "@/components/CommanBanner";
 import IMAGES, { SVGICON } from "@/constant/theme";
 import ShopSidebar from "@/elements/Shop/ShopSidebar";
@@ -21,7 +21,10 @@ import { TabData } from "@/constant/Alldata";
 
 function ShopStandardContent() {
     const searchParams = useSearchParams();
-    const initCategory = searchParams.get('category');
+    const pathname = usePathname();
+    const router = useRouter();
+    const initCategory = searchParams.get('category') || "";
+    const initSearch = (searchParams.get('search') || searchParams.get('q') || "").trim();
 
     const [detailModal, setDetailModal] = useState<boolean>(false);
     const [mobileSidebar, setMobileSidebar] = useState<boolean>(false);
@@ -36,39 +39,85 @@ function ShopStandardContent() {
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
-    // Filter states
-    const [searchQuery, setSearchQuery] = useState("");
+    // Filter states — `debouncedSearch` is what we send to GET /public/products (backend: `search` or `query`)
+    const [searchQuery, setSearchQuery] = useState(initSearch);
+    const [debouncedSearch, setDebouncedSearch] = useState(initSearch);
     const [selectedCategory, setSelectedCategory] = useState<string>(initCategory || "");
     const [selectedBrand, setSelectedBrand] = useState<string>("");
     const [selectedColor, setSelectedColor] = useState<string>("");
     const [selectedSize, setSelectedSize] = useState<string>("");
     const [priceRange, setPriceRange] = useState<number[] | null>(null);
     const [maxPrice, setMaxPrice] = useState<number>(1000);
+    const skipUrlToStateSyncRef = useRef(false);
+
+    const applySearchNow = useCallback(() => {
+        setDebouncedSearch(searchQuery.trim());
+    }, [searchQuery]);
+
+    useEffect(() => {
+        const t = window.setTimeout(() => {
+            setDebouncedSearch(searchQuery.trim());
+        }, 400);
+        return () => window.clearTimeout(t);
+    }, [searchQuery]);
+
+    // Keep filters in sync when the URL changes from outside (header search, browser back).
+    const searchParamsKey = searchParams.toString();
+    useEffect(() => {
+        if (skipUrlToStateSyncRef.current) {
+            skipUrlToStateSyncRef.current = false;
+            return;
+        }
+        const s = (searchParams.get('search') || searchParams.get('q') || "").trim();
+        const c = (searchParams.get('category') || "").trim();
+        setSearchQuery(s);
+        setDebouncedSearch(s);
+        setSelectedCategory(c);
+    }, [searchParamsKey, searchParams]);
+
+    // Reflect current filters in the address bar (shareable links).
+    useEffect(() => {
+        const next = new URLSearchParams();
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        if (selectedCategory) next.set("category", selectedCategory);
+        const cur = new URLSearchParams(searchParamsKey);
+        const same =
+            (cur.get("search") || "").trim() === debouncedSearch &&
+            (cur.get("category") || "").trim() === selectedCategory;
+        if (same) return;
+        skipUrlToStateSyncRef.current = true;
+        const qs = next.toString();
+        const target = qs ? `${pathname}?${qs}` : pathname;
+        router.replace(target, { scroll: false });
+    }, [debouncedSearch, selectedCategory, pathname, router, searchParamsKey]);
 
     // Fetch master filter data (Categories, Colors, Sizes) on mount
     useEffect(() => {
         const fetchFilters = async () => {
             try {
                 const url = getPublicApiUrl();
-                const [catRes, colorsRes, sizesRes, pRes] = await Promise.all([
+                const [catRes, colorsRes, sizesRes, filtersRes] = await Promise.all([
                     fetch(`${url}/public/categories`),
                     fetch(`${url}/colors`),
                     fetch(`${url}/sizes`),
-                    fetch(`${url}/public/products?limit=1&sort=priceDesc`) // getting max price roughly
+                    fetch(`${url}/public/products/filters`),
                 ]);
 
                 const catJson = await catRes.json();
                 const colorsJson = await colorsRes.json();
                 const sizesJson = await sizesRes.json();
-                const pJson = await pRes.json();
-
-                // Master Price 
-                let pData = pJson?.data || [];
-                if (!Array.isArray(pData)) pData = [];
-                const highestPrice = pData.length > 0 ? parseFloat(pData[0].basePrice || pData[0].price || 0) : 10000;
-                const limit = Math.ceil(highestPrice / 100) * 100 || 1000;
-                setMaxPrice(limit);
-                setPriceRange((prevRange) => prevRange || [0, limit]);
+                // Price slider max = max basePrice across all active products (GET /public/products/filters)
+                let catalogMax = 1000;
+                if (filtersRes.ok) {
+                    const filtersJson = await filtersRes.json();
+                    const pr = filtersJson?.data?.priceRange;
+                    const rawMax = pr != null ? parseFloat(String(pr.max)) : NaN;
+                    if (Number.isFinite(rawMax) && rawMax > 0) {
+                        catalogMax = Math.ceil(rawMax);
+                    }
+                }
+                setMaxPrice(catalogMax);
+                setPriceRange((prevRange) => prevRange ?? [0, catalogMax]);
 
                 if (colorsJson.success && colorsJson.data) setBackendColors(colorsJson.data);
                 if (sizesJson.success && sizesJson.data) setBackendSizes(sizesJson.data);
@@ -117,7 +166,10 @@ function ShopStandardContent() {
                     queryParams.append('minPrice', String(priceRange[0]));
                     queryParams.append('maxPrice', String(priceRange[1]));
                 }
-                if (searchQuery) queryParams.append('search', searchQuery);
+                if (debouncedSearch) {
+                    queryParams.append('search', debouncedSearch);
+                    queryParams.append('query', debouncedSearch);
+                }
 
                 const prodRes = await fetch(`${url}/public/products?${queryParams.toString()}`);
                 const prodJson = await prodRes.json();
@@ -139,12 +191,12 @@ function ShopStandardContent() {
         };
         
         fetchProducts();
-    }, [page, selectedCategory, selectedBrand, selectedColor, selectedSize, priceRange, searchQuery]);
+    }, [page, selectedCategory, selectedBrand, selectedColor, selectedSize, priceRange, debouncedSearch]);
 
     // Reset pagination to 1 whenever any filter changes (except page itself)
     useEffect(() => {
         setPage(1);
-    }, [selectedCategory, selectedBrand, selectedColor, selectedSize, priceRange, searchQuery]);
+    }, [selectedCategory, selectedBrand, selectedColor, selectedSize, priceRange, debouncedSearch]);
 
     // Format filters for sidebars properly
     const categories = hierarchicalCategories; // passing the full nested tree
@@ -207,10 +259,11 @@ function ShopStandardContent() {
                                                 <i className="flaticon-filter me-3" />
                                                 Filter
                                             </h6>
-                                            <Link href={"#"} className="btn btn-sm font-14 btn-secondary btn-sharp text-nowrap" onClick={(e) => { e.preventDefault(); setSearchQuery(''); setSelectedCategory(''); setSelectedBrand(''); setSelectedColor(''); setSelectedSize(''); setPriceRange([0, maxPrice]); }}>RESET</Link>
+                                            <Link href={"#"} className="btn btn-sm font-14 btn-secondary btn-sharp text-nowrap" onClick={(e) => { e.preventDefault(); setSearchQuery(''); setDebouncedSearch(''); setSelectedCategory(''); setSelectedBrand(''); setSelectedColor(''); setSelectedSize(''); setPriceRange([0, maxPrice]); }}>RESET</Link>
                                         </div>
                                         <ShopSidebar
                                             searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+                                            onSearchSubmit={applySearchNow}
                                             categories={categories} selectedCategory={selectedCategory} handleCategoryChange={setSelectedCategory}
                                             brands={brands} selectedBrand={selectedBrand} handleBrandChange={setSelectedBrand}
                                             colors={colors} selectedColor={selectedColor} handleColorChange={setSelectedColor}
