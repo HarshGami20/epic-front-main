@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link";
-import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "react";
 import { Modal, Nav, Tab } from "react-bootstrap";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import CommanBanner from "@/components/CommanBanner";
@@ -17,7 +17,22 @@ import ModalSlider from "@/components/ModalSlider";
 import BasicModalData from "@/components/BasicModalData";
 import { getImageUrl } from '@/lib/imageUtils';
 import { getPublicApiUrl } from '@/lib/env';
+import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 import { TabData } from "@/constant/Alldata";
+
+function findCategoryBySlugOrName(nodes: any[], match: string): any | null {
+    const m = match.trim();
+    if (!m) return null;
+    for (const n of nodes) {
+        if (!n) continue;
+        if (n.slug === m || n.name === m) return n;
+        if (n.children?.length) {
+            const found = findCategoryBySlugOrName(n.children, m);
+            if (found) return found;
+        }
+    }
+    return null;
+}
 
 function ShopStandardContent() {
     const searchParams = useSearchParams();
@@ -178,7 +193,7 @@ function ShopStandardContent() {
                 if (prodJson && prodJson.data) productsData = prodJson.data;
                 else if (Array.isArray(prodJson)) productsData = prodJson;
 
-                setProducts(productsData);
+                setProducts(productsData.map((p: any) => normalizePublicProductRecord(p)));
 
                 if (prodJson && prodJson.pagination) {
                     setTotalPages(prodJson.pagination.pages || 1);
@@ -205,6 +220,14 @@ function ShopStandardContent() {
     const sizes = backendSizes.map((s: any) => s.name).filter(Boolean);
 
     const displayProducts = products;
+
+    const shopBannerUrl = useMemo(() => {
+        const sel = (selectedCategory || "").trim();
+        if (!sel) return "";
+        const cat = findCategoryBySlugOrName(hierarchicalCategories, sel);
+        const raw = cat?.bannerImage?.trim?.() ?? "";
+        return raw ? getImageUrl(raw) : "";
+    }, [hierarchicalCategories, selectedCategory]);
 
     const renderProducts = (viewType: 'list' | 'grid') => {
         if (loading) return <div className="col-12 text-center py-5">Loading products...</div>;
@@ -237,7 +260,20 @@ function ShopStandardContent() {
     };
 
     return (
-        <div className="page-content bg-light">
+        <div
+            className={`page-content position-relative ${shopBannerUrl ? "" : "bg-light"}`}
+            style={
+                shopBannerUrl
+                    ? {
+                          backgroundImage: `linear-gradient(rgba(248, 249, 250, 0.9), rgba(248, 249, 250, 0.96)), url(${shopBannerUrl})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center top",
+                          backgroundRepeat: "no-repeat",
+                          backgroundAttachment: "scroll",
+                      }
+                    : undefined
+            }
+        >
             <CommanBanner parentText="Home" currentText="Shop Standard" mainText="Shop Standard" image={IMAGES.BackBg1.src} />
             <section className="content-inner-3 pt-3 z-index-unset">
                 <div className="container-fluid">

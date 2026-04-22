@@ -1,0 +1,212 @@
+/* Rich HTML from admin (Quill); nested under .dz-post-text */
+
+.blog-html-content {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    color: var(--title);
+    line-height: 1.7;
+}
+
+/* Restore rich-text typography inside CMS wrapper. */
+.blog-html-content h1,
+.blog-html-content h2,
+.blog-html-content h3,
+.blog-html-content h4,
+.blog-html-content h5,
+.blog-html-content h6 {
+    margin: 1.25rem 0 0.75rem;
+    color: var(--title);
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.blog-html-content h1 { font-size: clamp(1.75rem, 2.6vw, 2.4rem); }
+.blog-html-content h2 { font-size: clamp(1.5rem, 2.2vw, 2rem); }
+.blog-html-content h3 { font-size: clamp(1.25rem, 1.8vw, 1.6rem); }
+.blog-html-content h4 { font-size: 1.25rem; }
+.blog-html-content h5 { font-size: 1.1rem; }
+.blog-html-content h6 { font-size: 1rem; }
+
+.blog-html-content p {
+    margin: 0 0 1rem;
+}
+
+.blog-html-content ul,
+.blog-html-content ol {
+    margin: 0 0 1rem 1.25rem;
+    padding-left: 0.75rem;
+}
+
+.blog-html-content ul {
+    list-style: disc;
+}
+
+.blog-html-content ol {
+    list-style: decimal;
+}
+
+.blog-html-content li {
+    margin: 0.35rem 0;
+}
+
+/*
+  Theme blog rules remove list-style and inject custom pseudo markers on .dz-post-text li.
+  Force native bullets/numbers back for CMS wrapper only.
+*/
+.dz-blog.blog-single .dz-post-text .blog-html-content ul,
+.dz-blog.blog-single .dz-post-text .blog-html-content ol {
+    list-style-position: outside !important;
+}
+
+.dz-blog.blog-single .dz-post-text .blog-html-content ul li {
+    list-style-type: disc !important;
+}
+
+.dz-blog.blog-single .dz-post-text .blog-html-content ol li {
+    list-style-type: decimal !important;
+}
+
+.dz-blog.blog-single .dz-post-text .blog-html-content ul li::before,
+.dz-blog.blog-single .dz-post-text .blog-html-content ol li::before {
+    content: none !important;
+    display: none !important;
+}
+
+.blog-html-content li > ul,
+.blog-html-content li > ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.blog-html-content blockquote {
+    margin: 1.25rem 0;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--primary);
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.blog-html-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.blog-html-content th,
+.blog-html-content td {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 0.5rem 0.65rem;
+    vertical-align: top;
+}
+
+.blog-html-content figure {
+    margin: 1.5rem auto;
+    max-width: 100%;
+}
+
+/* Full column width; overrides Quill inline width/height */
+.blog-html-content img {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: var(--border-radius-base, 0.25rem);
+    object-fit: contain;
+}
+
+/*
+  Theme (_blog-details.scss) sets .wp-block-gallery img { width: auto } under
+  @supports (sticky) — that wins over max-width-only and keeps CMS images tiny.
+*/
+.blog-html-content .wp-block-gallery img,
+.blog-html-content .wp-block-image img,
+.blog-html-content p img {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.blog-detail-sub-gallery__frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 0.25rem;
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.blog-detail-sub-gallery__frame img {
+    object-fit: cover;
+}
+
+.blog-detail-bento-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.blog-detail-bento-grid__item {
+    min-width: 0;
+}
+
+@media (min-width: 768px) {
+    .blog-detail-bento-grid {
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .blog-detail-bento-grid__item {
+        grid-column: span 6;
+    }
+}
+
+@media (min-width: 992px) {
+    .blog-detail-bento-grid__item {
+        grid-column: span 4;
+    }
+
+    .blog-detail-bento-grid__item:nth-child(6n + 1),
+    .blog-detail-bento-grid__item:nth-child(6n + 2) {
+        grid-column: span 6;
+    }
+
+    .blog-detail-bento-grid__item:nth-child(6n) {
+        grid-column: 1 / -1;
+    }
+
+    .blog-detail-bento-grid__item:nth-child(6n) .blog-detail-sub-gallery__frame {
+        aspect-ratio: 16 / 6;
+    }
+
+    .blog-detail-bento-grid--single .blog-detail-bento-grid__item {
+        grid-column: 1 / -1;
+    }
+
+    .blog-detail-bento-grid--two .blog-detail-bento-grid__item {
+        grid-column: span 6;
+    }
+}
+
+.blog-html-content pre,
+.blog-html-content .ql-syntax {
+    overflow-x: auto;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    background: rgba(0, 0, 0, 0.04);
+    font-size: 0.9em;
+}
+
+.blog-html-content a {
+    text-decoration: underline;
+}
+
+/* Improve readability of hero text over cover image on blog detail page. */
+.blog-single.style-1 .blog-detail-hero-copy {
+    isolation: isolate;
+}
+
+.blog-single.style-1 .blog-detail-hero-copy h1,
+.blog-single.style-1 .blog-detail-hero-copy .dz-meta,
+.blog-single.style-1 .blog-detail-hero-copy .dz-meta a,
+.blog-single.style-1 .blog-detail-hero-copy .dz-meta li {
+    color: #fff !important;
+    mix-blend-mode: difference;
+    text-shadow: none;
+}

@@ -20,7 +20,7 @@ function stripHtml(html: string) {
 }
 
 function blogHref(slug: string) {
-    return `/post-left-sidebar?slug=${encodeURIComponent(slug)}`;
+    return `/blog/${encodeURIComponent(slug)}`;
 }
 
 const HottestBlog = ({ data }: { data?: any }) => {
@@ -56,7 +56,7 @@ const HottestBlog = ({ data }: { data?: any }) => {
                 image: typeof m.image === "string" ? m.image : (m.image as { src: string }).src,
                 title: m.title,
                 description: "up to 79% off",
-                href: "/blog-grid",
+                href: "/blog",
                 design: m.design,
             }));
         }
@@ -92,7 +92,7 @@ const HottestBlog = ({ data }: { data?: any }) => {
                 image: item.image || "",
                 title: item.title || item.name || "Item",
                 description: stripHtml(item.description || "").slice(0, 72) || "up to 79% off",
-                href: item.link || "/blog-grid",
+                href: item.link || "/blog",
                 design,
             };
         });
@@ -115,7 +115,7 @@ const HottestBlog = ({ data }: { data?: any }) => {
                 image: typeof m.image === "string" ? m.image : (m.image as { src: string }).src,
                 title: "…",
                 description: "Loading",
-                href: "/blog-grid",
+                href: "/blog",
                 isPlaceholder: true,
             };
         }
@@ -126,7 +126,7 @@ const HottestBlog = ({ data }: { data?: any }) => {
                 image: item.image,
                 title: item.title,
                 description: item.description,
-                href: item.href || "/blog-grid",
+                href: item.href || "/blog",
                 isPlaceholder: false,
             };
         }
@@ -136,7 +136,7 @@ const HottestBlog = ({ data }: { data?: any }) => {
             image: typeof m.image === "string" ? m.image : (m.image as { src: string }).src,
             title: m.title,
             description: "up to 79% off",
-            href: "/blog-grid",
+            href: "/blog",
             isPlaceholder: false,
         };
     });
@@ -215,7 +215,7 @@ const HottestBlog = ({ data }: { data?: any }) => {
                         </p>
                     </div>
                     <Link
-                        href="/blog-grid"
+                        href="/blog"
                         className="text-secondary font-14 d-flex align-items-center gap-1 m-b15"
                     >
                         See All

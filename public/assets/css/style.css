@@ -41570,12 +41570,10 @@ pre {
 
 .dz-share-post {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  margin-bottom: 60px;
 }
 .dz-share-post .post-tags strong {
   font-weight: 500;
@@ -41600,7 +41598,7 @@ pre {
 }
 @media only screen and (max-width: 991px) {
   .dz-share-post {
-    margin-bottom: 40px;
+    padding: 10px 0;
   }
 }
 .dz-share-post .dz-social-icon li {

@@ -10,6 +10,7 @@
     "sass": "sass --watch public/assets/scss/main.scss public/assets/css/style.css"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.6.0",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@radix-ui/react-scroll-area": "^1.2.3",
     "@radix-ui/react-slider": "^1.2.3",

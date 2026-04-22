@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getImageUrl } from '@/lib/imageUtils';
+import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 
 interface cardType {
     product: any;
@@ -8,20 +9,24 @@ interface cardType {
 }
 
 export default function ShopListCard({ product, inputtype }: cardType) {
-    const name = product?.name || 'Product';
-    const mainImage = product?.thumbImage && product.thumbImage.length > 0 
-        ? getImageUrl(product.thumbImage[0]) 
+    const p = normalizePublicProductRecord(product ?? {});
+    const name = p?.name || 'Product';
+    const mainImage = p?.thumbImage && Array.isArray(p.thumbImage) && p.thumbImage.length > 0
+        ? getImageUrl(String(p.thumbImage[0]))
         : '/assets/images/placeholder.jpg';
 
-    const price = product?.basePrice || product?.price || 0;
-    const comparePrice = product?.originPrice;
-    const productUrl = `/products/${product?.slug || ''}`;
+    const price = p?.basePrice || p?.price || 0;
+    const comparePrice = p?.originPrice;
+    const productUrl = `/products/${p?.slug || ''}`;
     
-    // Parse description dynamically
+    // Prefer admin short description; fall back to truncated long description
     let shortDescription = 'No description available for this product.';
-    if (product?.description) {
-        // Strip out HTML tags for a clean preview, limit to ~150 chars
-        const st = product.description.replace(/<[^>]*>?/gm, '');
+    const rawShort = typeof p.shortDescription === "string" ? p.shortDescription : "";
+    if (rawShort.trim()) {
+        const st = rawShort.replace(/<[^>]*>?/gm, '');
+        shortDescription = st.length > 150 ? st.substring(0, 150) + "..." : st;
+    } else if (typeof p.description === "string" && p.description) {
+        const st = p.description.replace(/<[^>]*>?/gm, '');
         shortDescription = st.length > 150 ? st.substring(0, 150) + "..." : st;
     }
 
@@ -34,9 +39,9 @@ export default function ShopListCard({ product, inputtype }: cardType) {
                 <div className="dz-header">
                     <div>
                         <h4 className="title mb-0"><Link href={productUrl}>{name}</Link></h4>
-                        {product?.category && (
+                        {p?.category && (
                             <ul className="dz-tags">
-                                <li><Link href={`/shop-list?category=${product.category}`}>{product.category}</Link></li>
+                                <li><Link href={`/shop-list?category=${String(p.category)}`}>{String(p.category)}</Link></li>
                             </ul>
                         )}
                     </div>

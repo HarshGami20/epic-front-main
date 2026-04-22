@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { getPublicApiUrl } from '@/lib/env';
+import { normalizePublicProductRecord } from '@/lib/publicProductNormalize';
 
 interface ShopState {
   products: any[];
@@ -115,10 +116,10 @@ export const useShopStore = create<ShopState>((set, get) => ({
       let paginationData = get().pagination;
 
       if (json && json.data) {
-        productsData = json.data;
+        productsData = json.data.map((p: any) => normalizePublicProductRecord(p));
         if (json.pagination) paginationData = json.pagination;
       } else if (Array.isArray(json)) {
-        productsData = json;
+        productsData = json.map((p: any) => normalizePublicProductRecord(p));
       }
 
       // Automatically determine maxPrice if not restricted by priceRange and maxPrice is basic default

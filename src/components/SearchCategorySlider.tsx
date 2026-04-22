@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Link from "next/link";
 import { getPublicApiUrl } from "@/lib/env";
+import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 import { getImageUrl } from "@/lib/imageUtils";
 
 export default function SearchCategorySlider() {
@@ -20,7 +21,7 @@ export default function SearchCategorySlider() {
                 let list: any[] = [];
                 if (json?.data && Array.isArray(json.data)) list = json.data;
                 else if (Array.isArray(json)) list = json;
-                if (!cancelled) setProducts(list);
+                if (!cancelled) setProducts(list.map((p) => normalizePublicProductRecord(p)));
             } catch {
                 if (!cancelled) setProducts([]);
             } finally {

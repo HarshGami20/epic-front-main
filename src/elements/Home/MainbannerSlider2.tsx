@@ -117,6 +117,7 @@ const MainBannerSlider2 = ({ data }: { data?: any }) => {
                         const viewDetail =
                             item.viewDetailText?.trim?.() || item.viewDetailText || "VIEW DETAIL";
                         const productPath = item.productSlug ? `/products/${item.productSlug}` : null;
+                        const detailHref = productPath || "/product-default";
 
                         return (
                             <div className="content-info" key={index}>
@@ -126,32 +127,42 @@ const MainBannerSlider2 = ({ data }: { data?: any }) => {
                                     </p>
                                 ) : null}
                                 <h1 className="title" style={{ fontSize: isNarrowLayout ? "28px" : "48px" }}>
-                                    {headline || " "}
+                                    {isNarrowLayout ? (
+                                        <Link href={detailHref} className="text-reset text-decoration-none">
+                                            {headline || " "}
+                                        </Link>
+                                    ) : (
+                                        headline || " "
+                                    )}
                                 </h1>
-                                <div className="swiper-meta-items">
-                                    <div className="meta-content">
-                                        <span className="price-name">{priceLabel}</span>
-                                        <span className="price-num d-inline-block">
-                                            {priceVal !== "" && priceVal != null
-                                                ? `$\u00A0${String(priceVal).replace(/^\$/, "")}`
-                                                : "—"}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="content-btn m-b30">
-                                    <Link
-                                        href={productPath || "/shop-cart"}
-                                        className="btn btn-secondary me-xl-3 me-2 btnhover20"
-                                    >
-                                        {addToCart}
-                                    </Link>
-                                    <Link
-                                        href={productPath || "/product-default"}
-                                        className="btn btn-outline-secondary btnhover20"
-                                    >
-                                        {viewDetail}
-                                    </Link>
-                                </div>
+                                {!isNarrowLayout ? (
+                                    <>
+                                        <div className="swiper-meta-items">
+                                            <div className="meta-content">
+                                                <span className="price-name">{priceLabel}</span>
+                                                <span className="price-num d-inline-block">
+                                                    {priceVal !== "" && priceVal != null
+                                                        ? `$\u00A0${String(priceVal).replace(/^\$/, "")}`
+                                                        : "—"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="content-btn m-b30">
+                                            <Link
+                                                href={productPath || "/shop-cart"}
+                                                className="btn btn-secondary me-xl-3 me-2 btnhover20"
+                                            >
+                                                {addToCart}
+                                            </Link>
+                                            <Link
+                                                href={detailHref}
+                                                className="btn btn-outline-secondary btnhover20"
+                                            >
+                                                {viewDetail}
+                                            </Link>
+                                        </div>
+                                    </>
+                                ) : null}
                             </div>
                         );
                     })}

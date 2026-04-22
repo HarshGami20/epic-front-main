@@ -6,6 +6,7 @@ import ProductInputButton from "./ProductInputButton";
 import ShopCardColour from "./ShopCardColour";
 import StarRating from "./StarRating";
 import { normalizeProductSizes, normalizeVariations } from "@/lib/productOptions";
+import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 
 interface thumbnailCardtype {
     productData?: any;
@@ -16,7 +17,7 @@ interface thumbnailCardtype {
 }
 
 export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
-    const product = props.productData || {};
+    const product: any = normalizePublicProductRecord(props.productData ?? {});
     const slug = String(product?.slug || "product");
     const sizeOptions = normalizeProductSizes(product?.sizes);
     const variations = normalizeVariations(product?.variation);
@@ -62,12 +63,16 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
         else setLocalColorIndex(null);
     };
     const name = product?.name || props.title || 'Product Name';
-    const description = product?.shortDescription || product?.description || props.para || '';
-    const price = product?.basePrice || product?.price || 125.75;
-    const comparePrice = product?.originPrice || null;
+    const shortHtml =
+        typeof product.shortDescription === "string" && product.shortDescription.trim() !== ""
+            ? product.shortDescription
+            : props.para || "";
+    const price = Number(product?.basePrice ?? product?.price ?? 125.75);
+    const comparePrice =
+        product?.originPrice != null ? Number(product.originPrice) : null;
 
     let discount = 0;
-    if (comparePrice && comparePrice > price) {
+    if (comparePrice != null && Number.isFinite(comparePrice) && comparePrice > price) {
         discount = Math.round(((comparePrice - price) / comparePrice) * 100);
     }
     return(
@@ -76,6 +81,8 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                 <div className="dz-content-footer">
                     <div className="dz-content-start">
                         {discount > 0 && <span className="badge bg-secondary mb-2">SALE {discount}% Off</span>}
+                       
+                       
                         <h4 className="title mb-1">{name}</h4>
                         <div className="review-num">
                             <ul className="dz-rating me-2">                                                       
@@ -86,7 +93,13 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                         </div>
                     </div>
                 </div>
-                <div className="para-text mt-3" dangerouslySetInnerHTML={{ __html: description }} />
+
+                {shortHtml && (
+                    <div
+                        className="para-text mb-2"
+                        dangerouslySetInnerHTML={{ __html: shortHtml }}
+                    />
+                )}
 
                 <div className="meta-content m-b20 mt-3">
                     <span className="form-label">Price</span>

@@ -1,7 +1,5 @@
 "use client";
 
-import { getImageUrl } from '@/lib/imageUtils';
-
 export type ShopCardVariation = {
   id?: string;
   color?: string;
@@ -21,6 +19,9 @@ type ShopCardColourProps = {
 
 const STATIC_SWATCHES = ['#24262B', '#8CB2D1', '#0D775E', '#FEC4C4'];
 
+/** Visible color disc size (px); theme default was ~16px. */
+const SWATCH_SIZE_PX = 25;
+
 export default function ShopCardColour({
   variations,
   idPrefix = 'color',
@@ -38,9 +39,13 @@ export default function ShopCardColour({
           const inputId = `${idPrefix}-color-${v.id ?? index}`;
           const label = v.color?.trim() || `Option ${index + 1}`;
           return (
-            <div className="form-check" key={v.id ?? index}>
+            <div
+              className="form-check m-0 position-relative flex-shrink-0"
+              key={v.id ?? index}
+              style={{ width: SWATCH_SIZE_PX, height: SWATCH_SIZE_PX }}
+            >
               <input
-                className="form-check-input"
+                className="form-check-input position-absolute top-0 start-0 m-0"
                 type="radio"
                 name={`${idPrefix}-variation`}
                 id={inputId}
@@ -48,15 +53,24 @@ export default function ShopCardColour({
                 onChange={() => onSelect?.(index)}
                 value={hex}
                 aria-label={label}
+                style={{
+                  width: SWATCH_SIZE_PX,
+                  height: SWATCH_SIZE_PX,
+                  cursor: "pointer",
+                }}
               />
-              {v.colorImage ? (
-                <span className="d-inline-flex rounded-circle overflow-hidden border border-secondary" style={{ width: 28, height: 28 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={getImageUrl(v.colorImage)} alt="" className="w-100 h-100 object-cover" />
-                </span>
-              ) : (
-                <span style={{ backgroundColor: hex }} title={label} />
-              )}
+              <span
+                className="m-0"
+                style={{
+                  backgroundColor: hex,
+                  width: SWATCH_SIZE_PX,
+                  height: SWATCH_SIZE_PX,
+                  borderRadius: "50%",
+                  display: "block",
+                  pointerEvents: "none",
+                }}
+                title={label}
+              />
             </div>
           );
         })}
@@ -67,16 +81,35 @@ export default function ShopCardColour({
   return (
     <>
       {STATIC_SWATCHES.map((hex, index) => (
-        <div className="form-check" key={hex}>
+        <div
+          className="form-check m-0 position-relative flex-shrink-0"
+          key={hex}
+          style={{ width: SWATCH_SIZE_PX, height: SWATCH_SIZE_PX }}
+        >
           <input
-            className="form-check-input"
+            className="form-check-input position-absolute top-0 start-0 m-0"
             type="radio"
             name={`${idPrefix}-static`}
             id={`${idPrefix}-static-${index}`}
             value={hex}
             defaultChecked={index === 0}
+            style={{
+              width: SWATCH_SIZE_PX,
+              height: SWATCH_SIZE_PX,
+              cursor: "pointer",
+            }}
           />
-          <span style={{ backgroundColor: hex }} />
+          <span
+            className="m-0"
+            style={{
+              backgroundColor: hex,
+              width: SWATCH_SIZE_PX,
+              height: SWATCH_SIZE_PX,
+              borderRadius: "50%",
+              display: "block",
+              pointerEvents: "none",
+            }}
+          />
         </div>
       ))}
     </>

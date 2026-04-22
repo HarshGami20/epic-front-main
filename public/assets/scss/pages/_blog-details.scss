@@ -2017,12 +2017,12 @@ pre {
 }
 .dz-share-post{
 	border-top: 1px solid rgba(0, 0, 0, 0.1);
-	border-bottom: 1px solid rgba(0,0,0, 0.1);
+	// border-bottom: 1px solid rgba(0,0,0, 0.1);
 	display:flex;
 	align-items:center;
 	justify-content:space-between;
 	padding: 10px 0;
-	margin-bottom:60px;
+	// margin-bottom:60px;
 	.post-tags{
 		strong{
 			font-weight: 500;
@@ -2045,7 +2045,7 @@ pre {
 		}
 	}
 	@include respond ('tab-port'){
-		margin-bottom:40px;
+		// margin-bottom:40px;
 		
 	}
 	.dz-social-icon li{ 

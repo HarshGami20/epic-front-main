@@ -23,6 +23,7 @@ import SponsoredSlider from "@/elements/Home/SponsoredSlider";
 import SummerSaleBlog from "@/elements/Home/SummerSaleBlog";
 import TradingSliderBlog from "@/elements/Home/TradingSliderBlog";
 import TrendingBlogCircleCta from "@/elements/Home/TrendingBlogCircleCta";
+import MakeYoursCustomize from "@/elements/Home/MakeYoursCustomize";
 import MoreCollectionBlog from "@/elements/Home/MoreCollectionBlog";
 import VideoReels from "@/elements/Home/VideoReels";
 import TrandingSlider from "@/elements/Home2/TrandingSlider";
@@ -68,6 +69,7 @@ const DEFAULT_LAYOUT = [
     { type: 'collectionBlog', id: '16', enabled: true },
     { type: 'trendingSlider', id: '17', enabled: true },
     { type: 'videoCarousel', id: '18', enabled: true },
+    { type: 'makeYoursCustomize', id: '19', enabled: true },
 ];
 
 const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
@@ -248,7 +250,7 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
                                                     data.buttonLink.trim().startsWith("http")
                                                     ? data.buttonLink.trim()
                                                     : `/${data.buttonLink.trim()}`
-                                                : "/blog-grid"
+                                                : "/blog"
                                         }
                                         className="btn btn-white"
                                     >
@@ -299,7 +301,7 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
                 ? data.linkUrl.trim().startsWith("/") || data.linkUrl.trim().startsWith("http")
                     ? data.linkUrl.trim()
                     : `/${data.linkUrl.trim()}`
-                : "/blog-grid";
+                : "/blog";
         const trendingLinkLabel =
             typeof data?.linkText === "string" && data.linkText.trim() ? data.linkText.trim() : "See All";
         return (
@@ -384,7 +386,28 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
         <section className="video-section">
             <VideoSection data={data} />
         </section>
-    )
+    ),
+    makeYoursCustomize: ({ data }) => (
+        <section className="content-inner overflow-hidden">
+            <div className="container">
+                <MakeYoursCustomize data={data} />
+            </div>
+        </section>
+    ),
+    makeYourCustomize: ({ data }) => (
+        <section className="content-inner overflow-hidden">
+            <div className="container">
+                <MakeYoursCustomize data={data} />
+            </div>
+        </section>
+    ),
+    makeyourcustomize: ({ data }) => (
+        <section className="content-inner overflow-hidden">
+            <div className="container">
+                <MakeYoursCustomize data={data} />
+            </div>
+        </section>
+    ),
 };
 
 const DEFAULT_EXPLORE_VIDEO = "/assets/images/video.mp4";

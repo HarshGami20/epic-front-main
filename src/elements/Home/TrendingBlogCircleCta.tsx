@@ -9,7 +9,7 @@ export const TRENDING_NEWS_RING_TEXT = "LATEST NEWS - LATEST NEWS -";
 
 function normalizeHref(url: string) {
     const u = url.trim();
-    if (!u) return "/blog-grid";
+    if (!u) return "/blog";
     if (u.startsWith("/") || u.startsWith("http")) return u;
     return `/${u}`;
 }
@@ -23,7 +23,7 @@ export default function TrendingBlogCircleCta({
     linkUrl?: string;
     linkText?: string;
 }) {
-    const href = normalizeHref(typeof linkUrl === "string" ? linkUrl : "/blog-grid");
+    const href = normalizeHref(typeof linkUrl === "string" ? linkUrl : "/blog");
 
     return (
         <Link

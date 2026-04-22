@@ -51,7 +51,7 @@ const HottestSliderBlog = ({ data, items: itemsProp }: Props) => {
                 <SwiperSlide key={i}>
                     <div className="shop-card style-7 ">
                         <div className="dz-media">
-                            <Link href={item.href || "/blog-grid"}>
+                            <Link href={item.href || "/blog"}>
                                 <Image
                                     src={item.image ? getImageUrl(item.image) : "/assets/images/placeholder.jpg"}
                                     alt=""
@@ -64,7 +64,7 @@ const HottestSliderBlog = ({ data, items: itemsProp }: Props) => {
                         <div className="dz-content hottest-blog-card-text overflow-hidden">
                             <h5 className="title mb-0">
                                 <Link
-                                    href={item.href || "/blog-grid"}
+                                    href={item.href || "/blog"}
                                     className="d-block text-truncate"
                                     title={item.title}
                                 >

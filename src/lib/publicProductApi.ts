@@ -1,4 +1,5 @@
 import { getPublicApiUrl } from "@/lib/env";
+import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 
 /**
  * Fetches a single product from the public detail API (full record, not list projection).
@@ -12,5 +13,5 @@ export async function fetchPublicProductBySlug(slug: string): Promise<unknown | 
   if (!res.ok) return null;
   const json = (await res.json()) as { success?: boolean; data?: unknown };
   if (!json.success || json.data == null) return null;
-  return json.data;
+  return normalizePublicProductRecord(json.data);
 }

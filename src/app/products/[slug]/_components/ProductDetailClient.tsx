@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductDefaultSlider from "@/elements/Shop/ProductDefaultSlider";
 import ThumbnailRightProductDetail from "@/elements/Shop/ThumbnailRightProductDetail";
-import ProductTabStyleOne from "@/elements/Shop/ProductTabStyleOne";
+import ProductDetailPageTabs from "@/elements/Shop/ProductDetailPageTabs";
 import { fetchPublicProductBySlug } from "@/lib/publicProductApi";
 import { normalizeVariations } from "@/lib/productOptions";
 
@@ -124,7 +124,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
             </section>
             <section className="content-inner-3 pb-6 border-top">
                 <div className="container">
-                    <ProductTabStyleOne productData={productData} />
+                    <ProductDetailPageTabs productData={productData} routeSlug={slug} />
                 </div>
             </section>
         </div>

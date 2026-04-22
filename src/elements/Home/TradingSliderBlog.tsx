@@ -10,7 +10,7 @@ import { getImageUrl } from "@/lib/imageUtils";
 import { getPublicApiUrl } from "@/lib/env";
 
 function blogHref(slug: string) {
-    return `/post-left-sidebar?slug=${encodeURIComponent(slug)}`;
+    return `/blog/${encodeURIComponent(slug)}`;
 }
 
 function formatPostDate(iso?: string) {
@@ -53,7 +53,7 @@ const TradingSliderBlog = ({ data }: { data?: any }) => {
                 image: typeof row.image === "string" ? row.image : (row.image as { src: string }).src,
                 title: row.name,
                 date: row.date,
-                href: "/blog-grid",
+                href: "/blog",
             }));
         }
 
@@ -97,7 +97,7 @@ const TradingSliderBlog = ({ data }: { data?: any }) => {
                 image: img,
                 title: item.title || item.name || "Post",
                 date: item.date || "",
-                href: item.href || "/blog-grid",
+                href: item.href || "/blog",
             };
         });
     }, [rawItems, allBlogs]);

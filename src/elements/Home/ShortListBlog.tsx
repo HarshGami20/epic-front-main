@@ -8,7 +8,7 @@ import { getImageUrl } from "@/lib/imageUtils";
 import { getPublicApiUrl } from "@/lib/env";
 
 function blogHref(slug: string) {
-    return `/post-left-sidebar?slug=${encodeURIComponent(slug)}`;
+    return `/blog/${encodeURIComponent(slug)}`;
 }
 
 type CardRow =

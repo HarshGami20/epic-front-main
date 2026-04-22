@@ -31,3 +31,46 @@ export function getImageUrl(imagePath: string | any | null | undefined): string 
     // Return as-is for other relative paths
     return imagePath;
 }
+
+/** Same URL rules as images: full URL, `/uploads/...` → asset origin, else relative (e.g. `/assets/...`). */
+export function resolvePublicMediaUrl(path: string | null | undefined): string {
+    if (path == null || typeof path !== "string") {
+        return "";
+    }
+    const trimmed = path.trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        return trimmed;
+    }
+    if (trimmed.startsWith("//")) {
+        return `https:${trimmed}`;
+    }
+    if (trimmed.startsWith("data:")) {
+        return trimmed;
+    }
+    let pathPart = trimmed;
+    if (pathPart.startsWith("uploads/")) {
+        pathPart = `/${pathPart}`;
+    }
+    if (pathPart.startsWith("/uploads/")) {
+        return `${getPublicAssetOrigin()}${pathPart}`;
+    }
+    return trimmed;
+}
+
+/**
+ * Rewrites <img src="..."> in CMS HTML (e.g. Quill) so upload paths resolve to the public asset origin.
+ */
+export function rewriteHtmlImageSources(html: string): string {
+    if (!html || typeof html !== "string") return "";
+    return html.replace(/<img\b([^>]*?)\/?>/gi, (_full, attrs: string) => {
+        const next = attrs.replace(
+            /\bsrc\s*=\s*(["'])([^"']*)\1/i,
+            (_m: string, quote: string, src: string) => {
+                const resolved = resolvePublicMediaUrl(src.trim()) || src;
+                return `src=${quote}${resolved}${quote}`;
+            },
+        );
+        return `<img ${next.trim()}>`;
+    });
+}
