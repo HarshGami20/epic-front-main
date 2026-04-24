@@ -3,7 +3,7 @@
 import Link from "next/link";
 import IMAGES from "@/constant/theme";
 import PasswordInputBox from "@/components/PasswordInputBox";
-import Image from "next/image";
+import AuthSlider from "@/components/AuthSlider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
@@ -12,6 +12,7 @@ import { registerUser } from "@/lib/authApi";
 export default function Registration() {
     const [firstName, setFirstName] = useState("");
     const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -20,13 +21,13 @@ export default function Registration() {
         e.preventDefault();
         setLoading(true);
         try {
-            const data = await registerUser({ firstName, email, password });
+            const data = await registerUser({ firstName, email, phone, password });
             if (data?.token) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data.user));
             }
             toast.success("Registration successful! You can now log in.");
-            
+
             setTimeout(() => {
                 router.push("/account-dashboard");
             }, 1500);
@@ -50,9 +51,7 @@ export default function Registration() {
                                 </ul>
                             </nav>
                         </div>
-                        <div className="registration-media">
-                            <Image src={IMAGES.RegistrationPng3} alt="/" />
-                        </div>
+                        <AuthSlider />
                     </div>
                     <div className="col-xxl-6 col-xl-6 col-lg-6 end-side-content justify-content-center">
                         <div className="login-area">
@@ -61,33 +60,45 @@ export default function Registration() {
                             <form onSubmit={handleRegister}>
                                 <div className="m-b25">
                                     <label className="label-title">Username</label>
-                                    <input 
-                                        name="dzName" 
-                                        required 
-                                        className="form-control" 
-                                        placeholder="Username" 
-                                        type="text" 
+                                    <input
+                                        name="dzName"
+                                        required
+                                        className="form-control"
+                                        placeholder="Username"
+                                        type="text"
                                         value={firstName}
                                         onChange={(e) => setFirstName(e.target.value)}
                                     />
                                 </div>
                                 <div className="m-b25">
                                     <label className="label-title">Email Address</label>
-                                    <input 
-                                        name="dzEmail" 
-                                        required 
-                                        className="form-control" 
-                                        placeholder="Email Address" 
-                                        type="email" 
+                                    <input
+                                        name="dzEmail"
+                                        required
+                                        className="form-control"
+                                        placeholder="Email Address"
+                                        type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                </div>
+                                <div className="m-b25">
+                                    <label className="label-title">Mobile Number</label>
+                                    <input
+                                        name="dzPhone"
+                                        required
+                                        className="form-control"
+                                        placeholder="Mobile Number"
+                                        type="tel"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
                                     />
                                 </div>
                                 <div className="m-b40">
                                     <label className="label-title">Password</label>
                                     <div className="secure-input ">
-                                        <PasswordInputBox 
-                                            placeholder="Password" 
+                                        <PasswordInputBox
+                                            placeholder="Password"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                         />

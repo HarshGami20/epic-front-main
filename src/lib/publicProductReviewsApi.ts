@@ -3,6 +3,7 @@ import { getPublicApiUrl } from "@/lib/env";
 export type PublicProductReview = {
   id: string;
   authorName: string;
+  authorEmail: string | null;
   rating: number;
   title: string;
   body: string;

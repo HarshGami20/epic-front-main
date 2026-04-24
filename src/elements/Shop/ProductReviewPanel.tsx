@@ -13,6 +13,7 @@ import {
   type PublicProductReviewsPayload,
 } from "@/lib/publicProductReviewsApi";
 import { getImageUrl } from "@/lib/imageUtils";
+import { useRouter } from "next/navigation";
 import LightGallery from 'lightgallery/react';
 import lgThumbnail from 'lightgallery/plugins/thumbnail';
 import lgZoom from 'lightgallery/plugins/zoom';
@@ -173,11 +174,27 @@ export default function ProductReviewPanel({
   const [writeRating, setWriteRating] = useState(0);
   const [headline, setHeadline] = useState("");
   const [body, setBody] = useState("");
-  const [author, setAuthor] = useState("");
-  const [email, setEmail] = useState("");
   const [previews, setPreviews] = useState<PreviewItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+
+  const router = useRouter();
+
+  // ── Auth state from localStorage ──
+  const [loggedInUser, setLoggedInUser] = useState<{ firstName?: string; lastName?: string; email?: string } | null>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) setLoggedInUser(JSON.parse(raw));
+    } catch {
+      setLoggedInUser(null);
+    }
+  }, []);
+
+  const author = loggedInUser
+    ? [loggedInUser.firstName, loggedInUser.lastName].filter(Boolean).join(" ") || loggedInUser.email || ""
+    : "";
+  const email = loggedInUser?.email || "";
 
   const previewsRef = useRef(previews);
   previewsRef.current = previews;
@@ -281,12 +298,7 @@ export default function ProductReviewPanel({
       return;
     }
     if (!author.trim() || !email.trim()) {
-      toast.error("Please enter your name and email.");
-      return;
-    }
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!emailOk) {
-      toast.error("Please enter a valid email address.");
+      toast.error("Could not find your account details. Please log in again.");
       return;
     }
 
@@ -315,8 +327,6 @@ export default function ProductReviewPanel({
       setWriteRating(0);
       setHeadline("");
       setBody("");
-      setAuthor("");
-      setEmail("");
       previews.forEach((p) => URL.revokeObjectURL(p.url));
       setPreviews([]);
       setShowReviewModal(false);
@@ -329,6 +339,20 @@ export default function ProductReviewPanel({
   };
 
   const reviewsList: PublicProductReview[] = useMemo(() => payload?.reviews ?? [], [payload]);
+
+  // Has the logged-in user already submitted a review?
+  const userAlreadyReviewed = useMemo(() => {
+    if (!email) return false;
+    return reviewsList.some((r) => r.authorEmail?.toLowerCase() === email.toLowerCase());
+  }, [reviewsList, email]);
+
+  const handleWriteReviewClick = () => {
+    if (!loggedInUser) {
+      router.push("/login");
+      return;
+    }
+    setShowReviewModal(true);
+  };
 
   if (!safeSlug) {
     return (
@@ -351,14 +375,18 @@ export default function ProductReviewPanel({
 
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <span className="text-secondary small d-none d-sm-inline">Share your experience with this product</span>
-        <Button
-          type="button"
-          variant="warning"
-          className="text-dark fw-600"
-          onClick={() => setShowReviewModal(true)}
-        >
-          Write a review
-        </Button>
+        {userAlreadyReviewed ? (
+          <span className="badge bg-success py-2 px-3" style={{ fontSize: 13 }}>✓ You reviewed this product</span>
+        ) : (
+          <Button
+            type="button"
+            variant="warning"
+            className="text-dark fw-600"
+            onClick={handleWriteReviewClick}
+          >
+            {loggedInUser ? "Write a review" : "Login to write a review"}
+          </Button>
+        )}
       </div>
 
       {loadError && (
@@ -421,7 +449,7 @@ export default function ProductReviewPanel({
           {!loading && reviewsList.length === 0 && (
             <div className="py-3">
               <p className="text-secondary mb-2">No reviews yet. Be the first to review this product.</p>
-              <Button type="button" variant="outline-secondary" size="sm" onClick={() => setShowReviewModal(true)}>
+              <Button type="button" variant="outline-secondary" size="sm" onClick={handleWriteReviewClick}>
                 Write the first review
               </Button>
             </div>
@@ -484,6 +512,19 @@ export default function ProductReviewPanel({
           <p className="text-secondary small mb-3">
             Your review will be shared publicly. Photo previews are local only until you connect a media upload; the review is saved as text (and optional image URLs from storage when configured).
           </p>
+          {/* Logged-in user badge */}
+          <div className="d-flex align-items-center gap-2 mb-3 p-2 rounded" style={{ background: '#f8f9fa', border: '1px solid #dee2e6' }}>
+            <div
+              className="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0 fw-bold"
+              style={{ width: 36, height: 36, fontSize: 14 }}
+            >
+              {(author || "?").slice(0, 1).toUpperCase()}
+            </div>
+            <div>
+              <div className="fw-600" style={{ fontSize: 14 }}>{author}</div>
+              <div className="text-secondary" style={{ fontSize: 12 }}>{email}</div>
+            </div>
+          </div>
           <Form onSubmit={(e) => void handleSubmit(e)} id="pdp-product-review-form">
             <div className="mb-3">
               <span className={css.formLabel}>
@@ -555,26 +596,6 @@ export default function ProductReviewPanel({
               )}
             </div>
 
-            <div className="row g-3 mb-0">
-              <div className="col-md-6">
-                <Form.Label htmlFor={`${formId}-author`} className={css.formLabel}>
-                  Your name <span className="text-danger">*</span>
-                </Form.Label>
-                <Form.Control id={`${formId}-author`} value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="e.g. Alex" />
-              </div>
-              <div className="col-md-6">
-                <Form.Label htmlFor={`${formId}-email`} className={css.formLabel}>
-                  Email <span className="text-danger">*</span>
-                </Form.Label>
-                <Form.Control
-                  id={`${formId}-email`}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="For order verification only"
-                />
-              </div>
-            </div>
           </Form>
         </Modal.Body>
         <Modal.Footer className="border-top-0 pt-0 flex-wrap gap-2">

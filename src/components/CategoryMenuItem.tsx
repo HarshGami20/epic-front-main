@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getPublicApiUrl } from "@/lib/env";
@@ -13,6 +15,15 @@ interface Category {
 export default function CategoryMenuItem() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
+    const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth <= 991);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -20,15 +31,15 @@ export default function CategoryMenuItem() {
                 const url = getPublicApiUrl();
                 const res = await fetch(`${url}/public/categories`);
                 const json = await res.json();
-                
+
                 let data: Category[] = [];
                 if (json && json.data) data = json.data;
                 else if (Array.isArray(json)) data = json;
 
-                // Build hierarchy
+                // Build hierarchy tree
                 const map = new Map<string, Category>();
                 data.forEach(item => map.set(item.id, { ...item, children: [] }));
-                
+
                 const tree: Category[] = [];
                 map.forEach(item => {
                     if (item.parentId && map.has(item.parentId)) {
@@ -48,53 +59,83 @@ export default function CategoryMenuItem() {
         fetchCategories();
     }, []);
 
+    const toggleItem = (id: string, e: React.MouseEvent) => {
+        if (!isMobile) return;
+        e.preventDefault();
+        e.stopPropagation();
+        setOpenItems(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
     if (loading) {
         return (
-            <ul className="nav navbar-nav">
-                <li>
-                    <span className="p-3 d-block">Loading Categories...</span>
-                </li>
+            <ul className="nav navbar-nav cat-menu-list">
+                {[1, 2, 3, 4, 5].map(i => (
+                    <li key={i} className="cat-skeleton-item">
+                        <span className="cat-skeleton-line" />
+                    </li>
+                ))}
             </ul>
         );
     }
 
-    const renderLevel = (items: Category[], isRoot: boolean) => {
+    const renderLevel = (items: Category[], isRoot: boolean, depth: number = 0) => {
         return items.map(category => {
-            const hasChildren = category.children && category.children.length > 0;
-            
+            const hasChildren = !!(category.children && category.children.length > 0);
+            const isOpen = openItems.has(category.id);
+
             if (isRoot) {
                 return (
-                    <li key={category.id} className={hasChildren ? "cate-drop" : ""}>
-                        <Link href={`/shop?category=${encodeURIComponent(category.name)}`}>
-                            <i className="icon feather icon-arrow-right"/>
-                            <span>{category.name}</span>
+                    <li
+                        key={category.id}
+                        className={`cate-item${hasChildren ? " cate-drop" : ""}${isOpen ? " mobile-open" : ""}`}
+                    >
+                        <Link
+                            href={`/shop?category=${encodeURIComponent(category.name)}`}
+                            onClick={hasChildren && isMobile ? (e) => toggleItem(category.id, e) : undefined}
+                        >
+                            <i className="icon feather icon-arrow-right cate-icon" />
+                            <span className="cate-name">{category.name}</span>
                             {hasChildren && (
-                                <span className="menu-icon">
-                                    <i className="icon feather icon-chevron-right"/>
+                                <span className={`menu-icon${isOpen ? " rotated" : ""}`}>
+                                    <i className="icon feather icon-chevron-right" />
                                 </span>
                             )}
                         </Link>
                         {hasChildren && (
-                            <ul className="sub-menu">
-                                {renderLevel(category.children!, false)}
+                            <ul className={`sub-menu cate-submenu${isOpen ? " mobile-show" : ""}`}>
+                                {renderLevel(category.children!, false, depth + 1)}
                             </ul>
                         )}
                     </li>
                 );
             } else {
                 return (
-                    <li key={category.id} className={hasChildren ? "cate-drop" : ""}>
-                        <Link href={`/shop?category=${encodeURIComponent(category.name)}`}>
-                            {category.name}
+                    <li
+                        key={category.id}
+                        className={`cate-item${hasChildren ? " cate-drop" : ""}${isOpen ? " mobile-open" : ""}`}
+                    >
+                        <Link
+                            href={`/shop?category=${encodeURIComponent(category.name)}`}
+                            onClick={hasChildren && isMobile ? (e) => toggleItem(category.id, e) : undefined}
+                        >
+                            <span className="cate-name">{category.name}</span>
                             {hasChildren && (
-                                <span className="menu-icon ms-auto">
-                                    <i className="icon feather icon-chevron-right"/>
+                                <span className={`menu-icon ms-auto${isOpen ? " rotated" : ""}`}>
+                                    <i className="icon feather icon-chevron-right" />
                                 </span>
                             )}
                         </Link>
                         {hasChildren && (
-                            <ul className="sub-menu">
-                                {renderLevel(category.children!, false)}
+                            <ul className={`sub-menu cate-submenu${isOpen ? " mobile-show" : ""}`}>
+                                {renderLevel(category.children!, false, depth + 1)}
                             </ul>
                         )}
                     </li>
@@ -104,7 +145,7 @@ export default function CategoryMenuItem() {
     };
 
     return (
-        <ul className="nav navbar-nav">
+        <ul className="nav navbar-nav cat-menu-list">
             {renderLevel(categories, true)}
         </ul>
     );

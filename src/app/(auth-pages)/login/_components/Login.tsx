@@ -3,7 +3,7 @@
 import Link from "next/link";
 import IMAGES from "@/constant/theme";
 import PasswordInputBox from "@/components/PasswordInputBox";
-import Image from "next/image";
+import AuthSlider from "@/components/AuthSlider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
@@ -50,9 +50,7 @@ export default function Login() {
                                 </ul>
                             </nav>	
                         </div>
-                        <div className="registration-media">
-                            <Image src={IMAGES.RegistrationPng3} alt="/" />
-                        </div>
+                        <AuthSlider />
                     </div>
                     <div className="col-xxl-6 col-xl-6 col-lg-6 end-side-content justify-content-center">
                         <div className="login-area">

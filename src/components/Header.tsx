@@ -86,22 +86,11 @@ function reducer(state: State, action: Action): State {
 const Header = ({ design }: DesignType) => {
 
     const [state, dispatch] = useReducer(reducer, initialState);
-    const [windowWidth, setWindowWidth] = useState<number>(0);
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (storedUser) setUser(JSON.parse(storedUser));
-        // Set initial window width on client
-        setWindowWidth(window.innerWidth);
-
-        const handleResize = () => {
-            setWindowWidth(window.innerWidth);
-        };
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
     }, []);
 
     const scrollHandler = () => {
@@ -175,37 +164,23 @@ const Header = ({ design }: DesignType) => {
                                 <div className="logo-header">
                                     <Link href="/"><Image src={IMAGES.logo} alt="logo" /></Link>
                                 </div>
-                                <div className="browse-category-menu" style={{ marginRight: "10px", position: "relative" }}>
-                                    <Link href="#" className={`category-btn ${state.categoryActive ? "active" : ""}`}
-                                        onClick={() => dispatch({ type: 'TOGGLE_CATEGORY_ACTIVE' })}
-                                        style={{ height: "50px", backgroundColor: "var(--light-dark)", borderRadius: "10px", display: "flex", alignItems: "center", padding: "0 20px" }}
+                                <div className="browse-category-menu">
+                                    <Link
+                                        href="#"
+                                        className={`category-btn${state.categoryActive ? " active" : ""}`}
+                                        onClick={(e) => { e.preventDefault(); dispatch({ type: 'TOGGLE_CATEGORY_ACTIVE' }); }}
                                     >
                                         <div className="category-menu me-3">
-                                            <span style={{ background: "var(--secondary)" }}></span>
-                                            <span style={{ background: "var(--secondary)" }}></span>
-                                            <span style={{ background: "var(--secondary)" }}></span>
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
                                         </div>
-                                        <span className="category-btn-title" style={{ color: "var(--title)", fontWeight: "600" }}>
-                                            Browse Categories
-                                        </span>
+                                        <span className="category-btn-title">Browse Categories</span>
                                         <span className="toggle-arrow ms-auto">
                                             <i className="icon feather icon-chevron-down" />
                                         </span>
                                     </Link>
-                                    <div className="category-menu-items"
-                                        style={{
-                                            display: state.categoryActive ? "block" : "none",
-                                            transition: "all 0.5s ease",
-                                            position: windowWidth > 991 ? "absolute" : "static",
-                                            top: windowWidth > 991 ? "100%" : "auto",
-                                            left: windowWidth > 991 ? "0" : "auto",
-                                            width: windowWidth > 991 ? "280px" : "100%",
-                                            boxShadow: windowWidth > 991 ? "0 10px 30px rgba(0,0,0,0.1)" : "none",
-                                            zIndex: 999,
-                                            backgroundColor: "#fff",
-                                            borderRadius: windowWidth > 991 ? "0 0 10px 10px" : "0"
-                                        }}
-                                    >
+                                    <div className={`category-menu-items${state.categoryActive ? " is-open" : ""}`}>
                                         <CategoryMenuItem />
                                     </div>
                                 </div>

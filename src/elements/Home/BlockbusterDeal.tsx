@@ -133,7 +133,7 @@ const BlockbusterDeal = ({ data }: { data?: any }) => {
     }, [rawItems, allProducts]);
 
     return (
-        <div className="blockbuster-deal-swiper-outer" style={{ overflow: "visible" }}>
+        <div className="blockbuster-deal-swiper-outer" style={{ overflow: "clip", maxWidth: "100%" }}>
             <style dangerouslySetInnerHTML={{ __html: `
                 .blockbuster-deal-swiper-outer .swiper.blockbuster-deal-swiper,
                 .blockbuster-deal-swiper-outer .blockbuster-deal-swiper .swiper-wrapper,

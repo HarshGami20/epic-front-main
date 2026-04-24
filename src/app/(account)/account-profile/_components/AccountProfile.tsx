@@ -5,7 +5,7 @@ import CommanBanner from "@/components/CommanBanner";
 import IMAGES from "@/constant/theme";
 import CommanSidebar from "@/elements/MyAccount/CommanSidebar";
 
-export default function AccountProfile(){
+export default function AccountProfile() {
     const [file, setFile] = useState<File | null>(null);
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
@@ -26,7 +26,7 @@ export default function AccountProfile(){
 
     if (!user) return null;
 
-    return(
+    return (
         <div className="page-content bg-light">
             <CommanBanner image={IMAGES.BackBg1.src} mainText="Profile" parentText="Home" currentText="Account Profile" />
             <div className="content-inner-1">
@@ -39,23 +39,23 @@ export default function AccountProfile(){
                                     <div className="avatar-upload d-flex align-items-center">
                                         <div className=" position-relative ">
                                             <div className="avatar-preview thumb">
-                                                <div id="imagePreview" 
+                                                <div id="imagePreview"
                                                     style={{ backgroundImage: file ? "url(" + URL.createObjectURL(file) + ")" : "url(" + IMAGES.ProfilePic3.src + ")" }}
-                                                >                                                    
+                                                >
                                                 </div>
                                             </div>
                                             <div className="change-btn  thumb-edit d-flex align-items-center flex-wrap">
                                                 <input type='file' className="form-control d-none" onChange={fileHandler} id="imageUpload" accept=".png, .jpg, .jpeg" />
-                                                <label htmlFor="imageUpload" className="btn btn-light ms-0"><i className="fa-solid fa-camera"/></label>
-                                            </div>	
-                                        </div>
+                                                <label htmlFor="imageUpload" className="btn btn-light ms-0"><i className="fa-solid fa-camera" /></label>
+                                            </div>
+                                        </div>.
                                     </div>
                                     <div className="clearfix">
                                         <h2 className="title mb-0">{user.firstName || "User"} {user.lastName || ""}</h2>
-                                        <span className="text text-primary">{user.email || ""}</span>                                        
+                                        <span className="text text-primary">{user.email || ""}</span>
                                     </div>
                                 </div>
-                                <form  className="row">
+                                <form className="row">
                                     <div className="col-lg-6">
                                         <div className="form-group m-b25">
                                             <label className="label-title">First Name</label>
@@ -77,7 +77,7 @@ export default function AccountProfile(){
                                     <div className="col-lg-6">
                                         <div className="form-group m-b25">
                                             <label className="label-title">Phone</label>
-                                            <input type="text" name="dzPhone" className="form-control" />
+                                            <input type="text" name="dzPhone" defaultValue={user.phone} className="form-control" />
                                         </div>
                                     </div>
                                     <div className="col-lg-6">

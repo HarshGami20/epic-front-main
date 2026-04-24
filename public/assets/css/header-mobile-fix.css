@@ -1,0 +1,410 @@
+/* ============================================================
+   Header Mobile Fix — Browse Categories Mega Menu
+   All rules scoped to their respective breakpoint to avoid
+   mobile styles leaking into desktop and vice-versa.
+   ============================================================ */
+
+/* ============================================================
+   MOBILE  (≤ 991px) — Accordion inside the sidebar
+   ============================================================ */
+@media only screen and (max-width: 991px) {
+
+  /* Container: fill full width, no absolute positioning */
+  .browse-category-menu {
+    width: 100%;
+    margin-right: 0 !important;
+    position: static !important;
+  }
+
+  /* Toggle button */
+  .browse-category-menu .category-btn {
+    width: 100%;
+    min-width: unset !important;
+    height: 50px !important;
+    padding: 10px 20px !important;
+    background-color: #f5f5f5 !important;
+    border-radius: 8px !important;
+    margin-bottom: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--title);
+    cursor: pointer;
+  }
+
+  .browse-category-menu .category-btn .category-menu span {
+    background-color: var(--secondary) !important;
+    height: 2px !important;
+    border-radius: 2px;
+  }
+
+  .browse-category-menu .category-btn .toggle-arrow {
+    margin-left: auto;
+  }
+
+  .browse-category-menu .category-btn.active .toggle-arrow {
+    transform: rotate(-180deg);
+  }
+
+  /* Never show dark overlay on mobile */
+  .browse-category-menu .category-btn::after {
+    display: none !important;
+  }
+
+  /* ---- Dropdown panel ---- */
+  .browse-category-menu .category-menu-items {
+    display: none;
+    position: static !important;
+    width: 100% !important;
+    top: auto !important;
+    left: auto !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    background-color: #f8f8f8 !important;
+    max-height: 380px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 0;
+    z-index: auto !important;
+  }
+
+  .browse-category-menu .category-menu-items.is-open {
+    display: block !important;
+  }
+
+  /* Nav list */
+  .browse-category-menu .category-menu-items .navbar-nav,
+  .browse-category-menu .category-menu-items .cat-menu-list {
+    display: block !important;
+    float: none !important;
+    padding: 10px 0 !important;
+  }
+
+  /* Root list items */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item,
+  .browse-category-menu .category-menu-items .navbar-nav>li {
+    display: block;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item:last-child,
+  .browse-category-menu .category-menu-items .navbar-nav>li:last-child {
+    border-bottom: none;
+  }
+
+  /* Item links */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item>a,
+  .browse-category-menu .category-menu-items .navbar-nav>li>a {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 11px 55px 11px 20px !important;
+    color: var(--title) !important;
+    text-transform: capitalize;
+    position: relative;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-icon {
+    margin-right: 10px;
+    font-size: 13px;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-name {
+    flex: 1;
+  }
+
+  /* Chevron icon badge */
+  .browse-category-menu .category-menu-items .navbar-nav .menu-icon {
+    position: absolute !important;
+    top: 50% !important;
+    right: 15px !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-color: var(--secondary) !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 5px !important;
+    transition: transform 0.25s ease, background-color 0.2s !important;
+    pointer-events: none;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .menu-icon i {
+    color: #fff !important;
+    font-size: 13px !important;
+  }
+
+  /* Chevron rotates + turns primary when item is open */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item.mobile-open>a .menu-icon {
+    transform: translateY(-50%) rotate(90deg) !important;
+    background-color: var(--primary) !important;
+  }
+
+  /* Sub-menus: hidden by default, accordion-style */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-submenu,
+  .browse-category-menu .category-menu-items .navbar-nav .sub-menu {
+    display: none !important;
+    position: static !important;
+    width: 100% !important;
+    left: auto !important;
+    top: auto !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    border-radius: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    padding: 0 0 5px 15px !important;
+    margin: 0 !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    min-width: unset !important;
+    z-index: auto !important;
+  }
+
+  /* Show sub-menu only when parent has mobile-open class */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item.mobile-open>.cate-submenu,
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item.mobile-open>.sub-menu {
+    display: block !important;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-submenu li {
+    display: block;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-submenu li a {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 13px !important;
+    padding: 8px 12px 8px 10px !important;
+    color: #666 !important;
+  }
+
+  /* Skeleton loader */
+  .browse-category-menu .cat-skeleton-item {
+    display: block;
+    padding: 8px 20px;
+  }
+
+  .browse-category-menu .cat-skeleton-line {
+    display: block;
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: cat-shimmer 1.2s infinite;
+  }
+
+  @keyframes cat-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+/* ============================================================
+   DESKTOP  (≥ 992px) — Absolute dropdown + hover fly-outs
+   ============================================================ */
+@media only screen and (min-width: 992px) {
+
+  .browse-category-menu {
+    position: relative;
+    margin-right: 10px;
+  }
+
+  /* Dropdown panel: hidden by default, shown via .is-open */
+  .browse-category-menu .category-menu-items {
+    display: none;
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    width: 300px !important;
+    background-color: #fff !important;
+    border-radius: 0 0 12px 12px !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12) !important;
+    z-index: 999 !important;
+    /* IMPORTANT: Remove overflow to allow fly-outs to be visible */
+    overflow: visible !important;
+    border: none !important;
+  }
+
+  .browse-category-menu .category-menu-items.is-open {
+    display: block;
+    animation: catDropIn 0.2s ease forwards;
+  }
+
+  /* Nav list reset */
+  .browse-category-menu .category-menu-items .navbar-nav,
+  .browse-category-menu .category-menu-items .cat-menu-list {
+    display: block !important;
+    float: none !important;
+    padding: 15px 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Root items */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item,
+  .browse-category-menu .category-menu-items .navbar-nav>li {
+    display: block;
+    position: relative;
+    overflow: visible !important;
+  }
+
+  /* Item link base */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item>a,
+  .browse-category-menu .category-menu-items .navbar-nav>li>a {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 10px 55px 10px 25px !important;
+    color: var(--title) !important;
+    text-transform: capitalize;
+    position: relative;
+    transition: color 0.2s, background-color 0.2s;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item>a:hover,
+  .browse-category-menu .category-menu-items .navbar-nav>li>a:hover {
+    color: var(--primary) !important;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-icon {
+    margin-right: 12px;
+    font-size: 13px;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-name {
+    flex: 1;
+  }
+
+  /* Chevron badge */
+  .browse-category-menu .category-menu-items .navbar-nav .menu-icon {
+    position: absolute !important;
+    top: 50% !important;
+    right: 15px !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-color: var(--secondary) !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 5px !important;
+    transition: background-color 0.2s !important;
+    pointer-events: none;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .menu-icon i {
+    color: #fff !important;
+    font-size: 13px !important;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item:hover>a .menu-icon {
+    background-color: var(--primary) !important;
+  }
+
+  /* ---- Sub-menu fly-out ---- */
+  /* Base state: hidden, positioned absolutely to the right */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-submenu,
+  .browse-category-menu .category-menu-items .navbar-nav .sub-menu {
+    display: none;
+    position: absolute !important;
+    top: 0 !important;
+    left: 100% !important;
+    min-width: 240px !important;
+    background: #fff !important;
+    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.12) !important;
+    border-radius: 12px !important;
+    padding: 10px 0 !important;
+    z-index: 1001 !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    margin: 0 !important;
+  }
+
+  /* Show fly-out on parent hover */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item:hover>.cate-submenu,
+  .browse-category-menu .category-menu-items .navbar-nav .cate-item:hover>.sub-menu {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Sub-menu items */
+  .browse-category-menu .category-menu-items .navbar-nav .cate-submenu li,
+  .browse-category-menu .category-menu-items .navbar-nav .sub-menu li {
+    display: block;
+    position: relative;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-submenu li a,
+  .browse-category-menu .category-menu-items .navbar-nav .sub-menu li a {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 13px !important;
+    padding: 9px 20px !important;
+    color: #555 !important;
+    transition: color 0.15s, background-color 0.15s;
+  }
+
+  .browse-category-menu .category-menu-items .navbar-nav .cate-submenu li a:hover,
+  .browse-category-menu .category-menu-items .navbar-nav .sub-menu li a:hover {
+    color: var(--primary) !important;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  /* Skeleton */
+  .browse-category-menu .cat-skeleton-item {
+    display: block;
+    padding: 10px 25px;
+  }
+
+  .browse-category-menu .cat-skeleton-line {
+    display: block;
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: cat-shimmer-d 1.2s infinite;
+  }
+
+  @keyframes cat-shimmer-d {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+/* ============================================================
+   Dropdown entrance animation (shared)
+   ============================================================ */
+@keyframes catDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

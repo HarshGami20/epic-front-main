@@ -14,6 +14,7 @@ import '../../public/assets/vendor/animate/animate.css'
 import '../../public/assets/css/style.css'
 import '../../public/assets/css/skin/skin-1.css'
 import './pixel-editor.css'
+import '../../public/assets/css/header-mobile-fix.css'
 
 
 export default function RootLayout({children,}: Readonly<{children: React.ReactNode;}>) {

@@ -169,7 +169,7 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
         </section>
     ),
     blockbusterDeal: ({ data }) => (
-        <section className="content-inner-2 blockbuster-deal-section">
+        <section className="content-inner-2 blockbuster-deal-section" style={{ overflowX: "hidden" }}>
             <div className="container blockbuster-deal-container">
                 <div className="section-head style-1 wow fadeInUp d-lg-flex justify-content-between align-items-start gap-3 margin-bottom-0" style={{ marginBottom: 0 }} data-wow-delay="0.2s">
                     <div className="left-content min-w-0 flex-grow-1">
