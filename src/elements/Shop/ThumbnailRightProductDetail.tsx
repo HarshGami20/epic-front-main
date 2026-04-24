@@ -7,6 +7,7 @@ import ShopCardColour from "./ShopCardColour";
 import StarRating from "./StarRating";
 import { normalizeProductSizes, normalizeVariations } from "@/lib/productOptions";
 import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
+import { fetchPublicProductReviews } from "@/lib/publicProductReviewsApi";
 
 interface thumbnailCardtype {
     productData?: any;
@@ -23,6 +24,7 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
     const variations = normalizeVariations(product?.variation);
     const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(null);
     const [localColorIndex, setLocalColorIndex] = useState<number | null>(null);
+    const [reviewStats, setReviewStats] = useState({ rating: 0, count: 0 });
 
     const parentControlsColor = props.onVariationChange != null;
     const colorIndex: number | null = parentControlsColor
@@ -33,6 +35,20 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
         setSelectedSizeIndex(null);
         setLocalColorIndex(null);
     }, [product?.id, slug]);
+
+    useEffect(() => {
+        if (!slug || slug === "product") return;
+        fetchPublicProductReviews(slug, { limit: 1 })
+            .then(data => {
+                if (data?.summary) {
+                    setReviewStats({
+                        rating: data.summary.averageRating || 0,
+                        count: data.summary.totalCount || 0
+                    });
+                }
+            })
+            .catch(err => console.error("Failed to load reviews summary", err));
+    }, [slug]);
 
     const handleColorSelect = (index: number) => {
         if (parentControlsColor) props.onVariationChange?.(index);
@@ -75,21 +91,21 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
     if (comparePrice != null && Number.isFinite(comparePrice) && comparePrice > price) {
         discount = Math.round(((comparePrice - price) / comparePrice) * 100);
     }
-    return(
+    return (
         <>
             <div className="dz-content">
                 <div className="dz-content-footer">
                     <div className="dz-content-start">
                         {discount > 0 && <span className="badge bg-secondary mb-2">SALE {discount}% Off</span>}
-                       
-                       
+
+
                         <h4 className="title mb-1">{name}</h4>
                         <div className="review-num">
-                            <ul className="dz-rating me-2">                                                       
-                                <StarRating />
+                            <ul className="dz-rating me-2">
+                                <StarRating rating={reviewStats.rating} />
                             </ul>
-                            <span className="text-secondary me-2">4.7 Rating</span>
-                            <Link href="#">(5 customer reviews)</Link>
+                            <span className="text-secondary me-2">{reviewStats.rating.toFixed(1)} Rating</span>
+                            <Link href="#">({reviewStats.count} customer reviews)</Link>
                         </div>
                     </div>
                 </div>
@@ -211,22 +227,22 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                         <li><strong>Share:</strong></li>
                         <li>
                             <Link href="/https://www.facebook.com/dexignzone" target="_blank">
-                                <i className="fa-brands fa-facebook-f"/>
+                                <i className="fa-brands fa-facebook-f" />
                             </Link>
                         </li>
                         <li>
                             <Link href="/https://www.linkedin.com/showcase/3686700/admin/" target="_blank">
-                                <i className="fa-brands fa-linkedin-in"/>
+                                <i className="fa-brands fa-linkedin-in" />
                             </Link>
                         </li>
                         <li>
                             <Link href="/https://www.instagram.com/dexignzone/" target="_blank">
-                                <i className="fa-brands fa-instagram"/>
+                                <i className="fa-brands fa-instagram" />
                             </Link>
                         </li>
                         <li>
                             <Link href="/https://twitter.com/dexignzones" target="_blank">
-                                <i className="fa-brands fa-twitter"/>
+                                <i className="fa-brands fa-twitter" />
                             </Link>
                         </li>
                     </ul>
@@ -234,7 +250,7 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                 <ul className="d-md-flex d-none align-items-center">
                     <li className="icon-bx-wraper style-3 me-xl-4 me-2">
                         <div className="icon-bx">
-                            <i className="flaticon flaticon-ship"/>
+                            <i className="flaticon flaticon-ship" />
                         </div>
                         <div className="info-content">
                             <span>FREE</span>

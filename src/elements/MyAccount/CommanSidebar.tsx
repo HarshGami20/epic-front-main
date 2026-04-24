@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import IMAGES from "../../constant/theme";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 type MenuItem = {
     title: string;
@@ -23,6 +26,15 @@ type MenuItem = {
 ];
 
 export default function CommanSidebar(){
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    }, []);
+
     return(
         <aside className="col-xl-3">
             <div className="toggle-info">
@@ -33,10 +45,10 @@ export default function CommanSidebar(){
                 <div className="account-sidebar" id="accountSidebar">
                     <div className="profile-head">
                         <div className="user-thumb">
-                            <Image className="rounded-circle" src={IMAGES.ProfilePic} alt="Susan Gardner" />
+                            <Image className="rounded-circle" src={IMAGES.ProfilePic} alt="User Avatar" />
                         </div>
-                        <h5 className="title mb-0">Ronald M. Spino</h5>
-                        <span className="text text-primary">info@example.com</span>
+                        <h5 className="title mb-0">{user ? user.firstName + ' ' + (user.lastName || '') : 'User'}</h5>
+                        <span className="text text-primary">{user ? user.email : ''}</span>
                     </div>
                     <div className="account-nav">
                         <div className="nav-title bg-light">DASHBOARD</div>

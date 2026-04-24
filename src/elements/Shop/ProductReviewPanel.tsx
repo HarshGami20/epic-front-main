@@ -8,10 +8,14 @@ import { toast, Toaster } from "sonner";
 import {
   createPublicProductReview,
   fetchPublicProductReviews,
+  uploadPublicMedia,
   type PublicProductReview,
   type PublicProductReviewsPayload,
 } from "@/lib/publicProductReviewsApi";
 import { getImageUrl } from "@/lib/imageUtils";
+import LightGallery from 'lightgallery/react';
+import lgThumbnail from 'lightgallery/plugins/thumbnail';
+import lgZoom from 'lightgallery/plugins/zoom';
 import css from "./productReviewAmazon.module.css";
 
 const MAX_REVIEW_IMAGES = 6;
@@ -108,23 +112,35 @@ function AuthorAvatar({ name }: { name: string }) {
 function ReviewGallery({ images }: { images: string[] }) {
   if (!images?.length) return null;
   return (
-    <div className={css.reviewImages}>
+    <LightGallery
+      speed={500}
+      plugins={[lgThumbnail, lgZoom]}
+      elementClassNames={css.reviewImages}
+      selector="a"
+    >
       {images.map((src, i) => {
         const resolved = getImageUrl(src);
         const srcStr = typeof resolved === "string" ? resolved : String(src);
         return (
-          <Image
+          <a
             key={`${src}-${i}`}
-            src={srcStr}
-            alt="Customer review"
-            width={88}
-            height={88}
-            className={css.reviewThumb}
-            unoptimized={srcStr.startsWith("http")}
-          />
+            href={srcStr}
+            data-src={srcStr}
+            style={{ display: "inline-block", marginRight: "10px", marginBottom: "10px" }}
+          >
+            <Image
+              src={srcStr}
+              alt="Customer review"
+              width={88}
+              height={88}
+              className={css.reviewThumb}
+              unoptimized={srcStr.startsWith("http")}
+              style={{ objectFit: 'cover' }}
+            />
+          </a>
         );
       })}
-    </div>
+    </LightGallery>
   );
 }
 
@@ -274,19 +290,22 @@ export default function ProductReviewPanel({
       return;
     }
 
-    if (previews.length > 0) {
-      toast.message("Photo upload to storage is not wired yet — submitting text only. Images stay in your browser.");
-    }
-
     setSubmitting(true);
     try {
+      let uploadedImagesUrls: string[] = [];
+      if (previews.length > 0) {
+        toast.info("Uploading images...");
+        const filesToUpload = previews.map((p) => p.file);
+        uploadedImagesUrls = await uploadPublicMedia(filesToUpload);
+      }
+
       const created = await createPublicProductReview(safeSlug, {
         authorName: author.trim(),
         authorEmail: email.trim(),
         rating: writeRating,
         title: headline.trim(),
         body: body.trim(),
-        images: [],
+        images: uploadedImagesUrls,
       });
       if (!created) {
         toast.error("Could not submit review.");
@@ -423,7 +442,7 @@ export default function ProductReviewPanel({
                     <div className={css.reviewMeta}>{formatReviewDate(r.createdAt)}</div>
                     <div className={css.reviewBody}>{r.body}</div>
                     <ReviewGallery images={r.images} />
-                    <div className={css.helpfulRow}>
+                    {/* <div className={css.helpfulRow}>
                       <span>Helpful?</span>
                       <button type="button" className={css.helpfulBtn}>
                         Yes · {r.helpfulCount ?? 0}
@@ -431,7 +450,7 @@ export default function ProductReviewPanel({
                       <button type="button" className={css.helpfulBtn}>
                         Report
                       </button>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </article>

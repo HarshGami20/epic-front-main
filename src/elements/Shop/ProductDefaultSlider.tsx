@@ -86,9 +86,10 @@ export default function ProductDefaultSlider({
                     ))}
                 </Swiper>
             </LightGallery>
-            <Swiper className="product-gallery-swiper thumb-swiper-lg"
+            <Swiper className="product-gallery-swiper thumb-swiper-lg mt-3"
                 spaceBetween={10}
-                slidesPerView={2}
+                slidesPerView={4}
+                style={{ position: 'static', transform: 'none' }}
                 // @ts-ignore
                 onSwiper={setThumbsSwiper}
                 modules={[Thumbs]}

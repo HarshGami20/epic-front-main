@@ -87,8 +87,11 @@ const Header = ({ design }: DesignType) => {
 
     const [state, dispatch] = useReducer(reducer, initialState);
     const [windowWidth, setWindowWidth] = useState<number>(0);
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) setUser(JSON.parse(storedUser));
         // Set initial window width on client
         setWindowWidth(window.innerWidth);
 
@@ -223,11 +226,13 @@ const Header = ({ design }: DesignType) => {
                             <div className={`extra-nav ${state.isBottom ? "bottom-end" : ""} ${state.isActive ? "active" : ""}`}>
                                 <div className="extra-cell">
                                     <ul className="header-right">
-                                        <li className="nav-item login-link">
-                                            <Link className="nav-link" href="/login">
-                                                Login / Register
-                                            </Link>
-                                        </li>
+                                        {!user && (
+                                            <li className="nav-item login-link">
+                                                <Link className="nav-link" href="/login">
+                                                    Login / Register
+                                                </Link>
+                                            </li>
+                                        )}
                                         <li className="nav-item search-link">
                                             <Link className="nav-link" href="#"
                                                 // onClick={()=>setOpenSearchBar(true)}

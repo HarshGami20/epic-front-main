@@ -1,7 +1,7 @@
 import Link from "next/link";
 import IMAGES from "../constant/theme";
 import CountdownBlog from "./CountdownBlog";
-import { Fragment, useReducer } from "react";
+import { Fragment, useReducer, useEffect, useState } from "react";
 import { accountMenuItem, menuData2, menuData3, menuData4, menuDataOne, portfolioMenu } from "../constant/Alldata";
 import Image from "next/image";
 
@@ -64,6 +64,14 @@ const reducer = (state: stateType, action: reduType) => {
 };
 export default function Menus() {
     const [state, dispatch] = useReducer(reducer, initialState);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     return (
         <ul className="nav navbar-nav">
@@ -291,16 +299,18 @@ export default function Menus() {
 
 
 
-            <li className={`sub-menu-down ${state.openMenu === 6 ? "open" : ""}`}
-                onClick={() => dispatch({ type: 'toggleMenu', index: 6 })}
-            >
-                <Link href="#"><span>My Account</span> <i className="fas fa-chevron-down tabindex" /></Link>
-                <ul className="sub-menu">
-                    {accountMenuItem.map((data, index) => (
-                        <li key={index}><Link href={data.url}>{data.name}</Link></li>
-                    ))}
-                </ul>
-            </li>
+            {user && (
+                <li className={`sub-menu-down ${state.openMenu === 6 ? "open" : ""}`}
+                    onClick={() => dispatch({ type: 'toggleMenu', index: 6 })}
+                >
+                    <Link href="#"><span>My Account</span> <i className="fas fa-chevron-down tabindex" /></Link>
+                    <ul className="sub-menu">
+                        {accountMenuItem.map((data, index) => (
+                            <li key={index}><Link href={data.url}>{data.name}</Link></li>
+                        ))}
+                    </ul>
+                </li>
+            )}
         </ul>
     )
 }

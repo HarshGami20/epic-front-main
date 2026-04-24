@@ -91,3 +91,23 @@ export async function createPublicProductReview(
   if (!json.success || !json.data) return null;
   return json.data;
 }
+
+export async function uploadPublicMedia(files: File[]): Promise<string[]> {
+  if (!files || files.length === 0) return [];
+  const base = getPublicApiUrl();
+  const formData = new FormData();
+  formData.append("folder", "reviews");
+  files.forEach((f) => formData.append("files", f));
+
+  const res = await fetch(`${base}/public/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  const json = (await res.json()) as { success?: boolean; data?: any[]; message?: string };
+  if (!res.ok) {
+    throw new Error(json.message || `Upload failed (${res.status})`);
+  }
+  if (!json.success || !json.data) return [];
+  // Return the uploaded URLs so frontend can use them
+  return json.data.map((m) => m.url);
+}
