@@ -87,6 +87,7 @@ const Header = ({ design }: DesignType) => {
 
     const [state, dispatch] = useReducer(reducer, initialState);
     const [user, setUser] = useState<any>(null);
+    const [hover, setHover] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -169,14 +170,20 @@ const Header = ({ design }: DesignType) => {
                                         href="#"
                                         className={`category-btn${state.categoryActive ? " active" : ""}`}
                                         onClick={(e) => { e.preventDefault(); dispatch({ type: 'TOGGLE_CATEGORY_ACTIVE' }); }}
+                                        onMouseEnter={() => setHover(true)}
+                                        onMouseLeave={() => setHover(false)}
                                     >
                                         <div className="category-menu me-3">
-                                            <span></span>
-                                            <span></span>
-                                            <span></span>
+                                            <span style={{ background: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}></span>
+                                            <span style={{ background: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}></span>
+                                            <span style={{ background: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}></span>
                                         </div>
-                                        <span className="category-btn-title">Browse Categories</span>
-                                        <span className="toggle-arrow ms-auto">
+                                        <span className="category-btn-title"
+                                            style={{ color: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}
+                                        >Browse Categories</span>
+                                        <span className="toggle-arrow ms-auto"
+                                            style={{ color: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}
+                                        >
                                             <i className="icon feather icon-chevron-down" />
                                         </span>
                                     </Link>

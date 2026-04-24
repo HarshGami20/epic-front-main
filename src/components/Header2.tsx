@@ -1,7 +1,7 @@
 "use client"
 import { Offcanvas } from "react-bootstrap";
 import IMAGES from "../constant/theme";
-import { Fragment, useEffect, useReducer } from "react";
+import { Fragment, useEffect, useReducer, useState } from "react";
 import Link from "next/link";
 import HeadSearchBar from "./HeadSearchBar";
 import HeaderSideShoppingCard from "./HeaderSideShopingCard";
@@ -17,7 +17,7 @@ interface State {
     isActive: boolean;
     previousScroll: number;
     openSidebar: boolean;
-    openSearchBar: boolean;    
+    openSearchBar: boolean;
     headShoppingSidebar: boolean;
     basketShoppingCard: boolean;
     categoryActive: boolean;
@@ -29,7 +29,7 @@ type Action =
     | { type: 'SET_IS_ACTIVE'; payload: boolean }
     | { type: 'SET_PREVIOUS_SCROLL'; payload: number }
     | { type: 'TOGGLE_SIDEBAR' }
-    | { type: 'TOGGLE_SEARCH_BAR' }    
+    | { type: 'TOGGLE_SEARCH_BAR' }
     | { type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' }
     | { type: 'TOGGLE_BASKET_SHOPPING_CARD' }
     | { type: 'TOGGLE_CATEGORY_ACTIVE' };
@@ -41,13 +41,13 @@ const initialState = {
     isActive: false,
     previousScroll: 0,
     openSidebar: false,
-    openSearchBar: false,    
+    openSearchBar: false,
     headShoppingSidebar: false,
     basketShoppingCard: false,
     categoryActive: false,
 };
 
-function reducer(state : State, action : Action) : State {
+function reducer(state: State, action: Action): State {
     switch (action.type) {
         case 'FIX_HEADER':
             return { ...state, headerFix: action.payload };
@@ -60,7 +60,7 @@ function reducer(state : State, action : Action) : State {
         case 'TOGGLE_SIDEBAR':
             return { ...state, openSidebar: !state.openSidebar };
         case 'TOGGLE_SEARCH_BAR':
-            return { ...state, openSearchBar: !state.openSearchBar };       
+            return { ...state, openSearchBar: !state.openSearchBar };
         case 'TOGGLE_HEAD_SHOPPING_SIDEBAR':
             return { ...state, headShoppingSidebar: !state.headShoppingSidebar };
         case 'TOGGLE_BASKET_SHOPPING_CARD':
@@ -72,8 +72,9 @@ function reducer(state : State, action : Action) : State {
     }
 }
 
-export default function Header2() {       
-    const [state, dispatch] = useReducer(reducer, initialState);    
+export default function Header2() {
+    const [state, dispatch] = useReducer(reducer, initialState);
+    const [hover, setHover] = useState(false);
     const scrollHandler = () => {
         if (window.scrollY > 80) {
             dispatch({ type: 'FIX_HEADER', payload: true });
@@ -82,7 +83,7 @@ export default function Header2() {
         }
     };
     const handleToggleClick = () => {
-        dispatch({ type: 'TOGGLE_CATEGORY_ACTIVE' }); 
+        dispatch({ type: 'TOGGLE_CATEGORY_ACTIVE' });
     };
 
     useEffect(() => {
@@ -160,9 +161,9 @@ export default function Header2() {
                             </div>
 
                             {/* <!-- Nav Toggle Button --> */}
-                            <button className={`navbar-toggler collapsed navicon justify-content-end ${state.openSidebar ? "open" : ""}` }
+                            <button className={`navbar-toggler collapsed navicon justify-content-end ${state.openSidebar ? "open" : ""}`}
                                 // onClick={()=>setOpenSidebar(!openSidebar)}
-                                onClick={()=>dispatch({type : "TOGGLE_SIDEBAR"})}
+                                onClick={() => dispatch({ type: "TOGGLE_SIDEBAR" })}
                             >
                                 <span></span>
                                 <span></span>
@@ -177,31 +178,37 @@ export default function Header2() {
                                 <div className="browse-category-menu">
                                     <Link href="#" className={`category-btn ${state.categoryActive ? "active" : ""}`}
                                         onClick={handleToggleClick}
+                                        onMouseEnter={() => setHover(true)}
+                                        onMouseLeave={() => setHover(false)}
                                     >
-                                        <div className="category-menu me-3">
-                                            <span></span>
-                                            <span></span>
-                                            <span></span>
+                                        <div className="category-menu  me-3">
+                                            <span style={{ background: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}></span>
+                                            <span style={{ background: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}></span>
+                                            <span style={{ background: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}></span>
                                         </div>
-                                        <span className="category-btn-title">
+                                        <span className="category-btn-title"
+                                            style={{ color: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}
+                                        >
                                             Browse Categories
                                         </span>
-                                        <span className="toggle-arrow ms-auto">
-                                            <i className="icon feather icon-chevron-down"/>
+                                        <span className="toggle-arrow ms-auto"
+                                            style={{ color: (state.categoryActive || hover) ? "var(--primary)" : "var(--title)" }}
+                                        >
+                                            <i className="icon feather icon-chevron-down" />
                                         </span>
                                     </Link>
-                                    <div className="category-menu-items" 
+                                    <div className="category-menu-items"
                                         style={{
                                             display: state.categoryActive ? "block" : "none",
                                             transition: "all 0.5s ease",
-                                        }}    
+                                        }}
                                     >
-                                       <CategoryMenuItem />
+                                        <CategoryMenuItem />
                                     </div>
                                 </div>
-                                <ul className="nav navbar-nav">                                    
+                                <ul className="nav navbar-nav">
                                     {/* All menus item */}
-                                        <Header2Menus />
+                                    <Header2Menus />
                                     {/* All menus item end*/}
                                 </ul>
                                 <div className="dz-social-icon">
@@ -214,7 +221,7 @@ export default function Header2() {
                                 </div>
                             </div>
 
-                            {/* <!-- EXTRA NAV --> */}                            
+                            {/* <!-- EXTRA NAV --> */}
                             <div className={`extra-nav ${state.isBottom ? "bottom-end" : ""} ${state.isActive ? "active" : ""}`}>
                                 <div className="extra-cell">
                                     <ul className="header-right">
@@ -224,24 +231,24 @@ export default function Header2() {
                                             </Link>
                                         </li>
                                         <li className="nav-item search-link">
-                                            <Link href={"#"} className="nav-link"                                                
-                                                onClick={()=>dispatch({type : 'TOGGLE_SEARCH_BAR'})}
+                                            <Link href={"#"} className="nav-link"
+                                                onClick={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })}
                                             >
-                                                <i className="iconly-Light-Search"/>
+                                                <i className="iconly-Light-Search" />
                                             </Link>
                                         </li>
                                         <li className="nav-item wishlist-link">
-                                            <Link className="nav-link" href={"#"}                                                 
-                                                onClick={()=>dispatch({type : 'TOGGLE_HEAD_SHOPPING_SIDEBAR'})}
+                                            <Link className="nav-link" href={"#"}
+                                                onClick={() => dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' })}
                                             >
-                                                <i className="iconly-Light-Heart2"/>
+                                                <i className="iconly-Light-Heart2" />
                                             </Link>
                                         </li>
                                         <li className="nav-item cart-link">
-                                            <Link href={"#"} className="nav-link cart-btn"                                                 
-                                                onClick={()=>dispatch({type : 'TOGGLE_BASKET_SHOPPING_CARD'})}
+                                            <Link href={"#"} className="nav-link cart-btn"
+                                                onClick={() => dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' })}
                                             >
-                                                <i className="iconly-Broken-Buy"/>
+                                                <i className="iconly-Broken-Buy" />
                                                 <span className="badge badge-circle">5</span>
                                             </Link>
                                         </li>
@@ -253,14 +260,14 @@ export default function Header2() {
                     </div>
                 </div>
             </header>
-            
+
             {/*  SearchBar  */}
             <Offcanvas className="dz-search-area dz-offcanvas offcanvas-top"
-                    show={state.openSearchBar} onHide={()=>dispatch({type :'TOGGLE_SEARCH_BAR'})}
-                    placement={'top'}
-                >
-                <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"                    
-                    onClick={()=>dispatch({type :'TOGGLE_SEARCH_BAR'})}
+                show={state.openSearchBar} onHide={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })}
+                placement={'top'}
+            >
+                <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"
+                    onClick={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })}
                 >
                     &times;
                 </button>
@@ -269,11 +276,11 @@ export default function Header2() {
             {/*  SearchBar  */}
 
             {/*  Sidebar cart  */}
-            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" tabIndex={-1} show={state.headShoppingSidebar} 
-                onHide={()=>dispatch({type :'TOGGLE_HEAD_SHOPPING_SIDEBAR'})}
+            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" tabIndex={-1} show={state.headShoppingSidebar}
+                onHide={() => dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' })}
             >
-                <button type="button" className="btn-close"                     
-                    onClick={()=>dispatch({type :'TOGGLE_HEAD_SHOPPING_SIDEBAR'})}                    
+                <button type="button" className="btn-close"
+                    onClick={() => dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' })}
                 >
                     &times;
                 </button>
@@ -285,11 +292,11 @@ export default function Header2() {
             </Offcanvas>
 
             {/*  Shopping Sidebar Basket   */}
-            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" tabIndex={-1} show={state.basketShoppingCard}                 
-                onHide={()=>dispatch({type :'TOGGLE_BASKET_SHOPPING_CARD'})}
+            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" tabIndex={-1} show={state.basketShoppingCard}
+                onHide={() => dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' })}
             >
-                <button type="button" className="btn-close"                     
-                    onClick={()=>dispatch({type :'TOGGLE_BASKET_SHOPPING_CARD'})}
+                <button type="button" className="btn-close"
+                    onClick={() => dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' })}
                 >
                     &times;
                 </button>
