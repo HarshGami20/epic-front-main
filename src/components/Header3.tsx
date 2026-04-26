@@ -11,6 +11,8 @@ import IMAGES from "../constant/theme";
 import { accountMenuItem, menuData2, menuData3, menuData4, menuDataOne, portfolioMenu } from "../constant/Alldata";
 import CountdownBlog from "./CountdownBlog";
 import Image from "next/image";
+import AnimatedLogo from "./AnimatedLogo";
+import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 
 interface reduType {
     headerFix: boolean;
@@ -93,6 +95,7 @@ function reducer(state: reduType, action: Action): reduType {
 };
 
 export default function Header3({ setOpenSidebar, openSidebar }: any) {
+    const { cart, wishlist } = useCartWishlistStore();
     const [state, dispatch] = useReducer(reducer, initialState);
     const scrollHandler = () => {
         if (window.scrollY > 80) {
@@ -152,8 +155,8 @@ export default function Header3({ setOpenSidebar, openSidebar }: any) {
                             </button>
                             <div className="logo-header me-5">
                                 <Link href={"/"} >
-                                    <Image src={IMAGES.logo} className="logo-dark" alt="logo" />
-                                    <Image src={IMAGES.LogoWhiteSvg} className="logo-light" alt="logo" />
+                                    <AnimatedLogo className="logo-dark" />
+                                    <AnimatedLogo white className="logo-light" />
                                 </Link>
                             </div>
 
@@ -178,6 +181,7 @@ export default function Header3({ setOpenSidebar, openSidebar }: any) {
                                                 onClick={() => dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' })}
                                             >
                                                 <i className="iconly-Light-Heart2" />
+                                                {wishlist.length > 0 && <span className="badge badge-circle">{wishlist.length}</span>}
                                             </Link>
                                         </li>
                                         <li className="nav-item cart-link">
@@ -185,7 +189,7 @@ export default function Header3({ setOpenSidebar, openSidebar }: any) {
                                                 onClick={() => dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' })}
                                             >
                                                 <i className="iconly-Broken-Buy" />
-                                                <span className="badge badge-circle">5</span>
+                                                {cart.length > 0 && <span className="badge badge-circle">{cart.length}</span>}
                                             </Link>
                                         </li>
                                         <li className="nav-item filte-link">

@@ -21615,7 +21615,7 @@ section {
   content: "";
   position: absolute;
   background-image: url(../images/next-btn.png);
-  right: 0;
+  right: -1px;
   bottom: 40px;
   width: 41px;
   height: 160px;

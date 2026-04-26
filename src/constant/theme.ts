@@ -4,6 +4,7 @@ import BackBg2 from '../../public/assets/images/background/bg2.jpg';
 // import BgVideoMp4 from '../../public/assets/images/background/video.mp4';
 import logo from '../../public/assets/images/logo.svg';
 import logopng from '../../public/assets/images/logo.png';
+import logodpng from '../../public/assets/images/logod.png';
 import LogoWhite from '../../public/assets/images/logo-white.png';
 import LogoWhiteSvg from '../../public/assets/images/logo-white.svg';
 
@@ -427,6 +428,7 @@ const IMAGES: any = {
     BgShape: BgShape,
     BackBg2: BackBg2,
     logopng: logopng,
+    logodpng: logodpng,
     logo: logo,
     LogoWhite: LogoWhite,
     LogoWhiteSvg: LogoWhiteSvg,

@@ -1,7 +1,10 @@
+"use client"
 import Image from "next/image";
 import Link from "next/link";
 import { getImageUrl } from '@/lib/imageUtils';
 import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
+import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
+import { toast } from "react-toastify";
 
 interface cardType {
     product: any;
@@ -9,6 +12,7 @@ interface cardType {
 }
 
 export default function ShopListCard({ product, inputtype }: cardType) {
+    const { addToCart, toggleWishlist, isInWishlist } = useCartWishlistStore();
     const p = normalizePublicProductRecord(product ?? {});
     const name = p?.name || 'Product';
     const mainImage = p?.thumbImage && Array.isArray(p.thumbImage) && p.thumbImage.length > 0
@@ -29,6 +33,35 @@ export default function ShopListCard({ product, inputtype }: cardType) {
         const st = p.description.replace(/<[^>]*>?/gm, '');
         shortDescription = st.length > 150 ? st.substring(0, 150) + "..." : st;
     }
+
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        addToCart({
+            id: p.id,
+            productId: p.id,
+            name: name,
+            price: price,
+            quantity: 1,
+            image: Array.isArray(p.thumbImage) ? p.thumbImage[0] : (p.thumbImage || ''),
+            slug: p.slug || ''
+        });
+        toast.success("Added to cart!");
+    };
+
+    const handleToggleWishlist = () => {
+        toggleWishlist({
+            productId: p.id,
+            name: name,
+            price: price,
+            image: Array.isArray(p.thumbImage) ? p.thumbImage[0] : (p.thumbImage || ''),
+            slug: p.slug || ''
+        });
+        if (!isInWishlist(p.id)) {
+            toast.success("Added to wishlist!");
+        } else {
+            toast.info("Removed from wishlist");
+        }
+    };
 
     return (
         <div className="dz-shop-card style-2">
@@ -70,13 +103,19 @@ export default function ShopListCard({ product, inputtype }: cardType) {
                                 {comparePrice && <del className="text-muted fs-6 ms-2">₹{comparePrice}</del>}
                             </div>
                         </div>
-                        <div className="d-flex">
-                            <Link href="/shop-cart" className="btn btn-secondary btn-md btn-icon">
+                        <div className="d-flex align-items-center">
+                            <button onClick={handleAddToCart} className="btn btn-secondary btn-md btn-icon me-2">
                                 <i className="icon feather icon-shopping-cart d-md-none d-block" />
                                 <span className="d-md-block d-none">Add to cart</span>
-                            </Link>
+                            </button>
                             <div className="bookmark-btn style-1">
-                                <input className="form-check-input" type="checkbox" id={inputtype} />
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    id={inputtype} 
+                                    checked={isInWishlist(p.id)}
+                                    onChange={handleToggleWishlist}
+                                />
                                 <label className="form-check-label" htmlFor={inputtype}>
                                     <i className="fa-solid fa-heart" />
                                 </label>
@@ -87,4 +126,4 @@ export default function ShopListCard({ product, inputtype }: cardType) {
             </div>
         </div>
     )
-}
+}

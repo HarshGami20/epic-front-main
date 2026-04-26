@@ -8,6 +8,7 @@ import { Offcanvas } from "react-bootstrap";
 import HeaderSidbar from "./HeaderSidbar";
 import HeaderSideShoppingCard from "./HeaderSideShopingCard";
 import Image from "next/image";
+import AnimatedLogo from "./AnimatedLogo";
 
 interface State {
     headerFix: boolean;
@@ -45,7 +46,7 @@ const initialState = {
     basketShoppingCard: false,
 };
 
-function reducer(state : State, action : Action) : State {
+function reducer(state: State, action: Action): State {
     switch (action.type) {
         case 'FIX_HEADER':
             return { ...state, headerFix: action.payload };
@@ -71,8 +72,8 @@ function reducer(state : State, action : Action) : State {
 }
 
 const Header6 = () => {
-    
-    const [state, dispatch] = useReducer(reducer, initialState);    
+
+    const [state, dispatch] = useReducer(reducer, initialState);
     const scrollHandler = () => {
         if (window.scrollY > 80) {
             dispatch({ type: 'FIX_HEADER', payload: true });
@@ -106,7 +107,7 @@ const Header6 = () => {
     }, [state.previousScroll]);
     return (
         <>
-            <header className={`site-header mo-left header`}>		
+            <header className={`site-header mo-left header`}>
                 <div className="top-bar">
                     <div className="container-fluid">
                         <div className="dz-topbar-inner d-flex justify-content-between align-items-center">
@@ -120,11 +121,11 @@ const Header6 = () => {
                             <div className="dz-topbar-right">
                                 <ul>
                                     <li><span>Share:</span></li>
-                                    <li><Link href="https://www.facebook.com/dexignzone" target="_blank"><i className="fa-brands fa-facebook-f"/></Link></li>
-                                    <li><Link href="https://www.linkedin.com/showcase/3686700/admin/" target="_blank"><i className="fa-brands fa-linkedin-in"/></Link></li>
-                                    <li><Link href="https://www.instagram.com/dexignzone/" target="_blank"><i className="fa-brands fa-instagram"/></Link></li>
-                                    <li><Link href="https://twitter.com/dexignzones" target="_blank"><i className="fa-brands fa-twitter"/></Link></li>
-                                </ul>					
+                                    <li><Link href="https://www.facebook.com/dexignzone" target="_blank"><i className="fa-brands fa-facebook-f" /></Link></li>
+                                    <li><Link href="https://www.linkedin.com/showcase/3686700/admin/" target="_blank"><i className="fa-brands fa-linkedin-in" /></Link></li>
+                                    <li><Link href="https://www.instagram.com/dexignzone/" target="_blank"><i className="fa-brands fa-instagram" /></Link></li>
+                                    <li><Link href="https://twitter.com/dexignzones" target="_blank"><i className="fa-brands fa-twitter" /></Link></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -132,95 +133,99 @@ const Header6 = () => {
                 {/*  Main Header  */}
                 <div className={`sticky-header main-bar-wraper navbar-expand-lg ${state.headerFix ? 'is-fixed' : ''}`}>
                     <div className="main-bar clearfix">
-                        <div className="container-fluid clearfix d-lg-flex d-block">                                                        
+                        <div className="container-fluid clearfix d-lg-flex d-block">
                             <div className="logo-header logo-dark me-md-5">
-                                <Link href="/"><Image src={IMAGES.logo} alt="logo" /></Link>
+                                <Link href="/">
+                                    <AnimatedLogo animationType={9} />
+                                </Link>
                             </div>
-                            <button className={`navbar-toggler collapsed navicon justify-content-end ${state.openSidebar ? "open" : ""}`}                                 
-                                onClick={()=>dispatch({type:'TOGGLE_SIDEBAR'})}
+                            <button className={`navbar-toggler collapsed navicon justify-content-end ${state.openSidebar ? "open" : ""}`}
+                                onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
                             >
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </button>
-                            
-                        {/*  Main Nav  */}
-                        <div className={`header-nav w3menu navbar-collapse collapse justify-content-start ${state.openSidebar ? "show" : ""}`} 
-                            id="navbarNavDropdown"                            
-                        >
-                            <div className="logo-header logo-dark">
-                                <Link href="/"><Image src={IMAGES.logo} alt="logo" /></Link>
-                            </div>
-                            {/* All menus item */}
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </button>
+
+                            {/*  Main Nav  */}
+                            <div className={`header-nav w3menu navbar-collapse collapse justify-content-start ${state.openSidebar ? "show" : ""}`}
+                                id="navbarNavDropdown"
+                            >
+                                <div className="logo-header logo-dark">
+                                    <Link href="/">
+                                        <AnimatedLogo animationType={9} />
+                                    </Link>
+                                </div>
+                                {/* All menus item */}
                                 <Menus />
-                            {/* All menus item end*/}
-                            <div className="dz-social-icon">
-                                <ul>
-                                    <li><Link className="fab fa-facebook-f" target="_blank" href="https://www.facebook.com/dexignzone"></Link></li>
-                                    <li><Link className="fab fa-twitter" target="_blank" href="https://twitter.com/dexignzones"></Link></li>
-                                    <li><Link className="fab fa-linkedin-in" target="_blank" href="https://www.linkedin.com/showcase/3686700/admin/"></Link></li>
-                                    <li><Link className="fab fa-instagram" target="_blank" href="https://www.instagram.com/dexignzone/"></Link></li>
-                                </ul>
+                                {/* All menus item end*/}
+                                <div className="dz-social-icon">
+                                    <ul>
+                                        <li><Link className="fab fa-facebook-f" target="_blank" href="https://www.facebook.com/dexignzone"></Link></li>
+                                        <li><Link className="fab fa-twitter" target="_blank" href="https://twitter.com/dexignzones"></Link></li>
+                                        <li><Link className="fab fa-linkedin-in" target="_blank" href="https://www.linkedin.com/showcase/3686700/admin/"></Link></li>
+                                        <li><Link className="fab fa-instagram" target="_blank" href="https://www.instagram.com/dexignzone/"></Link></li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
-                        {/* EXTRA NAV  */}
-                        <div className={`extra-nav ${state.isBottom ? "bottom-end" : ""} ${state.isActive ? "active" : ""}`}>
-                            <div className="extra-cell">						
-                                <ul className="header-right">
-                                    <li className="nav-item login-link">
-                                        <Link className="nav-link" href="/login">
-                                            Login / Register
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item search-link">
-                                        <Link className="nav-link" href="#"                                             
-                                            onClick={()=>dispatch({type:'TOGGLE_SEARCH_BAR'})}
-                                        >
-                                            <i className="iconly-Light-Search"/>
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item wishlist-link">
-                                        <Link className="nav-link" href="#"                                             
-                                            onClick={()=>dispatch({type:'TOGGLE_HEAD_SHOPPING_SIDEBAR'})}
-                                        >
-                                            <i className="iconly-Light-Heart2"/>
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item cart-link">
-                                        <Link href="#" className="nav-link cart-btn"                                              
-                                            onClick={()=>dispatch({type:'TOGGLE_BASKET_SHOPPING_CARD'})}
-                                        >
-                                            <i className="iconly-Broken-Buy"/>
-                                            <span className="badge badge-circle">5</span>
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item filte-link">
-                                        <Link href="#" className="nav-link filte-btn"                                            
-                                            onClick={()=>dispatch({type:'TOGGLE_HEAD_SIDEBAR'})}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 13" fill="none">
-                                                <rect y="11" width="30" height="2" fill="black"/>
-                                                <rect width="30" height="2" fill="black"/>
-                                            </svg>
-                                        </Link>
-                                    </li>
-                                </ul>
+                            {/* EXTRA NAV  */}
+                            <div className={`extra-nav ${state.isBottom ? "bottom-end" : ""} ${state.isActive ? "active" : ""}`}>
+                                <div className="extra-cell">
+                                    <ul className="header-right">
+                                        <li className="nav-item login-link">
+                                            <Link className="nav-link" href="/login">
+                                                Login / Register
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item search-link">
+                                            <Link className="nav-link" href="#"
+                                                onClick={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })}
+                                            >
+                                                <i className="iconly-Light-Search" />
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item wishlist-link">
+                                            <Link className="nav-link" href="#"
+                                                onClick={() => dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' })}
+                                            >
+                                                <i className="iconly-Light-Heart2" />
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item cart-link">
+                                            <Link href="#" className="nav-link cart-btn"
+                                                onClick={() => dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' })}
+                                            >
+                                                <i className="iconly-Broken-Buy" />
+                                                <span className="badge badge-circle">5</span>
+                                            </Link>
+                                        </li>
+                                        <li className="nav-item filte-link">
+                                            <Link href="#" className="nav-link filte-btn"
+                                                onClick={() => dispatch({ type: 'TOGGLE_HEAD_SIDEBAR' })}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 13" fill="none">
+                                                    <rect y="11" width="30" height="2" fill="black" />
+                                                    <rect width="30" height="2" fill="black" />
+                                                </svg>
+                                            </Link>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
                         </div>
                     </div>
                 </div>
                 {/*  Main Header End  */}
-            </header>   
+            </header>
             {/*  SearchBar  */}
             <Offcanvas className="dz-search-area dz-offcanvas offcanvas-top"
-                    show={state.openSearchBar} 
-                    onHide={()=>dispatch({type : 'TOGGLE_SEARCH_BAR'})}
-                    placement={'top'}
+                show={state.openSearchBar}
+                onHide={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })}
+                placement={'top'}
+            >
+                <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"
+                    onClick={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })}
                 >
-                <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"                    
-                    onClick={()=>dispatch({type : 'TOGGLE_SEARCH_BAR'})}
-                    >
                     &times;
                 </button>
                 <HeadSearchBar onAfterNavigate={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })} />
@@ -228,25 +233,25 @@ const Header6 = () => {
             {/*  SearchBar  */}
 
             {/* - Sidebar finter */}
-             <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" 
-                show={state.headSideBar}                 
-                onHide={()=>dispatch({type : 'TOGGLE_HEAD_SIDEBAR'})}
+            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end"
+                show={state.headSideBar}
+                onHide={() => dispatch({ type: 'TOGGLE_HEAD_SIDEBAR' })}
             >
-                <button type="button" className="btn-close"                     
-                    onClick={()=>dispatch({type : 'TOGGLE_HEAD_SIDEBAR'})}
+                <button type="button" className="btn-close"
+                    onClick={() => dispatch({ type: 'TOGGLE_HEAD_SIDEBAR' })}
                 >
                     &times;
                 </button>
                 <div className="offcanvas-body">
                     <HeaderSidbar />
                 </div>
-            </Offcanvas>  
+            </Offcanvas>
             {/*  Sidebar cart  */}
-            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" tabIndex={-1} show={state.headShoppingSidebar}                 
-                onHide={()=>dispatch({type : 'TOGGLE_HEAD_SHOPPING_SIDEBAR'})}
-                >
-                <button type="button" className="btn-close"                     
-                    onClick={()=>dispatch({type : 'TOGGLE_HEAD_SHOPPING_SIDEBAR'})}
+            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" tabIndex={-1} show={state.headShoppingSidebar}
+                onHide={() => dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' })}
+            >
+                <button type="button" className="btn-close"
+                    onClick={() => dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' })}
                 >
                     &times;
                 </button>
@@ -257,12 +262,12 @@ const Header6 = () => {
                 </div>
             </Offcanvas>
 
-             {/*  Shopping Sidebar Basket   */}
-            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" tabIndex={-1} show={state.basketShoppingCard}                 
-                onHide={()=>dispatch({type : 'TOGGLE_BASKET_SHOPPING_CARD'})}
-                >
-                <button type="button" className="btn-close" 
-                   onClick={()=>dispatch({type : 'TOGGLE_BASKET_SHOPPING_CARD'})}                    
+            {/*  Shopping Sidebar Basket   */}
+            <Offcanvas className="dz-offcanvas offcanvas-end" placement="end" tabIndex={-1} show={state.basketShoppingCard}
+                onHide={() => dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' })}
+            >
+                <button type="button" className="btn-close"
+                    onClick={() => dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' })}
                 >
                     &times;
                 </button>

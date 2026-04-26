@@ -10,6 +10,8 @@ import { getImageUrl } from '@/lib/imageUtils';
 import { getPublicApiUrl } from '@/lib/env';
 
 import { masonryData, headfilterData } from "../../constant/Alldata";
+import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
+import { toast } from "react-toastify";
 
 const ProductSection = ({ data }: { data?: any }) => {
     const tabsData = data?.tabs?.length ? data.tabs : undefined;
@@ -17,8 +19,9 @@ const ProductSection = ({ data }: { data?: any }) => {
     const [activeMenu, setActiveMenu] = useState(0);
     const [detailModal, setDetailModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const [heartIcon, setHeartIcon] = useState<{ [key: string]: boolean }>({});
-    const [basketIcon, setBasketIcon] = useState<{ [key: string]: boolean }>({});
+    const [modalQuantity, setModalQuantity] = useState<number>(1);
+
+    const { addToCart, toggleWishlist, isInWishlist } = useCartWishlistStore();
 
     const [allProducts, setAllProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,14 +48,37 @@ const ProductSection = ({ data }: { data?: any }) => {
 
     const handleHide = () => {
         setDetailModal(false);
+        setModalQuantity(1);
     };
 
-    const toggleHeart = (id: string) => {
-        setHeartIcon(prev => ({ ...prev, [id]: !prev[id] }));
+    const handleAddToCart = (product: any, quantity: number = 1) => {
+        if (!product) return;
+        addToCart({
+            id: product.id,
+            productId: product.id,
+            name: product.name,
+            price: product.basePrice || product.price || 0,
+            quantity: quantity,
+            image: product.thumbImage?.[0] || '',
+            slug: product.slug || ''
+        });
+        toast.success("Added to cart!");
     };
 
-    const toggleBasket = (id: string) => {
-        setBasketIcon(prev => ({ ...prev, [id]: !prev[id] }));
+    const handleToggleWishlist = (product: any) => {
+        if (!product) return;
+        toggleWishlist({
+            productId: product.id,
+            name: product.name,
+            price: product.basePrice || product.price || 0,
+            image: product.thumbImage?.[0] || '',
+            slug: product.slug || ''
+        });
+        if (!isInWishlist(product.id)) {
+            toast.success("Added to wishlist!");
+        } else {
+            toast.info("Removed from wishlist");
+        }
     };
 
     const filterCategory = (ind: number) => {
@@ -120,7 +146,6 @@ const ProductSection = ({ data }: { data?: any }) => {
                     ) : (
                         (isDynamic ? displayProducts : masonryData).map((item: any, ind: number) => {
 
-                            console.log(item)
                             // Extract values mapping correctly from Prisma Product scheme to Masonry style UI
                             const id = isDynamic ? item.id : ind.toString();
                             const name = isDynamic ? item.name : item.name;
@@ -187,14 +212,14 @@ const ProductSection = ({ data }: { data?: any }) => {
                                                     <i className="fa-solid fa-eye d-md-none d-block" />
                                                     <span className="d-md-block d-none">Quick View</span>
                                                 </div>
-                                                <div className={`btn btn-primary meta-icon dz-wishicon ${heartIcon[id] ? "active" : ""}`}
-                                                    onClick={() => toggleHeart(id)}
+                                                <div className={`btn btn-primary meta-icon dz-wishicon ${isInWishlist(item.id) ? "active" : ""}`}
+                                                    onClick={() => handleToggleWishlist(item)}
                                                 >
                                                     <i className="icon feather icon-heart dz-heart" />
                                                     <i className="icon feather icon-heart-on dz-heart-fill" />
                                                 </div>
-                                                <div className={`btn btn-primary meta-icon dz-carticon ${basketIcon[id] ? "active" : ""}`}
-                                                    onClick={() => toggleBasket(id)}
+                                                <div className={`btn btn-primary meta-icon dz-carticon`}
+                                                    onClick={() => handleAddToCart(item)}
                                                 >
                                                     <i className="flaticon flaticon-basket" />
                                                     <i className="flaticon flaticon-basket-on dz-heart-fill" />
@@ -248,7 +273,7 @@ const ProductSection = ({ data }: { data?: any }) => {
                                                 <span className="text-secondary me-2">4.7 Rating</span>
                                                 <Link href={"#"}>(5 customer reviews)</Link>
                                             </div>
-                                        </div>  
+                                        </div>
                                     </div>
                                     <div
                                         className="para-text"
@@ -268,17 +293,27 @@ const ProductSection = ({ data }: { data?: any }) => {
                                         </div>
                                         <div className="btn-quantity light me-0">
                                             <label className="form-label">Quantity</label>
-                                            <ProductInputButton />
+                                            <ProductInputButton value={modalQuantity} onChange={setModalQuantity} />
                                         </div>
                                     </div>
                                     <div className=" cart-btn">
-                                        <Link href="/shop-cart" className="btn btn-secondary text-uppercase">Add To Cart</Link>
-                                        <Link href="/shop-wishlist" className="btn btn-md btn-outline-secondary btn-icon">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAddToCart(selectedProduct, modalQuantity)}
+                                            className="btn btn-secondary text-uppercase"
+                                        >
+                                            Add To Cart
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleToggleWishlist(selectedProduct)}
+                                            className={`btn btn-md btn-icon ${isInWishlist(selectedProduct?.id) ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                                        >
                                             <svg width="19" height="17" viewBox="0 0 19 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M9.24805 16.9986C8.99179 16.9986 8.74474 16.9058 8.5522 16.7371C7.82504 16.1013 7.12398 15.5038 6.50545 14.9767L6.50229 14.974C4.68886 13.4286 3.12289 12.094 2.03333 10.7794C0.815353 9.30968 0.248047 7.9162 0.248047 6.39391C0.248047 4.91487 0.755203 3.55037 1.67599 2.55157C2.60777 1.54097 3.88631 0.984375 5.27649 0.984375C6.31552 0.984375 7.26707 1.31287 8.10464 1.96065C8.52734 2.28763 8.91049 2.68781 9.24805 3.15459C9.58574 2.68781 9.96875 2.28763 10.3916 1.96065C11.2292 1.31287 12.1807 0.984375 13.2197 0.984375C14.6098 0.984375 15.8885 1.54097 16.8202 2.55157C17.741 3.55037 18.248 4.91487 18.248 6.39391C18.248 7.9162 17.6809 9.30968 16.4629 10.7792C15.3733 12.094 13.8075 13.4285 11.9944 14.9737C11.3747 15.5016 10.6726 16.1001 9.94376 16.7374C9.75136 16.9058 9.50417 16.9986 9.24805 16.9986ZM5.27649 2.03879C4.18431 2.03879 3.18098 2.47467 2.45108 3.26624C1.71033 4.06975 1.30232 5.18047 1.30232 6.39391C1.30232 7.67422 1.77817 8.81927 2.84508 10.1066C3.87628 11.3509 5.41011 12.658 7.18605 14.1715L7.18935 14.1743C7.81021 14.7034 8.51402 15.3033 9.24654 15.9438C9.98344 15.302 10.6884 14.7012 11.3105 14.1713C13.0863 12.6578 14.6199 11.3509 15.6512 10.1066C16.7179 8.81927 17.1938 7.67422 17.1938 6.39391C17.1938 5.18047 16.7858 4.06975 16.045 3.26624C15.3152 2.47467 14.3118 2.03879 13.2197 2.03879C12.4197 2.03879 11.6851 2.29312 11.0365 2.79465C10.4585 3.24179 10.0558 3.80704 9.81975 4.20255C9.69835 4.40593 9.48466 4.52733 9.24805 4.52733C9.01143 4.52733 8.79774 4.40593 8.67635 4.20255C8.44041 3.80704 8.03777 3.24179 7.45961 2.79465C6.811 2.29312 6.07643 2.03879 5.27649 2.03879Z" fill="black"></path>
+                                                <path d="M9.24805 16.9986C8.99179 16.9986 8.74474 16.9058 8.5522 16.7371C7.82504 16.1013 7.12398 15.5038 6.50545 14.9767L6.50229 14.974C4.68886 13.4286 3.12289 12.094 2.03333 10.7794C0.815353 9.30968 0.248047 7.9162 0.248047 6.39391C0.248047 4.91487 0.755203 3.55037 1.67599 2.55157C2.60777 1.54097 3.88631 0.984375 5.27649 0.984375C6.31552 0.984375 7.26707 1.31287 8.10464 1.96065C8.52734 2.28763 8.91049 2.68781 9.24805 3.15459C9.58574 2.68781 9.96875 2.28763 10.3916 1.96065C11.2292 1.31287 12.1807 0.984375 13.2197 0.984375C14.6098 0.984375 15.8885 1.54097 16.8202 2.55157C17.741 3.55037 18.248 4.91487 18.248 6.39391C18.248 7.9162 17.6809 9.30968 16.4629 10.7792C15.3733 12.094 13.8075 13.4285 11.9944 14.9737C11.3747 15.5016 10.6726 16.1001 9.94376 16.7374C9.75136 16.9058 9.50417 16.9986 9.24805 16.9986ZM5.27649 2.03879C4.18431 2.03879 3.18098 2.47467 2.45108 3.26624C1.71033 4.06975 1.30232 5.18047 1.30232 6.39391C1.30232 7.67422 1.77817 8.81927 2.84508 10.1066C3.87628 11.3509 5.41011 12.658 7.18605 14.1715L7.18935 14.1743C7.81021 14.7034 8.51402 15.3033 9.24654 15.9438C9.98344 15.302 10.6884 14.7012 11.3105 14.1713C13.0863 12.6578 14.6199 11.3509 15.6512 10.1066C16.7179 8.81927 17.1938 7.67422 17.1938 6.39391C17.1938 5.18047 16.7858 4.06975 16.045 3.26624C15.3152 2.47467 14.3118 2.03879 13.2197 2.03879C12.4197 2.03879 11.6851 2.29312 11.0365 2.79465C10.4585 3.24179 10.0558 3.80704 9.81975 4.20255C9.69835 4.40593 9.48466 4.52733 9.24805 4.52733C9.01143 4.52733 8.79774 4.40593 8.67635 4.20255C8.44041 3.80704 8.03777 3.24179 7.45961 2.79465C6.811 2.29312 6.07643 2.03879 5.27649 2.03879Z" fill="currentColor"></path>
                                             </svg>
-                                            Add To Wishlist
-                                        </Link>
+                                            {isInWishlist(selectedProduct?.id) ? 'In Wishlist' : 'Add To Wishlist'}
+                                        </button>
                                     </div>
                                     <div className="dz-info mb-0">
                                         <ul>

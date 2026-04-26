@@ -134,7 +134,8 @@ const BlockbusterDeal = ({ data }: { data?: any }) => {
 
     return (
         <div className="blockbuster-deal-swiper-outer" style={{ overflow: "clip", maxWidth: "100%" }}>
-            <style dangerouslySetInnerHTML={{ __html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 .blockbuster-deal-swiper-outer .swiper.blockbuster-deal-swiper,
                 .blockbuster-deal-swiper-outer .blockbuster-deal-swiper .swiper-wrapper,
                 .blockbuster-deal-swiper-outer .blockbuster-deal-swiper .swiper-slide {
@@ -326,15 +327,15 @@ const BlockbusterDeal = ({ data }: { data?: any }) => {
                                         {hasDiscount && sale != null ? (
                                             <>
                                                 <span className="bd-price-current">
-                                                    ${sale.toFixed(0)}
+                                                    ₹{sale.toFixed(0)}
                                                 </span>
                                                 <span className="bd-price-was">
-                                                    ${orig!.toFixed(0)}
+                                                    ₹{orig!.toFixed(0)}
                                                 </span>
                                             </>
                                         ) : (
                                             <span className="bd-price-current">
-                                                ${Number(displaySale).toFixed(0)}
+                                                ₹{Number(displaySale).toFixed(0)}
                                             </span>
                                         )}
                                     </div>

@@ -10,6 +10,8 @@ import HeadSearchBar from "./HeadSearchBar";
 import HeaderSidbar from "./HeaderSidbar";
 import HeaderSideShoppingCard from "./HeaderSideShopingCard";
 import CategoryMenuItem from "./CategoryMenuItem";
+import AnimatedLogo from "./AnimatedLogo";
+import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 
 interface DesignType {
     design: string
@@ -84,7 +86,7 @@ function reducer(state: State, action: Action): State {
 
 
 const Header = ({ design }: DesignType) => {
-
+    const { cart, wishlist } = useCartWishlistStore();
     const [state, dispatch] = useReducer(reducer, initialState);
     const [user, setUser] = useState<any>(null);
     const [hover, setHover] = useState(false);
@@ -137,13 +139,19 @@ const Header = ({ design }: DesignType) => {
                                 ''
                                 :
                                 <div className="logo-header logo-dark me-md-5">
-                                    <Link href="/"><Image src={IMAGES.logo} alt="logo" /></Link>
+                                    <Link href="/">
+                                        <AnimatedLogo animationType={9} />
+                                    </Link>
                                 </div>
                             }
                             {design === "header-text-white header-transparent" ?
                                 <div className="logo-header me-md-5">
-                                    <Link href="/" className=" logo-light"><Image src={IMAGES.LogoWhite} alt="logo-white" /></Link>
-                                    <Link href="/" className="logo-dark"><Image src={IMAGES.logopng} alt="logo" /></Link>
+                                    <Link href="/" className=" logo-light">
+                                        <AnimatedLogo white />
+                                    </Link>
+                                    <Link href="/" className="logo-dark">
+                                        <AnimatedLogo animationType={9} />
+                                    </Link>
                                 </div>
                                 :
                                 ''
@@ -163,7 +171,9 @@ const Header = ({ design }: DesignType) => {
                                 id="navbarNavDropdown"
                             >
                                 <div className="logo-header">
-                                    <Link href="/"><Image src={IMAGES.logo} alt="logo" /></Link>
+                                    <Link href="/">
+                                        <AnimatedLogo animationType={9} />
+                                    </Link>
                                 </div>
                                 <div className="browse-category-menu">
                                     <Link
@@ -229,6 +239,7 @@ const Header = ({ design }: DesignType) => {
                                                 onClick={() => dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' })}
                                             >
                                                 <i className="iconly-Light-Heart2" />
+                                                {wishlist.length > 0 && <span className="badge badge-circle">{wishlist.length}</span>}
                                             </Link>
                                         </li>
                                         <li className="nav-item cart-link">
@@ -237,7 +248,7 @@ const Header = ({ design }: DesignType) => {
                                                 onClick={() => dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' })}
                                             >
                                                 <i className="iconly-Broken-Buy" />
-                                                <span className="badge badge-circle">5</span>
+                                                {cart.length > 0 && <span className="badge badge-circle">{cart.length}</span>}
                                             </Link>
                                         </li>
                                     </ul>

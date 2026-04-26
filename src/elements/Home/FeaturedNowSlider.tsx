@@ -58,7 +58,7 @@ const FeaturedNowSlider = ({ data }: { data?: any }) => {
                                 <span className="sale-title">{item.description || "Up to 40% Off"}</span>
                             </div>
                             <div className="d-flex align-items-center">
-                                <h6 className="price">{item.price ? `$${item.price}` : "$80"}</h6>
+                                <h6 className="price">{item.price ? `₹${item.price}` : "₹80"}</h6>
                                 <span className="review"><i className="fa-solid fa-star" />(2k Review)</span>
                             </div>
                         </div>

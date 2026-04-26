@@ -81,24 +81,24 @@ const SaleDiscountShopCard = ({
                             style={
                                 isBlogCard
                                     ? {
-                                          display: "-webkit-box",
-                                          WebkitLineClamp: 3,
-                                          WebkitBoxOrient: "vertical" as const,
-                                          overflow: "hidden",
-                                          wordBreak: "break-word",
-                                          lineHeight: 1.35,
-                                          maxHeight: "4.05em",
-                                          textOverflow: "ellipsis",
-                                      }
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: 3,
+                                        WebkitBoxOrient: "vertical" as const,
+                                        overflow: "hidden",
+                                        wordBreak: "break-word",
+                                        lineHeight: 1.35,
+                                        maxHeight: "4.05em",
+                                        textOverflow: "ellipsis",
+                                    }
                                     : {
-                                          display: "-webkit-box",
-                                          WebkitLineClamp: 2,
-                                          WebkitBoxOrient: "vertical" as const,
-                                          overflow: "hidden",
-                                          wordBreak: "break-word",
-                                          lineHeight: 1.35,
-                                          maxHeight: "2.7em",
-                                      }
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: "vertical" as const,
+                                        overflow: "hidden",
+                                        wordBreak: "break-word",
+                                        lineHeight: 1.35,
+                                        maxHeight: "2.7em",
+                                    }
                             }
                         >
                             {name}
@@ -109,15 +109,15 @@ const SaleDiscountShopCard = ({
                     <h6 className="price d-flex flex-wrap align-items-baseline gap-2">
                         {hasDiscount && sale != null ? (
                             <>
-                                <span className="text-primary fw-semibold">${sale.toFixed(2)}</span>
-                                <del className="text-muted font-14 fw-normal">${orig!.toFixed(2)}</del>
+                                <span className="text-primary fw-semibold">₹{sale.toFixed(2)}</span>
+                                <del className="text-muted font-14 fw-normal">₹{orig!.toFixed(2)}</del>
                             </>
                         ) : sale != null && sale > 0 ? (
-                            `$${sale.toFixed(2)}`
+                            `₹${sale.toFixed(2)}`
                         ) : (
                             <>
-                                $80
-                                <del>$95</del>
+                                ₹80
+                                <del>₹95</del>
                             </>
                         )}
                     </h6>

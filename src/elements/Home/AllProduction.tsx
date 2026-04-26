@@ -242,16 +242,16 @@ const AllProduction = ({ data }: { data?: any }) => {
                                                         return (
                                                             <>
                                                                 <span className="text-primary fw-semibold">
-                                                                    ${sale.toFixed(2)}
+                                                                    ₹{sale.toFixed(2)}
                                                                 </span>
                                                                 <span className="text-muted text-decoration-line-through font-14 fw-normal">
-                                                                    ${orig!.toFixed(2)}
+                                                                    ₹{orig!.toFixed(2)}
                                                                 </span>
                                                             </>
                                                         );
                                                     }
                                                     if (sale != null && sale > 0) {
-                                                        return `$${sale.toFixed(2)}`;
+                                                        return `₹${sale.toFixed(2)}`;
                                                     }
                                                     return "$80";
                                                 })()}

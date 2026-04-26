@@ -1,6 +1,9 @@
+"use client"
 import { useState } from "react";
 import Link from "next/link";
 import { getImageUrl } from '@/lib/imageUtils';
+import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
+import { toast } from "react-toastify";
 
 interface cardType {
     product: any;
@@ -8,8 +11,7 @@ interface cardType {
 }
 
 export default function ShopGridCard({ product, showdetailModal }: cardType) {
-    const [heartIcon, setHeartIcon] = useState(false);
-    const [basketIcon, setBasketIcon] = useState(false);
+    const { addToCart, toggleWishlist, isInWishlist } = useCartWishlistStore();
 
     const name = product?.name || 'Product';
     const mainImage = product?.thumbImage && product.thumbImage.length > 0
@@ -28,6 +30,36 @@ export default function ShopGridCard({ product, showdetailModal }: cardType) {
     if (comparePrice && comparePrice > price) {
         discount = Math.round(((comparePrice - price) / comparePrice) * 100);
     }
+
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        addToCart({
+            id: product.id,
+            productId: product.id,
+            name: name,
+            price: price,
+            quantity: 1,
+            image: product.thumbImage?.[0] || '',
+            slug: product.slug || ''
+        });
+        toast.success("Added to cart!");
+    };
+
+    const handleToggleWishlist = (e: React.MouseEvent) => {
+        e.preventDefault();
+        toggleWishlist({
+            productId: product.id,
+            name: name,
+            price: price,
+            image: product.thumbImage?.[0] || '',
+            slug: product.slug || ''
+        });
+        if (!isInWishlist(product.id)) {
+            toast.success("Added to wishlist!");
+        } else {
+            toast.info("Removed from wishlist");
+        }
+    };
 
     return (
         <div className="shop-card">
@@ -69,14 +101,14 @@ export default function ShopGridCard({ product, showdetailModal }: cardType) {
                         <i className="fa-solid fa-eye d-md-none d-block" />
                         <span className="d-md-block d-none">Quick View</span>
                     </div>
-                    <div className={`btn btn-primary meta-icon dz-wishicon ${heartIcon ? "active" : ""}`}
-                        onClick={() => setHeartIcon(!heartIcon)}
+                    <div className={`btn btn-primary meta-icon dz-wishicon ${isInWishlist(product.id) ? "active" : ""}`}
+                        onClick={handleToggleWishlist}
                     >
                         <i className="icon feather icon-heart dz-heart" />
                         <i className="icon feather icon-heart-on dz-heart-fill" />
                     </div>
-                    <div className={`btn btn-primary meta-icon dz-carticon  ${basketIcon ? "active" : ""}`}
-                        onClick={() => setBasketIcon(!basketIcon)}
+                    <div className={`btn btn-primary meta-icon dz-carticon`}
+                        onClick={handleAddToCart}
                     >
                         <i className="flaticon flaticon-basket" />
                         <i className="flaticon flaticon-shopping-basket-on dz-heart-fill" />

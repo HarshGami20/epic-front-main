@@ -16,7 +16,20 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
         const load = async () => {
             try {
                 const data = await fetchPublicProductBySlug(slug);
-                if (data) setProductData(data);
+                if (data) {
+                    setProductData(data);
+                    // Add to recently viewed
+                    const recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+                    const productInfo = {
+                        id: data.id,
+                        name: data.name,
+                        image: Array.isArray(data.thumbImage) ? data.thumbImage[0] : data.thumbImage,
+                        slug: data.slug,
+                        price: data.price
+                    };
+                    const updated = [productInfo, ...recent.filter((p: any) => p.id !== data.id)].slice(0, 5);
+                    localStorage.setItem('recentlyViewed', JSON.stringify(updated));
+                }
             } catch (err) {
                 console.error("Failed to load product", err);
             } finally {

@@ -9,6 +9,7 @@ import Header2Menus from "./Header2Menus";
 import CategoryMenuItem from "./CategoryMenuItem";
 import HeaderShopSearchForm from "./HeaderShopSearchForm";
 import Image from "next/image";
+import AnimatedLogo from "./AnimatedLogo";
 
 
 interface State {
@@ -117,7 +118,9 @@ export default function Header2() {
                     <div className="container clearfix">
                         {/* <!-- Website Logo --> */}
                         <div className="logo-header logo-dark">
-                            <Link href="/"><Image src={IMAGES.logo} alt="logo" /></Link>
+                            <Link href="/">
+                                <AnimatedLogo animationType={9} />
+                            </Link>
                         </div>
                         {/* <!-- EXTRA NAV --> */}
                         <div className="extra-nav d-md-flex d-none m-l15">
@@ -157,7 +160,9 @@ export default function Header2() {
                         <div className="container clearfix d-lg-flex d-block">
                             {/* <!-- Website Logo --> */}
                             <div className="logo-header logo-dark">
-                                <Link href="/"><Image src={IMAGES.logo} alt="logo" /></Link>
+                                <Link href="/">
+                                    <AnimatedLogo animationType={9} />
+                                </Link>
                             </div>
 
                             {/* <!-- Nav Toggle Button --> */}
@@ -173,7 +178,9 @@ export default function Header2() {
                             {/* <!-- Main Nav --> */}
                             <div className={`header-nav w3menu navbar-collapse collapse justify-content-start ${state.openSidebar ? "show" : ""}`}>
                                 <div className="logo-header">
-                                    <Link href="/"><Image src={IMAGES.logo} alt="logo" /></Link>
+                                    <Link href="/">
+                                        <AnimatedLogo animationType={9} />
+                                    </Link>
                                 </div>
                                 <div className="browse-category-menu">
                                     <Link href="#" className={`category-btn ${state.categoryActive ? "active" : ""}`}

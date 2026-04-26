@@ -142,7 +142,7 @@ const MainBannerSlider2 = ({ data }: { data?: any }) => {
                                                 <span className="price-name">{priceLabel}</span>
                                                 <span className="price-num d-inline-block">
                                                     {priceVal !== "" && priceVal != null
-                                                        ? `$\u00A0${String(priceVal).replace(/^\$/, "")}`
+                                                        ? `₹\u00A0${String(priceVal).replace(/^\$/, "")}`
                                                         : "—"}
                                                 </span>
                                             </div>

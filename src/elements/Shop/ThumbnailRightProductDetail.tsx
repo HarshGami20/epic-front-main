@@ -8,6 +8,8 @@ import StarRating from "./StarRating";
 import { normalizeProductSizes, normalizeVariations } from "@/lib/productOptions";
 import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 import { fetchPublicProductReviews } from "@/lib/publicProductReviewsApi";
+import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
+import { toast } from "react-toastify";
 
 interface thumbnailCardtype {
     productData?: any;
@@ -25,6 +27,9 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
     const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(null);
     const [localColorIndex, setLocalColorIndex] = useState<number | null>(null);
     const [reviewStats, setReviewStats] = useState({ rating: 0, count: 0 });
+    const [quantity, setQuantity] = useState<number>(1);
+
+    const { addToCart, toggleWishlist, isInWishlist } = useCartWishlistStore();
 
     const parentControlsColor = props.onVariationChange != null;
     const colorIndex: number | null = parentControlsColor
@@ -78,6 +83,46 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
         if (parentControlsColor) props.onVariationChange?.(null);
         else setLocalColorIndex(null);
     };
+
+    const handleAddToCart = () => {
+        const variation = variations[colorIndex ?? -1];
+        const size = sizeOptions[selectedSizeIndex ?? -1];
+        
+        const cartId = `${product.id}${colorIndex !== null ? `-${colorIndex}` : ''}${selectedSizeIndex !== null ? `-${selectedSizeIndex}` : ''}`;
+        
+        addToCart({
+            id: cartId,
+            productId: product.id,
+            name: product.name,
+            price: price,
+            quantity: quantity,
+            image: Array.isArray(product.thumbImage) ? product.thumbImage[0] : product.thumbImage,
+            slug: product.slug,
+            variation: {
+                color: variation,
+                size: size
+            }
+        });
+        toast.success("Added to cart!");
+    };
+
+    const handleToggleWishlist = () => {
+        toggleWishlist({
+            productId: product.id,
+            name: product.name,
+            price: price,
+            image: Array.isArray(product.thumbImage) ? product.thumbImage[0] : product.thumbImage,
+            slug: product.slug
+        });
+        const isNowIn = isInWishlist(product.id);
+        // Note: isInWishlist might not be updated immediately due to closure, but store will be
+        // Better to just toast based on current state (inverted)
+        if (!isNowIn) {
+             toast.success("Added to wishlist!");
+        } else {
+             toast.info("Removed from wishlist");
+        }
+    };
     const name = product?.name || props.title || 'Product Name';
     const shortHtml =
         typeof product.shortDescription === "string" && product.shortDescription.trim() !== ""
@@ -125,7 +170,7 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                     <div className="btn-quantity light d-flex flex-column gap-2  product-detail-option">
                         <label className="form-label mb-0">Quantity</label>
                         <div className="d-flex align-items-center">
-                            <ProductInputButton />
+                            <ProductInputButton value={quantity} onChange={setQuantity} />
                         </div>
                     </div>
                     {sizeOptions.length > 0 && (
@@ -200,11 +245,21 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                             Customize
                         </Link>
                     )}
-                    <Link href="/shop-cart" className="btn btn-secondary text-uppercase">Add To Cart</Link>
-                    <Link href="/shop-wishlist" className="btn btn-outline-secondary btn-icon">
-                        <i className="icon feather icon-heart"></i>
-                        Add To Wishlist
-                    </Link>
+                    <button 
+                        type="button" 
+                        className="btn btn-secondary text-uppercase"
+                        onClick={handleAddToCart}
+                    >
+                        Add To Cart
+                    </button>
+                    <button 
+                        type="button" 
+                        className={`btn btn-icon ${isInWishlist(product.id) ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                        onClick={handleToggleWishlist}
+                    >
+                        <i className={`icon feather icon-heart${isInWishlist(product.id) ? '-on' : ''}`}></i>
+                        {isInWishlist(product.id) ? 'In Wishlist' : 'Add To Wishlist'}
+                    </button>
                 </div>
                 <div className="dz-info mt-4">
                     <ul>

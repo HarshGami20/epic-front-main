@@ -1,10 +1,14 @@
 "use client"
-import { Autoplay, Navigation } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
-import IMAGES from "../../constant/theme";
+import { useState, useEffect, useMemo } from "react";
+import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
+import { toast } from "react-toastify";
+import { getImageUrl } from "@/lib/imageUtils";
+import { getPublicApiUrl } from "@/lib/env";
 import Link from "next/link";
 import Image from "next/image";
-import { useReducer } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Navigation } from "swiper/modules";
+import IMAGES from "../../constant/theme";
 
 interface trandingType {
     price: string;
@@ -28,57 +32,6 @@ interface modelType {
     data?: any;
 }
 
-type HeartIconsState = { [key: number]: boolean };
-
-const initialState = {
-    heartIcon: {} as HeartIconsState,
-    basketIcon: {} as HeartIconsState,
-    detailModal: false,
-    // activeMenu: 0,
-    // data: masonryData,
-};
-
-function reducer(state: typeof initialState, action: any) {
-    switch (action.type) {
-        case 'TOGGLE_HEART':
-            return {
-                ...state,
-                heartIcon: {
-                    ...state.heartIcon,
-                    [action.index]: !state.heartIcon[action.index],
-                },
-            };
-        case 'TOGGLE_BASKET':
-            return {
-                ...state,
-                basketIcon: {
-                    ...state.basketIcon,
-                    [action.index]: !state.basketIcon[action.index],
-                },
-            };
-        //   case 'SET_DETAIL_MODAL':
-        //     return {
-        //       ...state,
-        //       detailModal: action.value,
-        //     };
-        //   case 'SET_ACTIVE_MENU':
-        //     return {
-        //       ...state,
-        //       activeMenu: action.index,
-        //     };
-        //   case 'SET_DATA':
-        //     return {
-        //       ...state,
-        //       data: action.data,
-        //     };
-        default:
-            throw new Error();
-    }
-}
-
-import { useEffect, useMemo, useState } from "react";
-import { getImageUrl } from "@/lib/imageUtils";
-import { getPublicApiUrl } from "@/lib/env";
 
 function pickProductImage(p: any): string {
     const imgs = p?.images;
@@ -99,7 +52,7 @@ function parseMoney(v: unknown): number | undefined {
 }
 
 function TrandingSlider({ showdetailModal, data }: modelType) {
-    const [state, dispatch] = useReducer(reducer, initialState);
+    const { addToCart, toggleWishlist, isInWishlist } = useCartWishlistStore();
 
     const rawItems = data?.items?.length ? data.items : null;
     const [allProducts, setAllProducts] = useState<any[]>([]);
@@ -140,27 +93,56 @@ function TrandingSlider({ showdetailModal, data }: modelType) {
                 const img = pickProductImage(p);
                 const sale = parseMoney(p.price);
                 return {
+                    id: p.id,
                     title: p.name || "Product",
                     image: img || IMAGES.shopproduct1,
                     href: `/products/${p.slug}`,
-                    price: sale != null ? `$${sale.toFixed(2)}` : '$80',
+                    price: sale != null ? `₹${sale.toFixed(2)}` : '₹80',
+                    originalProduct: p,
+                    slug: p.slug
                 };
             }
             return {
+                id: `static-${item.productSlug || Math.random()}`,
                 title: "Trending Product",
                 image: IMAGES.shopproduct1,
                 href: "/shop-list",
-                price: "$80",
+                price: "₹80",
+                slug: ""
             };
         });
     }, [rawItems, allProducts]);
 
-    const toggleHeart = (index: number) => {
-        dispatch({ type: 'TOGGLE_HEART', index });
+    const handleAddToCart = (item: any) => {
+        if (!item.originalProduct) return;
+        const p = item.originalProduct;
+        addToCart({
+            id: p.id,
+            productId: p.id,
+            name: p.name,
+            price: p.basePrice || p.price || 0,
+            quantity: 1,
+            image: p.thumbImage?.[0] || '',
+            slug: p.slug || ''
+        });
+        toast.success("Added to cart!");
     };
 
-    const toggleBasket = (index: number) => {
-        dispatch({ type: 'TOGGLE_BASKET', index });
+    const handleToggleWishlist = (item: any) => {
+        if (!item.originalProduct) return;
+        const p = item.originalProduct;
+        toggleWishlist({
+            productId: p.id,
+            name: p.name,
+            price: p.basePrice || p.price || 0,
+            image: p.thumbImage?.[0] || '',
+            slug: p.slug || ''
+        });
+        if (!isInWishlist(p.id)) {
+            toast.success("Added to wishlist!");
+        } else {
+            toast.info("Removed from wishlist");
+        }
     };
 
     return (
@@ -209,18 +191,14 @@ function TrandingSlider({ showdetailModal, data }: modelType) {
                                     <i className="fa-solid fa-eye d-md-none d-block" />
                                     <span className="d-md-block d-none">Quick View</span>
                                 </Link>
-                                <div className={`btn btn-primary meta-icon dz-wishicon ${state.heartIcon[ind] ? "active" : ""}`}
-                                    onClick={() => {
-                                        toggleHeart(ind);
-                                    }}
+                                <div className={`btn btn-primary meta-icon dz-wishicon ${isInWishlist(elem.id) ? "active" : ""}`}
+                                    onClick={() => handleToggleWishlist(elem)}
                                 >
                                     <i className="icon feather icon-heart dz-heart" />
                                     <i className="icon feather icon-heart-on dz-heart-fill" />
                                 </div>
-                                <div className={`btn btn-primary meta-icon dz-carticon ${state.basketIcon[ind] ? "active" : ""}`}
-                                    onClick={() => {
-                                        toggleBasket(ind);
-                                    }}
+                                <div className={`btn btn-primary meta-icon dz-carticon`}
+                                    onClick={() => handleAddToCart(elem)}
                                 >
                                     <i className="flaticon flaticon-basket" />
                                     <i className="flaticon flaticon-basket-on dz-heart-fill" />
