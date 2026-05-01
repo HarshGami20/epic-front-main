@@ -47,7 +47,7 @@ const AnimatedLogo = ({
           initial: { opacity: 0, rotateX: -90, y: 20 },
           animate: { opacity: 1, rotateX: 0, y: 0 },
           exit: { opacity: 0, rotateX: 90, y: -20 },
-          transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] }
+          transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] as any }
         };
       case 3: // Horizontal 3D Flip (Spatial)
         return {
@@ -89,7 +89,7 @@ const AnimatedLogo = ({
           initial: { x: 50, skewX: -20, opacity: 0 },
           animate: { x: 0, skewX: 0, opacity: 1 },
           exit: { x: -50, skewX: 20, opacity: 0 },
-          transition: { duration: 0.5, ease: "power4.out" }
+          transition: { duration: 0.5, ease: "easeOut" }
         };
       case 9: // Perspective Swing
         return {
@@ -115,7 +115,7 @@ const AnimatedLogo = ({
     }
   };
 
-  const variants = getVariants(animationType);
+  const variants = getVariants(animationType) as any;
 
   return (
     <div
