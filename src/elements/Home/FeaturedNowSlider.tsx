@@ -5,8 +5,60 @@ import Link from "next/link";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/imageUtils";
 
+import { useState, useEffect } from "react";
+import { getPublicApiUrl } from "@/lib/env";
+
 const FeaturedNowSlider = ({ data }: { data?: any }) => {
-    const items = data?.items?.length ? data.items : FeaturedNowSliderData;
+    const [allProducts, setAllProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const hasProductSlugs = data?.items?.some((item: any) => item.productSlug);
+        if (!hasProductSlugs) return;
+
+        const fetchProducts = async () => {
+            setLoading(true);
+            try {
+                const url = getPublicApiUrl();
+                const response = await fetch(`${url}/products?limit=100`);
+                const json = await response.json();
+                if (json && json.data) {
+                    setAllProducts(json.data);
+                } else if (Array.isArray(json)) {
+                    setAllProducts(json);
+                }
+            } catch (err) {
+                console.error("Failed to fetch products:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProducts();
+    }, [data?.items]);
+
+    const rawItems = data?.items?.length ? data.items : FeaturedNowSliderData;
+
+    const items = rawItems.map((item: any) => {
+        if (item.productSlug && allProducts.length > 0) {
+            const product = allProducts.find((p: any) => p.slug === item.productSlug);
+            if (product) {
+                return {
+                    ...item,
+                    title: product.name,
+                    description: item.description || "Top Quality Product",
+                    image: product.thumbImage?.[0] || item.image,
+                    price: product.basePrice || product.price,
+                    slug: product.slug
+                };
+            }
+        }
+        return item;
+    });
+
+    if (loading && allProducts.length === 0) {
+        return <div className="text-center py-5">Loading featured products...</div>;
+    }
+
 
     return (
         <Swiper
@@ -54,12 +106,12 @@ const FeaturedNowSlider = ({ data }: { data?: any }) => {
                         </div>
                         <div className="dz-content">
                             <div>
-                                <h6 className="title"><Link href="/shop-list">{item.title || item.name}</Link></h6>
+                                <h6 className="title" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '4.2em' }}><Link href={item.slug ? `/products/${item.slug}` : "/shop-list"}>{item.title || item.name}</Link></h6>
                                 <span className="sale-title">{item.description || "Up to 40% Off"}</span>
                             </div>
                             <div className="d-flex align-items-center">
                                 <h6 className="price">{item.price ? `₹${item.price}` : "₹80"}</h6>
-                                <span className="review"><i className="fa-solid fa-star" />(2k Review)</span>
+                                {/* <span className="review"><i className="fa-solid fa-star" />(2k Review)</span> */}
                             </div>
                         </div>
                     </div>

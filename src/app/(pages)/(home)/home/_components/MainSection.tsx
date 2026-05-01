@@ -212,9 +212,10 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
                 <div className="section-head style-1 wow fadeInUp d-flex justify-content-between" data-wow-delay="0.2s">
                     <div className="left-content">
                         <h2 className="title">{typeof data?.title === 'string' ? data.title : "Featured now"} </h2>
+                        {data?.subtitle && <p className="mb-0 text-muted">{data.subtitle}</p>}
                     </div>
-                    <Link href="/shop-list" className="text-secondary font-14 d-flex align-items-center gap-1">{typeof data?.linkText === 'string' ? data.linkText : "See All"}
-                        <i className="icon feather icon-chevron-right font-18" />
+                    <Link href="/shop" className="text-secondary font-14 d-flex align-items-center gap-1">{typeof data?.linkText === 'string' ? data.linkText : "See All"}
+                        View all <i className="icon feather icon-chevron-right font-18" />
                     </Link>
                 </div>
                 <FeaturedNowSlider data={data} />

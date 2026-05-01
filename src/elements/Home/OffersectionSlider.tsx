@@ -7,10 +7,10 @@ import { FeaturedOfferCard, type FeaturedOfferItem } from "./FeaturedOfferCard";
 
 const defaultOffers: FeaturedOfferItem[] = [
     { image: IMAGES.ClothesPng1.src, subTitle: "20% Off", title: "Luxury Bras", titleStyle: "product-name", buttonText: "Collect Now", linkUrl: "/shop-list" },
-    { image: IMAGES.ClothesPng2.src, subTitle: "Sale Up to 50% Off", title: "Summer", spanText: "2024", titleStyle: "sub-title1", spanStyle: "year", buttonText: "Collect Now", linkUrl: "/shop-list" },
+    { image: IMAGES.ClothesPng2.src, subTitle: "Sale Up to 50% Off", title: "Summer", spanText: new Date().getFullYear().toString(), titleStyle: "sub-title1", spanStyle: "year", buttonText: "Collect Now", linkUrl: "/shop-list" },
     { image: IMAGES.ClothesPng3.src, subTitle: "20% Off", title: "Swimwear", spanText: "Sale", titleStyle: "sub-title2", spanStyle: "bg-title", buttonText: "Collect Now", linkUrl: "/shop-list" },
     { image: IMAGES.ClothesPng1.src, subTitle: "20% Off", title: "Luxury Bras", titleStyle: "product-name", buttonText: "Collect Now", linkUrl: "/shop-list" },
-    { image: IMAGES.ClothesPng2.src, subTitle: "Sale Up to 50% Off", title: "Summer", spanText: "2024", titleStyle: "sub-title1", spanStyle: "year", buttonText: "Collect Now", linkUrl: "/shop-list" },
+    { image: IMAGES.ClothesPng2.src, subTitle: "Sale Up to 50% Off", title: "Summer", spanText: new Date().getFullYear().toString(), titleStyle: "sub-title1", spanStyle: "year", buttonText: "Collect Now", linkUrl: "/shop-list" },
     { image: IMAGES.ClothesPng3.src, subTitle: "20% Off", title: "Swimwear", spanText: "Sale", titleStyle: "sub-title2", spanStyle: "bg-title", buttonText: "Collect Now", linkUrl: "/shop-list" },
 ];
 

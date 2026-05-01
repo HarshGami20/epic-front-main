@@ -462,7 +462,7 @@ export const HeaderThree = `
                                             </div>
                                             <div className="dz-content">
                                                 <h6 className="name"><Link to="/post-standard">Cozy Knit Cardigan Sweater</Link></h6>
-                                                <span className="time">July 23, 2024</span>
+                                                <span className="time">July 23, ${new Date().getFullYear()}</span>
                                             </div>
                                         </li>
                                         <li>
@@ -471,7 +471,7 @@ export const HeaderThree = `
                                             </div>
                                             <div className="dz-content">
                                                 <h6 className="name"><Link to="/post-standard">Sophisticated Swagger Suit</Link></h6>
-                                                <span className="time">July 23, 2024</span>
+                                                <span className="time">July 23, ${new Date().getFullYear()}</span>
                                             </div>
                                         </li>
                                         <li>
@@ -480,7 +480,7 @@ export const HeaderThree = `
                                             </div>
                                             <div className="dz-content">
                                                 <h6 className="name"><Link to="/post-standard">Athletic Mesh Sports Leggings</Link></h6>
-                                                <span className="time">July 23, 2024</span>
+                                                <span className="time">July 23, ${new Date().getFullYear()}</span>
                                             </div>
                                         </li>
                                         <li>
@@ -489,7 +489,7 @@ export const HeaderThree = `
                                             </div>
                                             <div className="dz-content">
                                                 <h6 className="name"><Link to="/post-standard">Satin Wrap Party Blouse</Link></h6>
-                                                <span className="time">July 23, 2024</span>
+                                                <span className="time">July 23, ${new Date().getFullYear()}</span>
                                             </div>
                                         </li>
                                     </ul>

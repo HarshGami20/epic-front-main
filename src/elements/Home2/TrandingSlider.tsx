@@ -206,7 +206,7 @@ function TrandingSlider({ showdetailModal, data }: modelType) {
                             </div>
                         </div>
                         <div className="dz-content">
-                            <h5 className="title"><Link href={elem.href}>{elem.title}</Link></h5>
+                            <h5 className="title" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '3em' }}><Link href={elem.href}>{elem.title}</Link></h5>
                             <h5 className="price">{elem.price}</h5>
                         </div>
                         <div className="product-tag">

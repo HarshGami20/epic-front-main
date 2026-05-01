@@ -109,7 +109,9 @@ const Footer = (props: footertype) => {
                                                 />
                                             </div>
                                             <div className="dz-content">
-                                                <h6 className="name"><Link href={`/products/${item.slug}`}>{item.name}</Link></h6>
+                                                <h6 className="name" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                    <Link href={`/products/${item.slug}`}>{item.name}</Link>
+                                                </h6>
                                                 <span className="price">₹{item.price}</span>
                                             </div>
                                         </li>
@@ -120,7 +122,9 @@ const Footer = (props: footertype) => {
                                                 <Image src={item.image} alt="" width={60} height={60} />
                                             </div>
                                             <div className="dz-content">
-                                                <h6 className="name"><Link href="#">{item.name}</Link></h6>
+                                                <h6 className="name" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                    <Link href="#">{item.name}</Link>
+                                                </h6>
                                                 <span className="time">Jan 23, 2025</span>
                                             </div>
                                         </li>
