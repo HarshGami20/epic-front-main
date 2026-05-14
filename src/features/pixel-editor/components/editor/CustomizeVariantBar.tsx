@@ -79,12 +79,12 @@ function CustomizeVariantBarInner({ options, defaultId }: InnerProps) {
  * matches the product’s canonical default (same rules as opening /customize without ?variant=).
  */
 export const CustomizeVariantBar: React.FC = () => {
-  const { editorSource, editorProduct } = useEditor();
+  const { editorSource, editorProduct, usesStyleVariants } = useEditor();
 
   const options = useMemo(() => getCustomizationVariantOptions(editorProduct), [editorProduct]);
   const defaultId = useMemo(() => getDefaultCustomizationVariantId(editorProduct), [editorProduct]);
 
-  if (editorSource !== "product" || options.length < 2) return null;
+  if (editorSource !== "product" || options.length < 2 || usesStyleVariants) return null;
 
   return <CustomizeVariantBarInner options={options} defaultId={defaultId} />;
 };

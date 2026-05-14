@@ -31,16 +31,37 @@ export const ToolSidebar: React.FC = () => {
     isMobile,
     productTextOnlyMode,
     editorSource,
+    editableZones,
+    activeEditableZoneId,
   } = useEditor();
 
   const tools = useMemo(() => {
     if (editorSource === 'product' && productTextOnlyMode) {
       return allTools.filter((t) => t.id === 'text' || t.id === 'layers');
     }
-    return allTools;
-  }, [editorSource, productTextOnlyMode]);
 
-  const showApps = editorSource === 'demo' || !productTextOnlyMode;
+    if (editorSource === 'product' && editableZones.length > 0) {
+      const activeZone = editableZones.find(z => z.id === activeEditableZoneId) ?? editableZones[0];
+      if (activeZone) {
+        if (activeZone.type === 'text') {
+          return allTools.filter((t) => ['text', 'layers'].includes(t.id));
+        } else if (activeZone.type === 'image') {
+          return allTools.filter((t) => ['picture', 'shapes', 'sticker', 'adjust', 'filter', 'crop', 'layers'].includes(t.id));
+        }
+      }
+    }
+
+    return allTools;
+  }, [editorSource, productTextOnlyMode, editableZones, activeEditableZoneId]);
+
+  const showApps = editorSource === 'demo' || (!productTextOnlyMode && (editableZones.find(z => z.id === activeEditableZoneId) ?? editableZones[0])?.type !== 'text');
+
+  React.useEffect(() => {
+    if (activeTool && activeTool !== 'apps' && !tools.find((t) => t.id === activeTool)) {
+      setActiveTool(null);
+      if (isMobile) setIsPanelOpen(false);
+    }
+  }, [tools, activeTool, setActiveTool, isMobile, setIsPanelOpen]);
 
   const handleToolClick = (tool: Tool) => {
     if (!imageLoaded) return;
@@ -102,7 +123,7 @@ export const ToolSidebar: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 bg-editor-panel/95 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.35)]">
+    <div className="fixed inset-x-0 bottom-0 z-40 bg-editor-panel/95 backdrop-blur-md border-t border-border min-h-[var(--editor-mobile-dock-h)] pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.35)]">
       <div className="flex items-center justify-between px-1 py-2 gap-0.5 overflow-x-auto">
         {tools.map((tool) => (
           <button

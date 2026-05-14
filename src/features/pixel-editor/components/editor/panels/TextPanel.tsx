@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { X, Search, Bold, Italic, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { useEditor } from '@pixel/contexts/EditorContext';
 import { Button } from '@pixel/components/ui/button';
@@ -52,6 +53,14 @@ export const TextPanel: React.FC = () => {
 
     const activeZone =
       editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
+
+    if (activeZone && activeZone.maxElements) {
+      const currentObjects = canvas.getObjects().filter(o => (o as any).editableZoneId === activeZone.id);
+      if (currentObjects.length >= activeZone.maxElements) {
+        toast.error(`Maximum of ${activeZone.maxElements} items allowed in this area.`);
+        return;
+      }
+    }
 
     let left = canvas.width! / 2 - 100;
     let top = canvas.height! / 2 - 50;
@@ -114,6 +123,10 @@ export const TextPanel: React.FC = () => {
 
   const isTextSelected = selectedObject?.type === 'textbox';
   const textObject = selectedObject as Textbox | null;
+  const activeZone =
+    editableZones.find((z) => z.id === (textObject as any)?.editableZoneId) ??
+    editableZones.find((z) => z.id === activeEditableZoneId) ??
+    editableZones[0];
 
   return (
     <div className="w-full md:w-72 bg-editor-panel border-r border-border h-full flex flex-col animate-slide-in-left">
@@ -259,20 +272,33 @@ export const TextPanel: React.FC = () => {
             {/* Color */}
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Color</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={textObject.fill as string || '#000000'}
-                  onChange={(e) => updateSelectedText('fill', e.target.value)}
-                  className="w-10 h-10 rounded border border-border cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={textObject.fill as string || '#000000'}
-                  onChange={(e) => updateSelectedText('fill', e.target.value)}
-                  className="editor-input flex-1"
-                />
-              </div>
+              {activeZone?.allowedColors && activeZone.allowedColors.length > 0 ? (
+                <div className="flex gap-2 flex-wrap">
+                  {activeZone.allowedColors.map((color) => (
+                    <button
+                      key={color}
+                      className={`w-8 h-8 rounded border ${textObject.fill === color ? 'ring-2 ring-primary border-transparent' : 'border-border'}`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => updateSelectedText('fill', color)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={textObject.fill as string || '#000000'}
+                    onChange={(e) => updateSelectedText('fill', e.target.value)}
+                    className="w-10 h-10 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    type="text"
+                    value={textObject.fill as string || '#000000'}
+                    onChange={(e) => updateSelectedText('fill', e.target.value)}
+                    className="editor-input flex-1"
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}

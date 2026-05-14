@@ -2,13 +2,12 @@ import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { Canvas as FabricCanvas, FabricImage, Point } from 'fabric';
 import { useEditor, products, type EditableZoneCanvas } from '@pixel/contexts/EditorContext';
 import {
-  pickCustomizationSlice,
   resolveProductAssetUrl,
   mapEditableAreaToCanvas,
   getCustomizationVariantOptions,
   ROOT_CUSTOMIZATION_VARIANT_ID,
 } from '@pixel/lib/productCustomization';
-import { ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ImageIcon, Type } from 'lucide-react';
 import { Button } from '@pixel/components/ui/button';
 import { cn } from '@pixel/lib/utils';
 import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
@@ -73,6 +72,9 @@ export const EditorCanvas: React.FC = () => {
     editorProduct,
     selectedVariantId,
     setSelectedVariantId,
+    customizationSlice,
+    customizationDesignSize,
+    usesStyleVariants,
     setEditableZones,
     editableZones,
     activeEditableZoneId,
@@ -82,22 +84,17 @@ export const EditorCanvas: React.FC = () => {
 
   const [productIndex, setProductIndex] = React.useState(0);
   /** Bumps when the canvas viewport changes so zone overlays stay aligned while panning/zooming. */
+  /** Bumps on every Fabric `after:render` so zone overlays stay in sync with pan/zoom (no rAF delay). */
   const [viewportTick, setViewportTick] = React.useState(0);
-  const viewportRafRef = useRef<number | null>(null);
 
-  const customizationSlice = useMemo(
-    () =>
-      editorProduct
-        ? pickCustomizationSlice(editorProduct.customization ?? null, selectedVariantId)
-        : null,
-    [editorProduct, selectedVariantId]
-  );
-
-  /** One chip per `customization.variants` entry (ids must match storefront design data). */
   const customizationVariantOptions = useMemo(
     () => getCustomizationVariantOptions(editorProduct),
     [editorProduct]
   );
+
+  const showColorVariantBar =
+    editorSource === 'product' && customizationVariantOptions.length > 1 && !usesStyleVariants;
+  const showZoneStrip = editorSource === 'product' && editableZones.length > 0;
 
   const getZoneForObject = useCallback(
     (obj: any): EditableZoneCanvas | null => {
@@ -130,6 +127,8 @@ export const EditorCanvas: React.FC = () => {
       selection: true,
       preserveObjectStacking: true,
     });
+    fabricCanvas.upperCanvasEl.classList.add('editor-fabric-upper');
+    fabricCanvas.lowerCanvasEl.classList.add('editor-fabric-upper');
 
     fabricCanvas.on('selection:created', (e) => {
       const selected = e.selected?.[0];
@@ -281,6 +280,36 @@ export const EditorCanvas: React.FC = () => {
         (obj as any).on('changed', () => {
           const z = getZoneForObject(obj);
           if (z) {
+            let currentText = (obj as any).text || '';
+            let modified = false;
+
+            if (z.maxLength && currentText.length > z.maxLength) {
+              currentText = currentText.substring(0, z.maxLength);
+              modified = true;
+            }
+
+            if (z.maxWords) {
+              const words = currentText.split(/\s+/);
+              if (words.length > z.maxWords) {
+                // Keep the whitespace structure if possible, or just join back
+                // A simpler way: match words up to maxWords
+                const match = currentText.match(new RegExp(`^\\s*(?:\\S+\\s+){0,${z.maxWords - 1}}\\S+`));
+                if (match) {
+                  currentText = match[0];
+                } else {
+                  currentText = words.slice(0, z.maxWords).join(' ');
+                }
+                modified = true;
+              }
+            }
+
+            if (modified) {
+              (obj as any).set('text', currentText);
+              if ((obj as any).hiddenTextarea) {
+                (obj as any).hiddenTextarea.value = currentText;
+              }
+            }
+
             fitObjectInZone(obj as any, z);
             canvas.requestRenderAll();
           }
@@ -307,20 +336,12 @@ export const EditorCanvas: React.FC = () => {
 
   useEffect(() => {
     if (!canvas) return;
-    const scheduleOverlaySync = () => {
-      if (viewportRafRef.current != null) return;
-      viewportRafRef.current = requestAnimationFrame(() => {
-        viewportRafRef.current = null;
-        setViewportTick((n) => n + 1);
-      });
+    const syncOverlays = () => {
+      setViewportTick((n) => n + 1);
     };
-    canvas.on('after:render', scheduleOverlaySync);
+    canvas.on('after:render', syncOverlays);
     return () => {
-      canvas.off('after:render', scheduleOverlaySync);
-      if (viewportRafRef.current != null) {
-        cancelAnimationFrame(viewportRafRef.current);
-        viewportRafRef.current = null;
-      }
+      canvas.off('after:render', syncOverlays);
     };
   }, [canvas]);
 
@@ -381,17 +402,76 @@ export const EditorCanvas: React.FC = () => {
   useEffect(() => {
     if (!canvas) return;
     const upper = canvas.upperCanvasEl;
+    let initialTouchDistance = 0;
+    let lastPanPos = { x: 0, y: 0 };
+    let isTouchPanning = false;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialTouchDistance = Math.sqrt(dx * dx + dy * dy);
+
+        lastPanPos = {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        };
+        isTouchPanning = true;
+        canvas.selection = false;
+        canvas.discardActiveObject();
+        setSelectedObject(null);
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && isTouchPanning) {
+        e.preventDefault();
+
+        // Handle Pan
+        const currentMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const currentMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const panX = currentMidX - lastPanPos.x;
+        const panY = currentMidY - lastPanPos.y;
+        lastPanPos = { x: currentMidX, y: currentMidY };
+        canvas.relativePan(new Point(panX, panY));
+
+        // Handle Zoom
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDistance = Math.sqrt(dx * dx + dy * dy);
+
+        if (initialTouchDistance > 0) {
+          const scaleDiff = currentDistance / initialTouchDistance;
+          let newZoom = canvas.getZoom() * scaleDiff;
+          newZoom = Math.max(0.1, Math.min(4, newZoom));
+
+          const point = new Point(currentMidX, currentMidY);
+          canvas.zoomToPoint(point, newZoom);
+          setZoom(Math.round(newZoom * 100));
+        }
+        initialTouchDistance = currentDistance;
+
+        canvas.requestRenderAll();
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        isTouchPanning = false;
+        canvas.selection = true;
+      }
+    };
 
     const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return; // Handled by touch events
       if (e.button === 1 || (spacePanRef.current && e.button === 0)) {
         e.preventDefault();
         isPanningRef.current = true;
         lastPanPosRef.current = { x: e.clientX, y: e.clientY };
         try {
           upper.setPointerCapture(e.pointerId);
-        } catch {
-          /* ignore */
-        }
+        } catch { }
         canvas.selection = false;
         canvas.discardActiveObject();
         setSelectedObject(null);
@@ -400,7 +480,7 @@ export const EditorCanvas: React.FC = () => {
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      if (!isPanningRef.current) return;
+      if (e.pointerType === 'touch' || !isPanningRef.current) return;
       e.preventDefault();
       const dx = e.clientX - lastPanPosRef.current.x;
       const dy = e.clientY - lastPanPosRef.current.y;
@@ -410,16 +490,20 @@ export const EditorCanvas: React.FC = () => {
     };
 
     const endPan = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
       if (!isPanningRef.current) return;
       isPanningRef.current = false;
       try {
         upper.releasePointerCapture(e.pointerId);
-      } catch {
-        /* ignore */
-      }
+      } catch { }
       canvas.selection = true;
       upper.style.cursor = spacePanRef.current ? 'grab' : '';
     };
+
+    upper.addEventListener('touchstart', onTouchStart, { passive: false });
+    upper.addEventListener('touchmove', onTouchMove, { passive: false });
+    upper.addEventListener('touchend', onTouchEnd);
+    upper.addEventListener('touchcancel', onTouchEnd);
 
     upper.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
@@ -427,12 +511,17 @@ export const EditorCanvas: React.FC = () => {
     window.addEventListener('pointercancel', endPan);
 
     return () => {
+      upper.removeEventListener('touchstart', onTouchStart);
+      upper.removeEventListener('touchmove', onTouchMove);
+      upper.removeEventListener('touchend', onTouchEnd);
+      upper.removeEventListener('touchcancel', onTouchEnd);
+
       upper.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', endPan);
       window.removeEventListener('pointercancel', endPan);
     };
-  }, [canvas, setSelectedObject]);
+  }, [canvas, setSelectedObject, setZoom]);
 
   const recalcDemoSelection = useCallback(() => {
     if (!canvas || !selectedProduct || !backgroundImgRef.current) return;
@@ -517,7 +606,15 @@ export const EditorCanvas: React.FC = () => {
       recalcDemoSelection();
     } else if (editorSource === 'product' && customizationSlice) {
       const zones: EditableZoneCanvas[] = customizationSlice.editableAreas.map((area) => {
-        const m = mapEditableAreaToCanvas(area, newLeft, newTop, imgW, imgH);
+        const m = mapEditableAreaToCanvas(
+          area,
+          newLeft,
+          newTop,
+          imgW,
+          imgH,
+          customizationDesignSize.width,
+          customizationDesignSize.height
+        );
         return {
           id: area.id,
           label: area.label,
@@ -528,6 +625,9 @@ export const EditorCanvas: React.FC = () => {
           height: m.height,
           bleed: 0,
           maxLength: area.maxLength,
+          maxWords: area.maxWords,
+          maxElements: area.maxElements,
+          allowedColors: area.allowedColors,
           fontSize: area.fontSize,
           textColor: area.textColor,
           fontFamily: area.fontFamily,
@@ -545,6 +645,7 @@ export const EditorCanvas: React.FC = () => {
     editorSource,
     selectedProduct,
     customizationSlice,
+    customizationDesignSize,
     recalcDemoSelection,
     setEditableZones,
     updateLayers,
@@ -636,7 +737,9 @@ export const EditorCanvas: React.FC = () => {
             fabricImg.left!,
             fabricImg.top!,
             imgWidth,
-            imgHeight
+            imgHeight,
+            customizationDesignSize.width,
+            customizationDesignSize.height
           );
           return {
             id: area.id,
@@ -648,6 +751,9 @@ export const EditorCanvas: React.FC = () => {
             height: m.height,
             bleed: 0,
             maxLength: area.maxLength,
+            maxWords: area.maxWords,
+            maxElements: area.maxElements,
+            allowedColors: area.allowedColors,
             fontSize: area.fontSize,
             textColor: area.textColor,
             fontFamily: area.fontFamily,
@@ -759,6 +865,7 @@ export const EditorCanvas: React.FC = () => {
     setImageLoaded,
     updateLayers,
     selectedVariantId,
+    customizationDesignSize,
   ]);
 
   const handlePrevProduct = () => {
@@ -778,7 +885,7 @@ export const EditorCanvas: React.FC = () => {
   void viewportTick;
 
   return (
-    <div ref={containerRef} className="flex-1 relative bg-editor-bg overflow-hidden">
+    <div ref={containerRef} className="flex-1 relative bg-editor-bg overflow-hidden min-h-0 touch-none">
       <canvas ref={canvasRef} className="absolute inset-0" />
 
       {imageLoaded && (
@@ -812,6 +919,7 @@ export const EditorCanvas: React.FC = () => {
       {editableZones.map((zone) => {
         const bleed = zone.bleed;
         const vpt = canvas?.viewportTransform as Mat2D | undefined;
+        const isZoneActive = zone.id === activeEditableZoneId;
         const outer =
           canvas && vpt
             ? sceneRectToViewportCss(vpt, zone.x - bleed, zone.y - bleed, zone.width + bleed * 2, zone.height + bleed * 2)
@@ -825,10 +933,15 @@ export const EditorCanvas: React.FC = () => {
             ? new Point(zone.x + zone.width / 2, zone.y).transform(vpt)
             : new Point(0, 0);
 
+        const tone =
+          zone.type === 'text'
+            ? 'shadow-[0_0_0_1px_hsl(var(--editor-zone-text)/0.35)]'
+            : 'shadow-[0_0_0_1px_hsl(var(--editor-zone-image)/0.35)]';
+
         return (
           <div
             key={zone.id}
-            className="absolute pointer-events-none"
+            className="absolute pointer-events-none z-[5]"
             style={{
               left: `${outer.left}px`,
               top: `${outer.top}px`,
@@ -838,12 +951,20 @@ export const EditorCanvas: React.FC = () => {
           >
             <div
               className={cn(
-                'absolute inset-0 border-2 border-dashed rounded-sm',
-                zone.type === 'text' ? 'border-sky-400/70' : 'border-emerald-400/70'
+                'absolute inset-0 ',
+                bleed > 0 ? 'border border-dashed border-foreground/15 bg-foreground/[0.02]' : 'opacity-0'
               )}
             />
             <div
-              className="absolute border-2 border-dashed rounded-sm border-white/40"
+              className={cn(
+                'absolute ',
+                tone,
+                isZoneActive
+                  ? 'ring-2 ring-primary ring-offset-2 ring-offset-slate-100 bg-primary/8 shadow-md'
+                  : zone.type === 'text'
+                    ? 'bg-red-500/[0.07] border-2 border-dashed border-sky-500/50'
+                    : 'bg-emerald-500/[0.07] border-2 border-dashed border-emerald-500/50'
+              )}
               style={{
                 left: `${inner.left - outer.left}px`,
                 top: `${inner.top - outer.top}px`,
@@ -853,16 +974,21 @@ export const EditorCanvas: React.FC = () => {
             />
             <span
               className={cn(
-                'absolute text-[10px] font-medium px-1.5 py-0.5 rounded whitespace-nowrap bg-editor-bg/90',
-                zone.type === 'text' ? 'text-sky-400' : 'text-emerald-400'
+                'absolute z-[1] text-[10px] sm:text-[11px] font-semibold px-2 py-1 rounded-md whitespace-nowrap shadow-sm border',
+                isZoneActive
+                  ? 'bg-primary text-primary-foreground border-primary/80'
+                  : zone.type === 'text'
+                    ? 'bg-sky-500/90 text-white border-sky-600/50'
+                    : 'bg-emerald-600/90 text-white border-emerald-700/50'
               )}
               style={{
                 left: `${labelPos.x - outer.left}px`,
-                top: `${labelPos.y - outer.top - 20}px`,
+                top: `${labelPos.y - outer.top - 26}px`,
                 transform: 'translateX(-50%)',
               }}
             >
               {zone.label}
+              {isZoneActive ? ' · active' : ''}
             </span>
           </div>
         );
@@ -871,8 +997,8 @@ export const EditorCanvas: React.FC = () => {
       {editorSource === 'demo' && (
         <div
           className={cn(
-            'absolute left-1/2 -translate-x-1/2 flex items-center gap-3 bg-editor-panel/95 backdrop-blur-sm rounded-full px-4 py-2 border border-border shadow-lg',
-            isMobile ? 'bottom-28' : 'bottom-4'
+            'absolute left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 sm:gap-3 bg-editor-panel/95 backdrop-blur-md rounded-full px-2 sm:px-4 py-2 border border-border shadow-lg max-w-[calc(100vw-1rem)]',
+            isMobile ? 'bottom-3' : 'bottom-4'
           )}
         >
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={handlePrevProduct}>
@@ -906,11 +1032,11 @@ export const EditorCanvas: React.FC = () => {
         </div>
       )}
 
-      {editorSource === 'product' && customizationVariantOptions.length > 1 && (
+      {showColorVariantBar && (
         <div
           className={cn(
-            'absolute left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-2 max-w-[95vw] bg-editor-panel/95 backdrop-blur-sm rounded-full px-4 py-2 border border-border shadow-lg',
-            isMobile ? 'bottom-28' : 'bottom-4'
+            'absolute left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-[calc(100vw-0.75rem)] bg-editor-panel/95 backdrop-blur-md rounded-2xl px-2 sm:px-4 py-2 border border-border shadow-lg',
+            showZoneStrip ? (isMobile ? 'bottom-[4.25rem]' : 'bottom-16') : isMobile ? 'bottom-3' : 'bottom-4'
           )}
         >
           {customizationVariantOptions.map((v) => {
@@ -919,61 +1045,82 @@ export const EditorCanvas: React.FC = () => {
               (isRoot && selectedVariantId === null) ||
               (!isRoot && selectedVariantId === v.id);
             return (
-            <button
-              key={v.id || 'root'}
-              type="button"
-              onClick={() => setSelectedVariantId(isRoot ? null : v.id)}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
-                chipSelected
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              )}
-            >
-              {v.colorCode ? (
-                <span
-                  className="inline-block w-3.5 h-3.5 rounded-full border border-white/30 shrink-0"
-                  style={{ backgroundColor: v.colorCode }}
-                  aria-hidden
-                />
-              ) : null}
-              {!v.colorCode && v.colorImage ? (
-                <img
-                  src={resolveProductAssetUrl(v.colorImage)}
-                  alt=""
-                  className="w-5 h-5 rounded-full object-cover border border-border shrink-0"
-                />
-              ) : null}
-              <span>{v.label}</span>
-            </button>
-          );
+              <button
+                key={v.id || 'root'}
+                type="button"
+                onClick={() => setSelectedVariantId(isRoot ? null : v.id)}
+                className={cn(
+                  'inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold transition-colors min-h-[44px] px-3 sm:min-h-0 sm:py-1.5',
+                  chipSelected
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/90 active:scale-[0.98]'
+                )}
+              >
+                {v.colorCode ? (
+                  <span
+                    className="inline-block w-3.5 h-3.5 rounded-full border border-white/30 shrink-0"
+                    style={{ backgroundColor: v.colorCode }}
+                    aria-hidden
+                  />
+                ) : null}
+                {!v.colorCode && v.colorImage ? (
+                  <img
+                    src={resolveProductAssetUrl(v.colorImage)}
+                    alt=""
+                    className="w-5 h-5 rounded-full object-cover border border-border shrink-0"
+                  />
+                ) : null}
+                <span>{v.label}</span>
+              </button>
+            );
           })}
         </div>
       )}
 
-      {editorSource === 'product' && editableZones.length > 1 && (
+      {showZoneStrip && (
         <div
           className={cn(
-            'absolute left-1/2 -translate-x-1/2 flex flex-wrap gap-2 justify-center max-w-[95vw]',
-            customizationVariantOptions.length > 1 ? (isMobile ? 'bottom-48' : 'bottom-20') : isMobile ? 'bottom-28' : 'bottom-4'
+            'absolute left-1/2 -translate-x-1/2 z-20 flex flex-wrap gap-2 justify-center max-w-[calc(100vw-0.75rem)] px-1',
+            isMobile ? 'bottom-3' : 'bottom-4'
           )}
         >
-          {editableZones.map((z) => (
-            <button
-              key={z.id}
-              type="button"
-              onClick={() => setActiveEditableZoneId(z.id)}
-              className={cn(
-                'px-2.5 py-1 rounded-md text-[11px] border transition-colors',
-                activeEditableZoneId === z.id
-                  ? 'border-primary bg-primary/15 text-foreground'
-                  : 'border-border bg-editor-panel/90 text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {z.label}{' '}
-              <span className="opacity-70">({z.type})</span>
-            </button>
-          ))}
+          <div className="flex  flex-wrap justify-center gap-2 rounded-sm bg-editor-panel/95 backdrop-blur-md border border-border shadow-lg p-0.5">
+            <span className="sr-only">Print areas — tap to choose where you edit</span>
+            {editableZones.map((z) => {
+              const active = activeEditableZoneId === z.id;
+              const Icon = z.type === 'text' ? Type : ImageIcon;
+              return (
+                <button
+                  key={z.id}
+                  type="button"
+                  onClick={() => setActiveEditableZoneId(z.id)}
+                  className={cn(
+                    'inline-flex items-center justify-center gap-2 rounded-sm p-0 border-2 text-left transition-all min-h-[48px] px-3 sm:min-h-[40px] active:scale-[0.98]',
+                    active
+                      ? 'border-primary bg-primary/12 text-foreground shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.2)]'
+                      : 'border-border bg-background/90 text-muted-foreground hover:text-foreground hover:border-primary/40'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-sm',
+                      z.type === 'text' ? 'bg-sky-500/15 text-sky-600' : 'bg-emerald-500/15 text-emerald-700'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden />
+                  </span>
+                  <span className="flex flex-col min-w-0">
+                    <span className="text-xs font-semibold leading-tight truncate max-w-[9rem] sm:max-w-[11rem]">
+                      {z.label}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wide opacity-70">
+                      {z.type === 'text' ? 'Text layer' : 'Image layer'}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

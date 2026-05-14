@@ -11,10 +11,14 @@ import React, {
 } from 'react';
 import { Canvas as FabricCanvas, FabricObject } from 'fabric';
 import {
-  pickCustomizationSlice,
+  resolveStorefrontCustomization,
   resolveInitialCustomizationVariantId,
   hasRootCustomizationSlice,
+  DESIGN_CANVAS_WIDTH,
+  DESIGN_CANVAS_HEIGHT,
   type ProductForEditor,
+  type CustomizationStyleVariantPayload,
+  type EditableAreaDef,
 } from '@pixel/lib/productCustomization';
 import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
 
@@ -91,6 +95,9 @@ export interface EditableZoneCanvas extends SelectionArea {
   label: string;
   type: 'text' | 'image';
   maxLength?: number;
+  maxWords?: number;
+  maxElements?: number;
+  allowedColors?: string[];
   fontSize?: number;
   textColor?: string;
   fontFamily?: string;
@@ -151,6 +158,13 @@ interface EditorContextType {
   /** Re-fit mockup to the canvas area and reset viewport (after sidebar resize / “fit view”). */
   fitCanvasToView: () => void;
   registerFitCanvasHandler: (fn: (() => void) | null) => void;
+  /** Resolved product slice (respects style variants when present). */
+  customizationSlice: { baseImage: string; editableAreas: EditableAreaDef[] } | null;
+  customizationDesignSize: { width: number; height: number };
+  usesStyleVariants: boolean;
+  styleVariantsForPicker: CustomizationStyleVariantPayload[];
+  selectedStyleVariantId: string | null;
+  setSelectedStyleVariantId: (id: string | null) => void;
 }
 
 const defaultAdjustments: Adjustments = {
@@ -199,7 +213,8 @@ export const EditorProvider: React.FC<{
   children: React.ReactNode;
   initialProduct?: ProductForEditor | null;
   initialVariantId?: string | null;
-}> = ({ children, initialProduct = null, initialVariantId = null }) => {
+  initialStyleVariantId?: string | null;
+}> = ({ children, initialProduct = null, initialVariantId = null, initialStyleVariantId = null }) => {
   const [canvas, setCanvas] = useState<FabricCanvas | null>(null);
   const [activeTool, setActiveTool] = useState<Tool | null>(null);
   const [zoom, setZoom] = useState(100);
@@ -237,11 +252,21 @@ export const EditorProvider: React.FC<{
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(() =>
     resolveInitialCustomizationVariantId(initialProduct ?? null, initialVariantId)
   );
+  const [selectedStyleVariantId, setSelectedStyleVariantId] = useState<string | null>(() => {
+    const styles = initialProduct?.customization?.styleVariants;
+    if (!Array.isArray(styles) || styles.length === 0) return null;
+    if (initialStyleVariantId && styles.some((s) => s.id === initialStyleVariantId)) {
+      return initialStyleVariantId;
+    }
+    return styles[0].id;
+  });
   const [editableZones, setEditableZones] = useState<EditableZoneCanvas[]>([]);
 
   useEffect(() => {
     const c = initialProduct?.customization;
     if (!c) return;
+    if (Array.isArray(c.styleVariants) && c.styleVariants.length > 0) return;
+
     const variants = c.variants;
     const keys = variants && typeof variants === 'object' ? Object.keys(variants) : [];
     const hasRoot = hasRootCustomizationSlice(c);
@@ -257,31 +282,53 @@ export const EditorProvider: React.FC<{
     if (hasRoot) setSelectedVariantId(null);
     else if (keys.length > 0) setSelectedVariantId(keys[0]);
   }, [initialProduct?.customization, selectedVariantId]);
+
+  useEffect(() => {
+    const styles = initialProduct?.customization?.styleVariants;
+    if (!Array.isArray(styles) || styles.length === 0) {
+      setSelectedStyleVariantId(null);
+      return;
+    }
+    if (!selectedStyleVariantId || !styles.some((s) => s.id === selectedStyleVariantId)) {
+      setSelectedStyleVariantId(styles[0].id);
+    }
+  }, [initialProduct?.customization?.styleVariants, selectedStyleVariantId]);
+
   const [activeEditableZoneId, setActiveEditableZoneId] = useState<string | null>(null);
 
-  const customizationSlice = useMemo(
+  const resolvedCustomization = useMemo(
     () =>
-      initialProduct
-        ? pickCustomizationSlice(initialProduct.customization ?? null, selectedVariantId)
-        : null,
-    [initialProduct, selectedVariantId]
+      resolveStorefrontCustomization(
+        initialProduct ?? null,
+        selectedVariantId,
+        selectedStyleVariantId
+      ),
+    [initialProduct, selectedVariantId, selectedStyleVariantId]
   );
+
+  const customizationSlice = resolvedCustomization?.slice ?? null;
+  const customizationDesignSize = resolvedCustomization?.designSize ?? {
+    width: DESIGN_CANVAS_WIDTH,
+    height: DESIGN_CANVAS_HEIGHT,
+  };
+  const usesStyleVariants = resolvedCustomization?.usesStyleVariants ?? false;
+  const styleVariantsForPicker = resolvedCustomization?.styleVariants ?? [];
 
   const editorSource: EditorSource = customizationSlice ? 'product' : 'demo';
 
   /** Admin `textOnly: true` OR every zone in the current slice is text → Text + Layers only */
   const productTextOnlyMode = useMemo(() => {
     if (editorSource !== 'product' || !initialProduct?.customization) return false;
-    const c = initialProduct.customization;
-    if (c.textOnly === true) return true;
-    if (c.textOnly === false) return false;
+    const eff = resolvedCustomization?.effectiveTextOnly;
+    if (eff === true) return true;
+    if (eff === false) return false;
     const slice = customizationSlice;
     return (
       !!slice &&
       slice.editableAreas.length > 0 &&
       slice.editableAreas.every((a) => a.type === 'text')
     );
-  }, [editorSource, initialProduct, customizationSlice]);
+  }, [editorSource, initialProduct, customizationSlice, resolvedCustomization?.effectiveTextOnly]);
 
   useEffect(() => {
     if (!imageLoaded || !productTextOnlyMode) return;
@@ -310,7 +357,7 @@ export const EditorProvider: React.FC<{
       setLayers([]);
       return;
     }
-    
+
     const objects = canvas.getObjects();
     const layerItems: LayerItem[] = objects
       .filter(obj => !(obj as any).isBackground) // Exclude background
@@ -323,7 +370,7 @@ export const EditorProvider: React.FC<{
         object: obj,
       }))
       .reverse(); // Reverse to show top layer first
-    
+
     setLayers(layerItems);
   }, [canvas]);
 
@@ -341,16 +388,16 @@ export const EditorProvider: React.FC<{
     };
     return names[type] || 'Object';
   };
-  
+
   const pushHistory = useCallback(() => {
     if (!canvas || isHistoryAction.current) return;
-    
+
     const state = JSON.stringify(canvas.toJSON());
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push({ canvasState: state, timestamp: Date.now() });
-    
+
     if (newHistory.length > 50) newHistory.shift();
-    
+
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
     updateLayers();
@@ -358,7 +405,7 @@ export const EditorProvider: React.FC<{
 
   const undo = useCallback(() => {
     if (!canvas || historyIndex <= 0) return;
-    
+
     isHistoryAction.current = true;
     const prevState = history[historyIndex - 1];
     canvas.loadFromJSON(JSON.parse(prevState.canvasState)).then(() => {
@@ -371,7 +418,7 @@ export const EditorProvider: React.FC<{
 
   const redo = useCallback(() => {
     if (!canvas || historyIndex >= history.length - 1) return;
-    
+
     isHistoryAction.current = true;
     const nextState = history[historyIndex + 1];
     canvas.loadFromJSON(JSON.parse(nextState.canvasState)).then(() => {
@@ -385,7 +432,7 @@ export const EditorProvider: React.FC<{
   const deleteSelectedObject = useCallback(() => {
     if (!canvas || !selectedObject) return;
     if ((selectedObject as any).isBackground) return; // Prevent deleting background
-    
+
     canvas.remove(selectedObject);
     canvas.discardActiveObject();
     setSelectedObject(null);
@@ -397,6 +444,22 @@ export const EditorProvider: React.FC<{
   const duplicateSelectedObject = useCallback(() => {
     if (!canvas || !selectedObject) return;
     if ((selectedObject as any).isBackground) return;
+
+    const zid = (selectedObject as { editableZoneId?: string }).editableZoneId;
+    const zone = zid
+      ? editableZones.find((z) => z.id === zid)
+      : editableZones[0];
+
+    if (zone && zone.maxElements) {
+      const currentObjects = canvas.getObjects().filter((o) => (o as any).editableZoneId === zone.id);
+      if (currentObjects.length >= zone.maxElements) {
+        // Need to import toast from 'sonner' at the top
+        import('sonner').then(({ toast }) => {
+          toast.error(`Maximum of ${zone.maxElements} items allowed in this area.`);
+        });
+        return;
+      }
+    }
 
     selectedObject.clone().then((cloned: FabricObject) => {
       cloned.set({
@@ -421,7 +484,7 @@ export const EditorProvider: React.FC<{
   const bringForward = useCallback(() => {
     if (!canvas || !selectedObject) return;
     if ((selectedObject as any).isBackground) return;
-    
+
     canvas.bringObjectForward(selectedObject);
     canvas.renderAll();
     pushHistory();
@@ -431,12 +494,12 @@ export const EditorProvider: React.FC<{
   const sendBackward = useCallback(() => {
     if (!canvas || !selectedObject) return;
     if ((selectedObject as any).isBackground) return;
-    
+
     // Find background and make sure we don't go behind it
     const objects = canvas.getObjects();
     const bgIndex = objects.findIndex(obj => (obj as any).isBackground);
     const currentIndex = objects.indexOf(selectedObject);
-    
+
     if (currentIndex > bgIndex + 1) {
       canvas.sendObjectBackwards(selectedObject);
       canvas.renderAll();
@@ -497,6 +560,12 @@ export const EditorProvider: React.FC<{
     productTextOnlyMode,
     fitCanvasToView,
     registerFitCanvasHandler,
+    customizationSlice,
+    customizationDesignSize,
+    usesStyleVariants,
+    styleVariantsForPicker,
+    selectedStyleVariantId,
+    setSelectedStyleVariantId,
   };
 
   return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;

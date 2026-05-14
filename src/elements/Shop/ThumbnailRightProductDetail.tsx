@@ -17,6 +17,7 @@ interface thumbnailCardtype {
     para?: string;
     selectedVariationIndex?: number | null;
     onVariationChange?: (index: number | null) => void;
+    relatedVariants?: any[];
 }
 
 export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {

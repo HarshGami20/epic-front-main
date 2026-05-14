@@ -68,6 +68,14 @@ export const PicturePanel: React.FC = () => {
     const activeZone =
       editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
 
+    if (activeZone && activeZone.maxElements) {
+      const currentObjects = canvas.getObjects().filter(o => (o as any).editableZoneId === activeZone.id);
+      if (currentObjects.length >= activeZone.maxElements) {
+        toast.error(`Maximum of ${activeZone.maxElements} items allowed in this area.`);
+        return;
+      }
+    }
+
     const img = new Image();
     img.onload = () => {
       let left = canvas.width! / 2;

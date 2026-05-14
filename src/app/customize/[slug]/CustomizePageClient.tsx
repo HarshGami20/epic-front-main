@@ -11,6 +11,7 @@ import { fetchPublicProductBySlug } from "@/lib/publicProductApi";
 export default function CustomizePageClient({ slug }: { slug: string }) {
   const searchParams = useSearchParams();
   const variant = searchParams.get("variant");
+  const style = searchParams.get("style");
   const [product, setProduct] = useState<ProductForEditor | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,13 +50,17 @@ export default function CustomizePageClient({ slug }: { slug: string }) {
   }
 
   const c = product.customization;
+  const hasStyleSlices =
+    Array.isArray(c?.styleVariants) &&
+    c.styleVariants.some((s) => s && typeof s === "object" && Boolean((s as { baseImage?: string }).baseImage));
   const hasSlice =
     !!c &&
     (Boolean(c.baseImage) ||
+      hasStyleSlices ||
       Boolean(
         c.variants &&
           Object.values(c.variants).some(
-            (v) => v && typeof v === 'object' && Boolean((v as { baseImage?: string }).baseImage)
+            (v) => v && typeof v === "object" && Boolean((v as { baseImage?: string }).baseImage)
           )
       ));
 
@@ -74,7 +79,7 @@ export default function CustomizePageClient({ slug }: { slug: string }) {
   }
 
   return (
-    <EditorProvider initialProduct={product} initialVariantId={variant}>
+    <EditorProvider initialProduct={product} initialVariantId={variant} initialStyleVariantId={style}>
       <PhotoEditor />
     </EditorProvider>
   );

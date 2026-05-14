@@ -31,12 +31,24 @@ export default function ProductDefaultSlider({
             thumbUrl: getImageUrl(img),
             isStatic: false
         }));
-    } else if (productData?.thumbImage?.length > 0) {
+    } else if (Array.isArray(productData?.images) && productData.images.length > 0) {
+        sliderImages = productData.images.map((img: string) => ({
+            url: getImageUrl(img),
+            thumbUrl: getImageUrl(img),
+            isStatic: false
+        }));
+    } else if (Array.isArray(productData?.thumbImage) && productData.thumbImage.length > 0) {
         sliderImages = productData.thumbImage.map((img: string) => ({
             url: getImageUrl(img),
             thumbUrl: getImageUrl(img),
             isStatic: false
         }));
+    } else if (typeof productData?.thumbImage === 'string' && productData.thumbImage.length > 0) {
+        sliderImages = [{
+            url: getImageUrl(productData.thumbImage),
+            thumbUrl: getImageUrl(productData.thumbImage),
+            isStatic: false
+        }];
     } else if (productData?.image) {
         sliderImages = [{
             url: typeof productData.image === 'string' ? productData.image : productData.image.src,

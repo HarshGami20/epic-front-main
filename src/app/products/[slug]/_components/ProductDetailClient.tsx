@@ -12,6 +12,8 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     const [loading, setLoading] = useState(true);
     const [selectedVariationIndex, setSelectedVariationIndex] = useState<number | null>(null);
 
+    const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+
     useEffect(() => {
         const load = async () => {
             try {
@@ -29,6 +31,20 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                     };
                     const updated = [productInfo, ...recent.filter((p: any) => p.id !== data.id)].slice(0, 5);
                     localStorage.setItem('recentlyViewed', JSON.stringify(updated));
+
+                    // Fetch related variants if metadata exists
+                    if (data.metadata?.productVariations?.length > 0) {
+                        try {
+                            const { fetchPublicProducts } = await import('@/lib/publicProductApi');
+                            const allProds = await fetchPublicProducts({ limit: 100 });
+                            const variants = allProds.filter((p: any) =>
+                                data.metadata.productVariations.includes(p.id)
+                            );
+                            setRelatedProducts(variants);
+                        } catch (err) {
+                            console.error("Failed to load variants", err);
+                        }
+                    }
                 }
             } catch (err) {
                 console.error("Failed to load product", err);
@@ -129,6 +145,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                                     productData={productData}
                                     selectedVariationIndex={selectedVariationIndex}
                                     onVariationChange={setSelectedVariationIndex}
+                                    relatedVariants={relatedProducts}
                                 />
                             </div>
                         </div>
@@ -137,7 +154,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
             </section>
             <section className="content-inner-3 pb-6 border-top">
                 <div className="container">
-                    <ProductDetailPageTabs productData={productData} routeSlug={slug} />
+                    <ProductDetailPageTabs productData={productData} routeSlug={slug} relatedVariants={relatedProducts} />
                 </div>
             </section>
         </div>

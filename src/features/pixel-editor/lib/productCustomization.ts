@@ -1,6 +1,6 @@
 import { getPublicAssetOrigin } from '@/lib/env';
 
-/** Matches epiclance-admin `CustomizationEditor` stage size */
+/** Default design space when admin has not set `designWidth` / `designHeight` */
 export const DESIGN_CANVAS_WIDTH = 500;
 export const DESIGN_CANVAS_HEIGHT = 600;
 
@@ -19,7 +19,22 @@ export interface EditableAreaDef {
   fontSize?: number;
   textColor?: string;
   maxLength?: number;
+  maxWords?: number;
+  maxElements?: number;
+  allowedColors?: string[];
   imageUrl?: string;
+}
+
+export interface CustomizationStyleVariantPayload {
+  id: string;
+  title: string;
+  priceAddon: number;
+  baseImage: string;
+  editableAreas: EditableAreaDef[];
+  designWidth?: number;
+  designHeight?: number;
+  textOnly?: boolean;
+  allowedFonts?: string[];
 }
 
 export interface ProductCustomizationPayload {
@@ -28,13 +43,19 @@ export interface ProductCustomizationPayload {
   /** When true, storefront shows text tools only; when false, image upload only (single area). */
   textOnly?: boolean;
   allowedFonts?: string[];
+  /** Logical design stage in px (from admin crop / canvas). */
+  designWidth?: number;
+  designHeight?: number;
   variants?: Record<
     string,
     {
       baseImage: string;
       editableAreas: EditableAreaDef[];
+      designWidth?: number;
+      designHeight?: number;
     }
   >;
+  styleVariants?: CustomizationStyleVariantPayload[];
 }
 
 export interface ProductForEditor {
@@ -61,9 +82,66 @@ export function hasRootCustomizationSlice(
   if (!customization) return false;
   return Boolean(
     customization.baseImage &&
-      Array.isArray(customization.editableAreas) &&
-      customization.editableAreas.length > 0
+    Array.isArray(customization.editableAreas) &&
+    customization.editableAreas.length > 0
   );
+}
+
+export interface ResolvedStorefrontCustomization {
+  slice: { baseImage: string; editableAreas: EditableAreaDef[] } | null;
+  designSize: { width: number; height: number };
+  usesStyleVariants: boolean;
+  styleVariants: CustomizationStyleVariantPayload[];
+  /** Effective textOnly for the active slice (style row overrides root). */
+  effectiveTextOnly: boolean | undefined;
+}
+
+/**
+ * When `styleVariants` exist, the storefront uses them as the primary mockup source (not color `variants`).
+ * Otherwise behavior matches legacy `pickCustomizationSlice` + root design size.
+ */
+export function resolveStorefrontCustomization(
+  product: ProductForEditor | null | undefined,
+  colorVariantId: string | null,
+  styleVariantId: string | null
+): ResolvedStorefrontCustomization | null {
+  const c = product?.customization;
+  if (!c) return null;
+
+  const styles = Array.isArray(c.styleVariants) ? c.styleVariants : [];
+
+  if (styles.length > 0) {
+    const sid =
+      styleVariantId && styles.some((s) => s.id === styleVariantId)
+        ? styleVariantId
+        : styles[0].id;
+    const row = styles.find((s) => s.id === sid);
+    if (!row) return null;
+    const dw = row.designWidth ?? c.designWidth ?? DESIGN_CANVAS_WIDTH;
+    const dh = row.designHeight ?? c.designHeight ?? DESIGN_CANVAS_HEIGHT;
+    return {
+      slice: {
+        baseImage: row.baseImage,
+        editableAreas: row.editableAreas || [],
+      },
+      designSize: { width: dw, height: dh },
+      usesStyleVariants: true,
+      styleVariants: styles,
+      effectiveTextOnly: row.textOnly ?? c.textOnly,
+    };
+  }
+
+  const slice = pickCustomizationSlice(c, colorVariantId);
+  if (!slice) return null;
+  const dw = c.designWidth ?? DESIGN_CANVAS_WIDTH;
+  const dh = c.designHeight ?? DESIGN_CANVAS_HEIGHT;
+  return {
+    slice,
+    designSize: { width: dw, height: dh },
+    usesStyleVariants: false,
+    styleVariants: [],
+    effectiveTextOnly: c.textOnly,
+  };
 }
 
 export function pickCustomizationSlice(
@@ -224,13 +302,13 @@ export function mapEditableAreaToCanvas(
   bgLeft: number,
   bgTop: number,
   displayWidth: number,
-  displayHeight: number
+  displayHeight: number,
+  designWidth: number = DESIGN_CANVAS_WIDTH,
+  designHeight: number = DESIGN_CANVAS_HEIGHT
 ): { x: number; y: number; width: number; height: number } {
-  const x =
-    bgLeft + (area.x / DESIGN_CANVAS_WIDTH) * displayWidth;
-  const y =
-    bgTop + (area.y / DESIGN_CANVAS_HEIGHT) * displayHeight;
-  const w = (area.width / DESIGN_CANVAS_WIDTH) * displayWidth;
-  const h = (area.height / DESIGN_CANVAS_HEIGHT) * displayHeight;
+  const x = bgLeft + (area.x / designWidth) * displayWidth;
+  const y = bgTop + (area.y / designHeight) * displayHeight;
+  const w = (area.width / designWidth) * displayWidth;
+  const h = (area.height / designHeight) * displayHeight;
   return { x, y, width: w, height: h };
 }

@@ -75,6 +75,17 @@ export const ShapesPanel: React.FC = () => {
   const addShape = (shapeId: string) => {
     if (!canvas) return;
 
+    const zone = editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
+    if (zone && zone.maxElements) {
+      const currentObjects = canvas.getObjects().filter((o) => (o as any).editableZoneId === zone.id);
+      if (currentObjects.length >= zone.maxElements) {
+        import('sonner').then(({ toast }) => {
+          toast.error(`Maximum of ${zone.maxElements} items allowed in this area.`);
+        });
+        return;
+      }
+    }
+
     // Position in selection area if available
     let centerX = canvas.width! / 2;
     let centerY = canvas.height! / 2;

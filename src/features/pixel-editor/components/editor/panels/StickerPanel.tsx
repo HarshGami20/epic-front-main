@@ -81,6 +81,17 @@ export const StickerPanel: React.FC = () => {
   const addSticker = async (emoji: string) => {
     if (!canvas) return;
 
+    const zone = editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
+    if (zone && zone.maxElements) {
+      const currentObjects = canvas.getObjects().filter((o) => (o as any).editableZoneId === zone.id);
+      if (currentObjects.length >= zone.maxElements) {
+        import('sonner').then(({ toast }) => {
+          toast.error(`Maximum of ${zone.maxElements} items allowed in this area.`);
+        });
+        return;
+      }
+    }
+
     // Create a canvas element to render the emoji with high resolution
     const tempCanvas = document.createElement('canvas');
     const ctx = tempCanvas.getContext('2d');

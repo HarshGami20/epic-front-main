@@ -47,6 +47,10 @@
     --editor-canvas-bg: 220 18% 93%;
     --editor-slider-track: 220 12% 88%;
     --editor-slider-fill: 187 72% 42%;
+    /** Bottom tool strip on small screens — keep in sync with ToolSidebar mobile bar */
+    --editor-mobile-dock-h: 4.75rem;
+    --editor-zone-text: 199 89% 48%;
+    --editor-zone-image: 160 84% 39%;
   }
 
   #pixel-editor-root * {
@@ -74,6 +78,21 @@
 
   #pixel-editor-root .editor-tool-btn.active {
     @apply text-primary bg-[hsl(var(--accent))] shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)];
+  }
+
+  /** Prevent page scroll / rubber-band while dragging on the canvas */
+  #pixel-editor-root .editor-fabric-upper {
+    touch-action: none;
+  }
+
+  #pixel-editor-root .editor-studio-main {
+    @apply min-h-0 flex-1 flex overflow-hidden relative;
+  }
+
+  @media (max-width: 767px) {
+    #pixel-editor-root .editor-studio-main {
+      padding-bottom: calc(var(--editor-mobile-dock-h) + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   #pixel-editor-root .editor-slider {

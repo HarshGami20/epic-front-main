@@ -2,6 +2,7 @@ import React from 'react';
 import { Toaster } from 'sonner';
 import { TopBar } from './TopBar';
 import { CustomizeVariantBar } from './CustomizeVariantBar';
+import { CustomizeStyleVariantBar } from './CustomizeStyleVariantBar';
 import { ToolSidebar } from './ToolSidebar';
 import { ToolPanel } from './ToolPanel';
 import { EditorCanvas } from './EditorCanvas';
@@ -11,9 +12,10 @@ export const PhotoEditor: React.FC = () => {
     <div id="pixel-editor-root" className="min-h-screen editor-app-shell">
       <div className="h-screen w-screen flex flex-col bg-editor-bg overflow-hidden">
         <TopBar />
+        <CustomizeStyleVariantBar />
         <CustomizeVariantBar />
 
-        <div className="flex-1 flex overflow-hidden relative">
+        <div className="flex-1 flex overflow-hidden relative editor-studio-main">
           <ToolSidebar />
           <ToolPanel />
           <EditorCanvas />

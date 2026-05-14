@@ -35,6 +35,10 @@ export function buildProductSpecRows(product: Record<string, any> | null | undef
     add("Subcategories", product.subCategories.join(", "));
   }
   add("Type", product.type);
+  add("Gender", product.gender);
+  if (Array.isArray(product.tags) && product.tags.length > 0) {
+    add("Tags", product.tags.join(", "));
+  }
 
   return rows;
 }
