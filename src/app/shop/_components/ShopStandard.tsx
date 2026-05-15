@@ -39,14 +39,16 @@ function ShopStandardContent() {
     const router = useRouter();
     const initCategory = searchParams.get('category') || "";
     const initSearch = (searchParams.get('search') || searchParams.get('q') || "").trim();
+    const initPage = parseInt(searchParams.get('page') || '1', 10);
 
     const [detailModal, setDetailModal] = useState<boolean>(false);
     const [mobileSidebar, setMobileSidebar] = useState<boolean>(false);
 
     // Dynamic products state
     const [products, setProducts] = useState<any[]>([]);
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(!isNaN(initPage) && initPage > 0 ? initPage : 1);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const [backendColors, setBackendColors] = useState<any[]>([]);
     const [backendSizes, setBackendSizes] = useState<any[]>([]);
     const [hierarchicalCategories, setHierarchicalCategories] = useState<any[]>([]);
@@ -89,9 +91,11 @@ function ShopStandardContent() {
         }
         const s = (searchParams.get('search') || searchParams.get('q') || "").trim();
         const c = (searchParams.get('category') || "").trim();
+        const p = parseInt(searchParams.get('page') || '1', 10);
         setSearchQuery(s);
         setDebouncedSearch(s);
         setSelectedCategory(c);
+        if (!isNaN(p) && p > 0) setPage(p);
     }, [searchParamsKey, searchParams]);
 
     // Reflect current filters in the address bar (shareable links).
@@ -99,6 +103,7 @@ function ShopStandardContent() {
         const next = new URLSearchParams();
         if (debouncedSearch) next.set('search', debouncedSearch);
         if (selectedCategory && selectedCategory !== 'All Categories') next.set('category', selectedCategory);
+        if (page > 1) next.set('page', String(page));
 
         const currentQuery = searchParams.toString();
         const nextQuery = next.toString();
@@ -107,7 +112,12 @@ function ShopStandardContent() {
             skipUrlToStateSyncRef.current = true;
             router.replace(`${pathname}?${nextQuery}`, { scroll: false });
         }
-    }, [debouncedSearch, selectedCategory, pathname, router]);
+    }, [debouncedSearch, selectedCategory, page, pathname, router]);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [selectedCategory, selectedBrand, selectedColor, selectedSize, priceRange, debouncedSearch]);
 
     // Initial load: Categories, colors, sizes, and max price
     useEffect(() => {
@@ -172,7 +182,8 @@ function ShopStandardContent() {
                 else if (Array.isArray(prodJson)) productsData = prodJson;
 
                 setProducts(productsData.map(normalizePublicProductRecord));
-                setTotalPages(prodJson.totalPages || 1);
+                setTotalPages(prodJson.pagination?.pages || prodJson.totalPages || 1);
+                setTotalItems(prodJson.pagination?.total || productsData.length);
             } catch (err) {
                 console.error("Failed to fetch products:", err);
             } finally {
@@ -368,7 +379,7 @@ function ShopStandardContent() {
                             </div>
                             <div className="row page mt-0">
                                 <div className="col-md-6">
-                                    <p className="page-text">Showing {displayProducts.length > 0 ? 1 : 0}–{displayProducts.length} of {displayProducts.length} Results</p>
+                                    <p className="page-text">Showing {totalItems > 0 ? (page - 1) * 12 + 1 : 0}–{Math.min(page * 12, totalItems)} of {totalItems} Results</p>
                                 </div>
                                 <div className="col-md-12">
                                     <nav aria-label="Blog Pagination">
@@ -464,7 +475,7 @@ function ShopStandardContent() {
                                         <div className="dz-info mb-0">
                                             <ul>
                                                 <li><strong>Category:</strong></li>
-                                                <li><Link href={`/shop-list?category=${selectedProduct?.category}`}>{selectedProduct?.category}</Link></li>
+                                                <li><Link href={`/shop?category=${selectedProduct?.category}`}>{selectedProduct?.category}</Link></li>
                                             </ul>
                                         </div>
                                     </div>
