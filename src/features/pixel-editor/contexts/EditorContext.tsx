@@ -394,7 +394,7 @@ export const EditorProvider: React.FC<{
   const pushHistory = useCallback(() => {
     if (!canvas || isHistoryAction.current) return;
 
-    const state = JSON.stringify(canvas.toJSON(['editableZoneId', 'textFieldId', 'isBackground']));
+    const state = JSON.stringify(canvas.toObject(['editableZoneId', 'textFieldId', 'isBackground']));
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push({ canvasState: state, timestamp: Date.now() });
 
