@@ -19,6 +19,7 @@ import {
   type ProductForEditor,
   type CustomizationStyleVariantPayload,
   type EditableAreaDef,
+  type CustomTextFieldDef,
 } from '@pixel/lib/productCustomization';
 import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
 
@@ -102,6 +103,7 @@ export interface EditableZoneCanvas extends SelectionArea {
   textColor?: string;
   fontFamily?: string;
   rotation?: number;
+  textFields?: CustomTextFieldDef[];
 }
 
 interface EditorContextType {
@@ -392,7 +394,7 @@ export const EditorProvider: React.FC<{
   const pushHistory = useCallback(() => {
     if (!canvas || isHistoryAction.current) return;
 
-    const state = JSON.stringify(canvas.toJSON());
+    const state = JSON.stringify(canvas.toJSON(['editableZoneId', 'textFieldId', 'isBackground']));
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push({ canvasState: state, timestamp: Date.now() });
 

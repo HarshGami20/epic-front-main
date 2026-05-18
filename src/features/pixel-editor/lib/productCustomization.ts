@@ -4,6 +4,23 @@ import { getPublicAssetOrigin } from '@/lib/env';
 export const DESIGN_CANVAS_WIDTH = 500;
 export const DESIGN_CANVAS_HEIGHT = 600;
 
+export interface CustomTextFieldDef {
+  id: string;
+  label: string;
+  text: string;
+  fontFamily?: string;
+  fontSize?: number;
+  textColor?: string;
+  maxLength?: number;
+  maxWords?: number;
+  allowedColors?: string[];
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+}
+
 export interface EditableAreaDef {
   id: string;
   type: 'text' | 'image';
@@ -23,6 +40,7 @@ export interface EditableAreaDef {
   maxElements?: number;
   allowedColors?: string[];
   imageUrl?: string;
+  textFields?: CustomTextFieldDef[];
 }
 
 export interface CustomizationStyleVariantPayload {
@@ -119,10 +137,44 @@ export function resolveStorefrontCustomization(
     if (!row) return null;
     const dw = row.designWidth ?? c.designWidth ?? DESIGN_CANVAS_WIDTH;
     const dh = row.designHeight ?? c.designHeight ?? DESIGN_CANVAS_HEIGHT;
+
+    // If the style variant's editableAreas lack textFields or certain constraints that are present in the root editableAreas,
+    // merge them in so that storefront users always get the latest field definitions even if the style variant was saved prior to adding text fields!
+    const rootAreasMap = new Map((c.editableAreas || []).map(a => [a.id, a]));
+    const mergedAreas = (row.editableAreas || []).map(a => {
+      const rootA = rootAreasMap.get(a.id);
+      if (rootA) {
+        return {
+          ...a,
+          label: a.label || rootA.label,
+          maxLength: a.maxLength ?? rootA.maxLength,
+          maxWords: a.maxWords ?? rootA.maxWords,
+          maxElements: a.maxElements ?? rootA.maxElements,
+          allowedColors: (a.allowedColors && a.allowedColors.length > 0) ? a.allowedColors : rootA.allowedColors,
+          fontFamily: a.fontFamily || rootA.fontFamily,
+          fontSize: a.fontSize || rootA.fontSize,
+          textColor: a.textColor || rootA.textColor,
+          textFields: (a.textFields && a.textFields.length > 0) ? a.textFields : rootA.textFields,
+        };
+      }
+      return a;
+    });
+
+    // Also include any new areas added to the root customization that aren't in this style variant
+    const sAreaIds = new Set((row.editableAreas || []).map(a => a.id));
+    for (const rootA of (c.editableAreas || [])) {
+      if (!sAreaIds.has(rootA.id)) {
+        mergedAreas.push({
+          ...rootA,
+          textFields: rootA.textFields ? rootA.textFields.map(tf => ({ ...tf })) : undefined,
+        });
+      }
+    }
+
     return {
       slice: {
         baseImage: row.baseImage,
-        editableAreas: row.editableAreas || [],
+        editableAreas: mergedAreas,
       },
       designSize: { width: dw, height: dh },
       usesStyleVariants: true,

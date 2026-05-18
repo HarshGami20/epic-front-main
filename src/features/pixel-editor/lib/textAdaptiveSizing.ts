@@ -71,13 +71,18 @@ export function applyUniformScaleToTextMetrics(obj: FabricObject, s: number): bo
   if (Math.abs(s - 1) < 1e-9) return false;
   const t = obj.type;
   if (t === 'textbox') {
-    const tb = obj as FabricObject & { fontSize?: number; width?: number };
+    const tb = obj as FabricObject & { fontSize?: number; width?: number; calcTextWidth?: () => number };
+    const newFS = (tb.fontSize ?? 16) * s;
     tb.set({
-      fontSize: (tb.fontSize ?? 16) * s,
-      width: (tb.width ?? 200) * s,
+      fontSize: newFS,
       scaleX: 1,
       scaleY: 1,
     });
+    if (typeof tb.calcTextWidth === 'function') {
+      tb.set('width', Math.max(tb.calcTextWidth() + 10, 50));
+    } else {
+      tb.set('width', (tb.width ?? 200) * s);
+    }
     tb.setCoords();
     return true;
   }

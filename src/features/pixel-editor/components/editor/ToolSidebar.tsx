@@ -37,14 +37,14 @@ export const ToolSidebar: React.FC = () => {
 
   const tools = useMemo(() => {
     if (editorSource === 'product' && productTextOnlyMode) {
-      return allTools.filter((t) => t.id === 'text' || t.id === 'layers');
+      return [];
     }
 
     if (editorSource === 'product' && editableZones.length > 0) {
       const activeZone = editableZones.find(z => z.id === activeEditableZoneId) ?? editableZones[0];
       if (activeZone) {
         if (activeZone.type === 'text') {
-          return allTools.filter((t) => ['text', 'layers'].includes(t.id));
+          return [];
         } else if (activeZone.type === 'image') {
           return allTools.filter((t) => ['picture', 'shapes', 'sticker', 'adjust', 'filter', 'crop', 'layers'].includes(t.id));
         }
@@ -76,6 +76,8 @@ export const ToolSidebar: React.FC = () => {
   };
 
   const baseButtonClasses = 'editor-tool-btn';
+
+  if (tools.length === 0 && !showApps) return null;
 
   if (!isMobile) {
     return (

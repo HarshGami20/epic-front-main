@@ -128,6 +128,11 @@ export const TextPanel: React.FC = () => {
     editableZones.find((z) => z.id === activeEditableZoneId) ??
     editableZones[0];
 
+  const activeTextField = activeZone?.textFields?.find(
+    (tf) => tf.id === (textObject as any)?.textFieldId
+  );
+  const effectiveAllowedColors = activeTextField?.allowedColors ?? activeZone?.allowedColors;
+
   return (
     <div className="w-full md:w-72 bg-editor-panel border-r border-border h-full flex flex-col animate-slide-in-left">
       {/* Header */}
@@ -167,11 +172,11 @@ export const TextPanel: React.FC = () => {
                 onClick={() => addText(preset)}
                 className="aspect-square rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-colors"
               >
-                <span 
+                <span
                   className="text-foreground"
-                  style={{ 
-                    fontSize: preset.fontSize / 4, 
-                    fontWeight: preset.fontWeight === 'bold' ? 700 : 400 
+                  style={{
+                    fontSize: preset.fontSize / 4,
+                    fontWeight: preset.fontWeight === 'bold' ? 700 : 400
                   }}
                 >
                   {preset.label}
@@ -203,11 +208,11 @@ export const TextPanel: React.FC = () => {
         {isTextSelected && textObject && (
           <div className="space-y-4 pt-4 border-t border-border">
             <h3 className="text-sm font-medium">Text Properties</h3>
-            
+
             {/* Font Family */}
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Font</label>
-              <select 
+              <select
                 className="editor-input w-full"
                 value={textObject.fontFamily}
                 onChange={(e) => updateSelectedText('fontFamily', e.target.value)}
@@ -272,9 +277,9 @@ export const TextPanel: React.FC = () => {
             {/* Color */}
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Color</label>
-              {activeZone?.allowedColors && activeZone.allowedColors.length > 0 ? (
+              {effectiveAllowedColors && effectiveAllowedColors.length > 0 ? (
                 <div className="flex gap-2 flex-wrap">
-                  {activeZone.allowedColors.map((color) => (
+                  {effectiveAllowedColors.map((color) => (
                     <button
                       key={color}
                       className={`w-8 h-8 rounded border ${textObject.fill === color ? 'ring-2 ring-primary border-transparent' : 'border-border'}`}

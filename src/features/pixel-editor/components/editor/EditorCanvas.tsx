@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
-import { Canvas as FabricCanvas, FabricImage, Point } from 'fabric';
+import { Canvas as FabricCanvas, FabricImage, Point, Textbox } from 'fabric';
 import { useEditor, products, type EditableZoneCanvas } from '@pixel/contexts/EditorContext';
 import {
   resolveProductAssetUrl,
@@ -94,7 +94,7 @@ export const EditorCanvas: React.FC = () => {
 
   const showColorVariantBar =
     editorSource === 'product' && customizationVariantOptions.length > 1 && !usesStyleVariants;
-  const showZoneStrip = editorSource === 'product' && editableZones.length > 0;
+  const showZoneStrip = false;
 
   const getZoneForObject = useCallback(
     (obj: any): EditableZoneCanvas | null => {
@@ -228,10 +228,19 @@ export const EditorCanvas: React.FC = () => {
   useEffect(() => {
     if (!canvas) return;
 
+    const fitObjInExactArea = (obj: any, zone: EditableZoneCanvas) => {
+      const tf = zone.textFields?.find(f => f.id === obj.textFieldId);
+      if (tf) {
+        fitObjectInZone(obj, { x: tf.x, y: tf.y, width: tf.width, height: tf.height, bleed: 0 });
+      } else {
+        fitObjectInZone(obj, zone);
+      }
+    };
+
     const handleMoving = (e: any) => {
       const obj = e.target;
       const zone = getZoneForObject(obj);
-      if (zone) fitObjectInZone(obj, zone);
+      if (zone) fitObjInExactArea(obj, zone);
       canvas.renderAll();
     };
 
@@ -240,7 +249,7 @@ export const EditorCanvas: React.FC = () => {
       if (!obj || (obj as any).isBackground) return;
       bakeTextboxScaleIntoMetrics(obj);
       const zone = getZoneForObject(obj);
-      if (zone) fitObjectInZone(obj, zone);
+      if (zone) fitObjInExactArea(obj, zone);
       canvas.renderAll();
     };
 
@@ -249,7 +258,7 @@ export const EditorCanvas: React.FC = () => {
       if (!obj || (obj as any).isBackground) return;
       const zone = getZoneForObject(obj);
       if (!zone) return;
-      fitObjectInZone(obj, zone);
+      fitObjInExactArea(obj, zone);
       canvas.renderAll();
     };
 
@@ -258,7 +267,15 @@ export const EditorCanvas: React.FC = () => {
       if (!obj || (obj as any).isBackground) return;
       bakeTextboxScaleIntoMetrics(obj);
       const zone = getZoneForObject(obj);
-      if (zone) fitObjectInZone(obj, zone);
+      if (zone) {
+        if (obj.type === 'textbox' || obj.type === 'i-text') {
+          const tf = zone.textFields?.find(f => f.id === obj.textFieldId);
+          obj.set('whiteSpace', 'nowrap');
+          obj.set('splitByGrapheme', false);
+          obj.set('width', Math.max(obj.calcTextWidth() + 10, tf?.width || zone.width || 50));
+        }
+        fitObjInExactArea(obj, zone);
+      }
       canvas.renderAll();
     };
 
@@ -268,7 +285,13 @@ export const EditorCanvas: React.FC = () => {
 
       const zone = getZoneForObject(obj);
       if (zone) {
-        fitObjectInZone(obj as any, zone);
+        if (obj.type === 'textbox' || obj.type === 'i-text') {
+          const tf = zone.textFields?.find(f => f.id === (obj as any).textFieldId);
+          (obj as any).set('whiteSpace', 'nowrap');
+          (obj as any).set('splitByGrapheme', false);
+          (obj as any).set('width', Math.max((obj as any).calcTextWidth() + 10, tf?.width || zone.width || 50));
+        }
+        fitObjInExactArea(obj as any, zone);
       }
 
       const t = obj.type;
@@ -283,21 +306,23 @@ export const EditorCanvas: React.FC = () => {
             let currentText = (obj as any).text || '';
             let modified = false;
 
-            if (z.maxLength && currentText.length > z.maxLength) {
-              currentText = currentText.substring(0, z.maxLength);
+            const tf = z.textFields?.find(f => f.id === (obj as any).textFieldId);
+            const effMaxLength = tf?.maxLength ?? z.maxLength;
+            const effMaxWords = tf?.maxWords ?? z.maxWords;
+
+            if (effMaxLength && currentText.length > effMaxLength) {
+              currentText = currentText.substring(0, effMaxLength);
               modified = true;
             }
 
-            if (z.maxWords) {
+            if (effMaxWords) {
               const words = currentText.split(/\s+/);
-              if (words.length > z.maxWords) {
-                // Keep the whitespace structure if possible, or just join back
-                // A simpler way: match words up to maxWords
-                const match = currentText.match(new RegExp(`^\\s*(?:\\S+\\s+){0,${z.maxWords - 1}}\\S+`));
+              if (words.length > effMaxWords) {
+                const match = currentText.match(new RegExp(`^\\s*(?:\\S+\\s+){0,${effMaxWords - 1}}\\S+`));
                 if (match) {
                   currentText = match[0];
                 } else {
-                  currentText = words.slice(0, z.maxWords).join(' ');
+                  currentText = words.slice(0, effMaxWords).join(' ');
                 }
                 modified = true;
               }
@@ -310,7 +335,11 @@ export const EditorCanvas: React.FC = () => {
               }
             }
 
-            fitObjectInZone(obj as any, z);
+            (obj as any).set('whiteSpace', 'nowrap');
+            (obj as any).set('splitByGrapheme', false);
+            (obj as any).set('width', Math.max((obj as any).calcTextWidth() + 10, tf?.width || z.width || 50));
+
+            fitObjInExactArea(obj as any, z);
             canvas.requestRenderAll();
           }
         });
@@ -357,7 +386,7 @@ export const EditorCanvas: React.FC = () => {
         let zoomFactor = canvas.getZoom();
         if (e.deltaY < 0) zoomFactor *= 1.1;
         else zoomFactor /= 1.1;
-        zoomFactor = Math.max(0.1, Math.min(4, zoomFactor));
+        zoomFactor = Math.max(1, Math.min(4, zoomFactor));
         const point = canvas.getViewportPoint(e);
         canvas.zoomToPoint(point, zoomFactor);
         setZoom(Math.round(zoomFactor * 100));
@@ -444,7 +473,7 @@ export const EditorCanvas: React.FC = () => {
         if (initialTouchDistance > 0) {
           const scaleDiff = currentDistance / initialTouchDistance;
           let newZoom = canvas.getZoom() * scaleDiff;
-          newZoom = Math.max(0.1, Math.min(4, newZoom));
+          newZoom = Math.max(1, Math.min(4, newZoom));
 
           const point = new Point(currentMidX, currentMidY);
           canvas.zoomToPoint(point, newZoom);
@@ -565,14 +594,14 @@ export const EditorCanvas: React.FC = () => {
       return;
     }
 
-    const padding = 40;
+    const padding = isMobile ? 0 : 10;
     const cw = canvas.getWidth();
     const ch = canvas.getHeight();
     const maxW = Math.max(1, cw - padding * 2);
     const maxH = Math.max(1, ch - padding * 2);
     const nw = src.naturalWidth || src.width;
     const nh = src.naturalHeight || src.height;
-    const scale = Math.min(maxW / nw, maxH / nh, 1);
+    const scale = Math.min(maxW / nw, maxH / nh);
     const imgW = nw * scale;
     const imgH = nh * scale;
     const newLeft = (cw - imgW) / 2;
@@ -615,6 +644,24 @@ export const EditorCanvas: React.FC = () => {
           customizationDesignSize.width,
           customizationDesignSize.height
         );
+        const mappedTextFields = area.textFields?.map(tf => {
+          const tfM = mapEditableAreaToCanvas(
+            tf as any,
+            newLeft,
+            newTop,
+            imgW,
+            imgH,
+            customizationDesignSize.width,
+            customizationDesignSize.height
+          );
+          return {
+            ...tf,
+            x: tfM.x,
+            y: tfM.y,
+            width: tfM.width,
+            height: tfM.height,
+          };
+        });
         return {
           id: area.id,
           label: area.label,
@@ -632,6 +679,7 @@ export const EditorCanvas: React.FC = () => {
           textColor: area.textColor,
           fontFamily: area.fontFamily,
           rotation: area.rotation,
+          textFields: mappedTextFields,
         };
       });
       setEditableZones(zones);
@@ -691,10 +739,10 @@ export const EditorCanvas: React.FC = () => {
         backgroundImgRef.current = null;
         sourceImgRef.current = img;
 
-        const padding = 40;
+        const padding = isMobile ? 0 : 10;
         const maxWidth = canvas.width! - padding * 2;
         const maxHeight = canvas.height! - padding * 2;
-        const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+        const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
 
         const fabricImg = new FabricImage(img, {
           left: 0,
@@ -741,6 +789,24 @@ export const EditorCanvas: React.FC = () => {
             customizationDesignSize.width,
             customizationDesignSize.height
           );
+          const mappedTextFields = area.textFields?.map(tf => {
+            const tfM = mapEditableAreaToCanvas(
+              tf as any,
+              fabricImg.left!,
+              fabricImg.top!,
+              imgWidth,
+              imgHeight,
+              customizationDesignSize.width,
+              customizationDesignSize.height
+            );
+            return {
+              ...tf,
+              x: tfM.x,
+              y: tfM.y,
+              width: tfM.width,
+              height: tfM.height,
+            };
+          });
           return {
             id: area.id,
             label: area.label,
@@ -758,9 +824,71 @@ export const EditorCanvas: React.FC = () => {
             textColor: area.textColor,
             fontFamily: area.fontFamily,
             rotation: area.rotation,
+            textFields: mappedTextFields,
           };
         });
         setEditableZones(zones);
+
+        zones.forEach((zone) => {
+          if (zone.type === 'text') {
+            if (zone.textFields && zone.textFields.length > 0) {
+              zone.textFields.forEach((tf) => {
+                const scaleFactor = imgWidth / customizationDesignSize.width;
+                const fontSize = Math.round((tf.fontSize || 24) * scaleFactor);
+                const text = new Textbox(tf.text || tf.label || 'Text', {
+                  left: tf.x + tf.width / 2,
+                  top: tf.y + tf.height / 2,
+                  originX: 'center',
+                  originY: 'center',
+                  fontSize,
+                  fontFamily: tf.fontFamily || zone.fontFamily || 'Arial',
+                  fill: tf.textColor || zone.textColor || '#000000',
+                  width: tf.width,
+                  textAlign: 'center',
+                  whiteSpace: 'nowrap',
+                  lockMovementX: true,
+                  lockMovementY: true,
+                  lockRotation: true,
+                  lockScalingX: true,
+                  lockScalingY: true,
+                  hasControls: false,
+                  editable: true,
+                  selectable: true,
+                });
+                (text as any).editableZoneId = zone.id;
+                (text as any).textFieldId = tf.id;
+                canvas.add(text);
+                fitObjectInZone(text, { x: tf.x, y: tf.y, width: tf.width, height: tf.height, bleed: 0 });
+              });
+            } else {
+              const scaleFactor = imgWidth / customizationDesignSize.width;
+              const fontSize = Math.round((zone.fontSize || 24) * scaleFactor);
+              const text = new Textbox(zone.label || 'Text', {
+                left: zone.x + zone.width / 2,
+                top: zone.y + zone.height / 2,
+                originX: 'center',
+                originY: 'center',
+                fontSize,
+                fontFamily: zone.fontFamily || 'Arial',
+                fill: zone.textColor || '#000000',
+                width: zone.width,
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                lockMovementX: true,
+                lockMovementY: true,
+                lockRotation: true,
+                lockScalingX: true,
+                lockScalingY: true,
+                hasControls: false,
+                editable: true,
+                selectable: true,
+              });
+              (text as any).editableZoneId = zone.id;
+              canvas.add(text);
+              fitObjectInZone(text, zone);
+            }
+          }
+        });
 
         setImageLoaded(true);
         canvas.renderAll();
