@@ -133,6 +133,12 @@ export const StickerPanel: React.FC = () => {
         scaleX: 0.4,
         scaleY: 0.4,
       });
+      fabricImg.setControlsVisibility({
+        mt: false,
+        mb: false,
+        ml: false,
+        mr: false,
+      });
       
       (fabricImg as any).customName = 'Sticker';
       const zone =

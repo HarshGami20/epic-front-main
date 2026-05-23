@@ -6,7 +6,7 @@ import { Button } from '@pixel/components/ui/button';
 import { Input } from '@pixel/components/ui/input';
 import { Textbox } from 'fabric';
 import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
-import { computeAdaptiveFontSizeForZone } from '@pixel/lib/textAdaptiveSizing';
+import { computeAdaptiveFontSizeForZone, fitSingleLineTextInZone } from '@pixel/lib/textAdaptiveSizing';
 
 const textPresets = [
   { id: 'title', label: 'Title', fontSize: 72, fontWeight: 'bold' },
@@ -33,6 +33,7 @@ export const TextPanel: React.FC = () => {
     canvas,
     pushHistory,
     selectedObject,
+    setSelectedObject,
     isMobile,
     setIsPanelOpen,
     editableZones,
@@ -64,7 +65,6 @@ export const TextPanel: React.FC = () => {
 
     let left = canvas.width! / 2 - 100;
     let top = canvas.height! / 2 - 50;
-    let width = 200;
     let fontSize = preset.fontSize;
     let fill = '#000000';
     let fontFamily = 'Arial';
@@ -72,7 +72,6 @@ export const TextPanel: React.FC = () => {
     let originY: 'top' | 'center' = 'top';
 
     if (activeZone) {
-      width = Math.max(80, activeZone.width * 0.92);
       fontSize = computeAdaptiveFontSizeForZone(activeZone, preset.fontSize);
       left = activeZone.x + activeZone.width / 2;
       top = activeZone.y + activeZone.height / 2;
@@ -93,19 +92,32 @@ export const TextPanel: React.FC = () => {
       fontWeight: preset.fontWeight,
       fontFamily,
       fill,
-      width,
       textAlign: 'center',
+      whiteSpace: 'nowrap',
+      splitByGrapheme: false,
+      dynamicMinWidth: 0,
+      lockMovementX: true,
+      lockMovementY: true,
+      lockRotation: true,
+      lockScalingX: true,
+      lockScalingY: true,
+      hasControls: false,
+      editable: false,
+      selectable: false,
+      evented: false,
     });
 
     if (activeZone) {
       (text as any).editableZoneId = activeZone.id;
+      (text as any).zoneMaxFontSize = fontSize;
     }
 
     canvas.add(text);
     if (activeZone) {
+      fitSingleLineTextInZone(text, { width: activeZone.width, height: activeZone.height }, fontSize);
       fitObjectInZone(text, activeZone);
     }
-    canvas.setActiveObject(text);
+    setSelectedObject(text);
     canvas.renderAll();
     pushHistory();
     if (isMobile) {
@@ -117,6 +129,26 @@ export const TextPanel: React.FC = () => {
     if (!canvas || !selectedObject || selectedObject.type !== 'textbox') return;
 
     (selectedObject as any).set(property, value);
+    const zone =
+      editableZones.find((z) => z.id === (selectedObject as any)?.editableZoneId) ??
+      editableZones.find((z) => z.id === activeEditableZoneId) ??
+      editableZones[0];
+    if (
+      (selectedObject.type === 'textbox' || selectedObject.type === 'i-text') &&
+      zone
+    ) {
+      const maxFs =
+        (selectedObject as any).zoneMaxFontSize ?? (selectedObject as any).fontSize ?? 24;
+      if (property === 'fontSize') {
+        (selectedObject as any).zoneMaxFontSize = value;
+      }
+      fitSingleLineTextInZone(
+        selectedObject,
+        { width: zone.width, height: zone.height },
+        property === 'fontSize' ? value : maxFs
+      );
+      fitObjectInZone(selectedObject, zone);
+    }
     canvas.renderAll();
     pushHistory();
   };
@@ -223,16 +255,7 @@ export const TextPanel: React.FC = () => {
               </select>
             </div>
 
-            {/* Font Size */}
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Size</label>
-              <Input
-                type="number"
-                value={textObject.fontSize}
-                onChange={(e) => updateSelectedText('fontSize', parseInt(e.target.value))}
-                className="editor-input"
-              />
-            </div>
+
 
             {/* Style Buttons */}
             <div className="flex gap-2">

@@ -105,6 +105,12 @@ export const PicturePanel: React.FC = () => {
         originX: 'center',
         originY: 'center',
       });
+      fabricImg.setControlsVisibility({
+        mt: false,
+        mb: false,
+        ml: false,
+        mr: false,
+      });
 
       // Give it a custom name for the layers panel
       (fabricImg as any).customName = 'Uploaded Image';

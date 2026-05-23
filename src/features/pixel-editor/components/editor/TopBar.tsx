@@ -206,15 +206,6 @@ export const TopBar: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex items-center border border-border rounded-md h-8 shrink-0 bg-background">
-                  <Button variant="ghost" size="icon" className="h-full w-7 rounded-none shrink-0" onClick={() => updateSelectedText('fontSize', Math.max(8, (textObject.fontSize || 24) - 2))}>
-                    <Minus className="w-3 h-3" />
-                  </Button>
-                  <span className="text-xs px-1 min-w-[20px] text-center">{Math.round(textObject.fontSize || 24)}</span>
-                  <Button variant="ghost" size="icon" className="h-full w-7 rounded-none shrink-0" onClick={() => updateSelectedText('fontSize', Math.min(120, (textObject.fontSize || 24) + 2))}>
-                    <Plus className="w-3 h-3" />
-                  </Button>
-                </div>
 
                 <div className="w-px h-6 bg-border mx-1 shrink-0" />
               </>

@@ -7,6 +7,8 @@ import { useEditor } from "@pixel/contexts/EditorContext";
 import { resolveProductAssetUrl } from "@pixel/lib/productCustomization";
 import { Button } from "@pixel/components/ui/button";
 import { cn } from "@pixel/lib/utils";
+import { fitSingleLineTextInZone, toSingleLineText } from "@pixel/lib/textAdaptiveSizing";
+import { fitObjectInZone } from "@pixel/lib/canvasZoneFit";
 import { toast } from "sonner";
 import { EditorCanvas } from "./EditorCanvas";
 import { FabricImage } from "fabric";
@@ -56,6 +58,7 @@ export const ProductStudio: React.FC = () => {
 
   const [fetchedFonts, setFetchedFonts] = useState<any[]>([]);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
+  const [presetImages, setPresetImages] = useState<any[]>([]);
 
   // Fetch fonts and media from backend
   useEffect(() => {
@@ -80,6 +83,16 @@ export const ProductStudio: React.FC = () => {
         }
       })
       .catch((err) => console.error("Error fetching fonts", err));
+
+    // Fetch Preset Images (admin-managed image library)
+    fetch(`${base}/preset-images`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setPresetImages(data.filter((img) => img.isActive !== false));
+        }
+      })
+      .catch((err) => console.error("Error fetching preset images", err));
 
     // Fetch Media Gallery Images
     fetch(`${base}/public/media?limit=50`, { cache: "no-store" })
@@ -111,6 +124,30 @@ export const ProductStudio: React.FC = () => {
   };
 
   // Helper to find canvas Textbox by textFieldId or zoneId
+  const getTextFieldBounds = (textFieldId?: string) => {
+    if (!activeZone) return null;
+    if (textFieldId && activeZone.textFields?.length) {
+      const tf = activeZone.textFields.find((f) => f.id === textFieldId);
+      if (tf) {
+        return { x: tf.x, y: tf.y, width: tf.width, height: tf.height };
+      }
+    }
+    return {
+      x: activeZone.x,
+      y: activeZone.y,
+      width: activeZone.width,
+      height: activeZone.height,
+    };
+  };
+
+  const fitTextInField = (tb: any, textFieldId?: string, maxFontSize?: number) => {
+    const bounds = getTextFieldBounds(textFieldId);
+    if (!bounds) return;
+    const cap = maxFontSize ?? tb.zoneMaxFontSize ?? tb.fontSize ?? 24;
+    fitSingleLineTextInZone(tb, { width: bounds.width, height: bounds.height }, cap);
+    fitObjectInZone(tb, { ...bounds, bleed: 0 });
+  };
+
   const getTextboxForField = (textFieldId?: string, zoneId?: string) => {
     if (!canvas) return null;
     const objects = canvas.getObjects();
@@ -130,7 +167,7 @@ export const ProductStudio: React.FC = () => {
     const tb = getTextboxForField(textFieldId, zoneId);
     if (!tb) return;
 
-    let newText = textVal || "";
+    let newText = toSingleLineText(textVal || "");
     let maxLen = undefined;
     let maxWds = undefined;
 
@@ -158,10 +195,8 @@ export const ProductStudio: React.FC = () => {
       }
     }
 
-    tb.set("whiteSpace", "nowrap");
-    tb.set("splitByGrapheme", false);
-    tb.set("text", newText || " ");
-    tb.set("width", Math.max(tb.calcTextWidth() + 10, 50));
+    tb.set("text", newText.trim() ? newText : " ");
+    fitTextInField(tb, textFieldId);
     tb.fire("changed");
     canvas?.requestRenderAll();
     pushHistory();
@@ -170,10 +205,8 @@ export const ProductStudio: React.FC = () => {
   const handleFontChange = (fontVal: string, textFieldId?: string, zoneId?: string) => {
     const tb = getTextboxForField(textFieldId, zoneId);
     if (tb) {
-      tb.set("whiteSpace", "nowrap");
-      tb.set("splitByGrapheme", false);
       tb.set("fontFamily", fontVal);
-      tb.set("width", Math.max(tb.calcTextWidth() + 10, 50));
+      fitTextInField(tb, textFieldId);
       tb.fire("changed");
       canvas?.requestRenderAll();
       pushHistory();
@@ -183,10 +216,9 @@ export const ProductStudio: React.FC = () => {
   const handleFontSizeChange = (sizeVal: number, textFieldId?: string, zoneId?: string) => {
     const tb = getTextboxForField(textFieldId, zoneId);
     if (tb) {
-      tb.set("whiteSpace", "nowrap");
-      tb.set("splitByGrapheme", false);
+      tb.zoneMaxFontSize = sizeVal;
       tb.set("fontSize", sizeVal);
-      tb.set("width", Math.max(tb.calcTextWidth() + 10, 50));
+      fitTextInField(tb, textFieldId, sizeVal);
       tb.fire("changed");
       canvas?.requestRenderAll();
       pushHistory();
@@ -243,6 +275,12 @@ export const ProductStudio: React.FC = () => {
           scaleX: scale,
           scaleY: scale,
         });
+        fabImg.setControlsVisibility({
+          mt: false,
+          mb: false,
+          ml: false,
+          mr: false,
+        });
         (fabImg as any).editableZoneId = activeZone.id;
         canvas.add(fabImg);
         canvas.setActiveObject(fabImg);
@@ -269,6 +307,12 @@ export const ProductStudio: React.FC = () => {
         top: activeZone.y + (activeZone.height - imgObj.height * scale) / 2,
         scaleX: scale,
         scaleY: scale,
+      });
+      fabImg.setControlsVisibility({
+        mt: false,
+        mb: false,
+        ml: false,
+        mr: false,
       });
       (fabImg as any).editableZoneId = activeZone.id;
       canvas.add(fabImg);
@@ -393,10 +437,13 @@ export const ProductStudio: React.FC = () => {
               slidesPerView="auto"
               className="py-1 px-1"
             >
-              {editableZones.map((z, idx) => {
+              {editableZones.map((z) => {
                 const isActive = activeEditableZoneId === z.id;
                 const isImg = z.type === "image";
-                const label = z.label || (isImg ? `Image ${idx + 1}` : `Text ${idx + 1}`);
+                const typeZones = editableZones.filter(x => x.type === z.type);
+                const indexInType = typeZones.findIndex(x => x.id === z.id);
+                const num = indexInType !== -1 ? indexInType + 1 : 1;
+                const label = z.label || (isImg ? `Image ${num}` : `Text ${num}`);
 
                 return (
                   <SwiperSlide key={z.id} className="w-auto">
@@ -432,8 +479,11 @@ export const ProductStudio: React.FC = () => {
             <div className="relative sm:border-2 sm:border-slate-200/80 sm:rounded-3xl overflow-hidden bg-white sm:shadow-xl sm:shadow-slate-200/50 aspect-[4/3] w-full max-w-2xl mx-auto flex flex-col group">
               {/* Floating Zone Badges over canvas */}
               <div className="absolute top-4 left-4 z-20 hidden sm:flex flex-wrap gap-2 pointer-events-none">
-                {editableZones.map((z, idx) => {
+                {editableZones.map((z) => {
                   const isImg = z.type === "image";
+                  const typeZones = editableZones.filter(x => x.type === z.type);
+                  const indexInType = typeZones.findIndex(x => x.id === z.id);
+                  const num = indexInType !== -1 ? indexInType + 1 : 1;
                   return (
                     <span
                       key={z.id}
@@ -444,7 +494,7 @@ export const ProductStudio: React.FC = () => {
                           : "bg-[#2b99ff]/90 text-white border-[#007aff]"
                       )}
                     >
-                      {z.label || (isImg ? `Image ${idx + 1}` : `Text ${idx + 1}`)}
+                      {z.label || (isImg ? `Image ${num}` : `Text ${num}`)}
                     </span>
                   );
                 })}
@@ -529,24 +579,6 @@ export const ProductStudio: React.FC = () => {
                               </div>
                             </div>
 
-                            <div className="space-y-2.5">
-                              <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1 uppercase tracking-wide">
-                                Font Size :
-                              </label>
-                              <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 shadow-inner">
-                                <input
-                                  type="range"
-                                  min="12"
-                                  max={maxAllowedFontSize}
-                                  value={Math.min(currentFontSize, maxAllowedFontSize)}
-                                  onChange={(e) => handleFontSizeChange(Number(e.target.value), tf.id, activeZone.id)}
-                                  className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
-                                />
-                                <span className="text-xs font-extrabold text-slate-700 min-w-[48px] text-center bg-white py-1 px-2 rounded-lg border border-slate-200 shadow-sm">
-                                  {Math.round(currentFontSize)}px
-                                </span>
-                              </div>
-                            </div>
 
                             <div className="space-y-2.5">
                               <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1 uppercase tracking-wide">
@@ -630,37 +662,6 @@ export const ProductStudio: React.FC = () => {
                         </div>
                       </div>
 
-                      {(() => {
-                        const tb = getTextboxForField(undefined, activeZone.id);
-                        const currentFontSize = tb ? tb.fontSize : activeZone.fontSize || 24;
-                        const maxW = activeZone.width || 200;
-                        const maxH = activeZone.height || 50;
-                        const calcW = tb ? tb.calcTextWidth() : 0;
-                        const calculatedMax = calcW > 0 ? Math.floor(Math.min((maxW * currentFontSize) / calcW, (maxH * currentFontSize) / (tb.height || currentFontSize * 1.2))) : 120;
-                        const maxAllowedFontSize = Math.max(12, Math.min(120, calculatedMax));
-
-                        return (
-                          <div className="space-y-2.5">
-                            <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1 uppercase tracking-wide">
-                              Font Size :
-                            </label>
-                            <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 shadow-inner">
-                              <input
-                                type="range"
-                                min="12"
-                                max={maxAllowedFontSize}
-                                value={Math.min(currentFontSize, maxAllowedFontSize)}
-                                onChange={(e) => handleFontSizeChange(Number(e.target.value), undefined, activeZone.id)}
-                                className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
-                              />
-                              <span className="text-xs font-extrabold text-slate-700 min-w-[48px] text-center bg-white py-1 px-2 rounded-lg border border-slate-200 shadow-sm">
-                                {Math.round(currentFontSize)}px
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
                       <div className="space-y-2.5">
                         <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1 uppercase tracking-wide">
                           Select Color :
@@ -701,7 +702,7 @@ export const ProductStudio: React.FC = () => {
                     </label>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                      {/* Upload option */}
+                      {/* Upload your own */}
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
@@ -716,49 +717,27 @@ export const ProductStudio: React.FC = () => {
                         </span>
                       </button>
 
-                      {/* Preset Logo 1 */}
-                      <button
-                        type="button"
-                        onClick={() => addPresetImage("/placeholder.svg", "Advocate Logo")}
-                        className="flex flex-col items-center justify-center p-4 border-2 border-slate-200 rounded-2xl hover:border-slate-400 hover:bg-slate-50 transition-all duration-300 aspect-square group cursor-pointer shadow-sm"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center mb-2 font-serif font-bold text-sm">
-                          ⚖
-                        </div>
-                        <span className="text-[11px] font-extrabold text-slate-800">
-                          Advocate
-                        </span>
-                      </button>
+                      {/* Admin preset images */}
+                      {presetImages.map((img, idx) => (
+                        <button
+                          key={img.id || idx}
+                          type="button"
+                          onClick={() => addPresetImage(img.url, img.name)}
+                          className="flex flex-col items-center justify-center p-2 border-2 border-slate-200 rounded-2xl hover:border-blue-400 hover:bg-blue-50/20 transition-all duration-300 aspect-square group cursor-pointer shadow-sm overflow-hidden bg-white"
+                        >
+                          <img
+                            src={getImageUrl(img.url)}
+                            alt={img.name || ""}
+                            className="w-10 h-10 object-contain mb-1.5"
+                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+                          />
+                          <span className="text-[10px] font-extrabold text-slate-800 truncate w-full text-center px-1">
+                            {img.name?.replace(/\.[^/.]+$/, "") || `Image ${idx + 1}`}
+                          </span>
+                        </button>
+                      ))}
 
-                      {/* Preset Logo 2 */}
-                      <button
-                        type="button"
-                        onClick={() => addPresetImage("/placeholder.svg", "Justice Logo")}
-                        className="flex flex-col items-center justify-center p-4 border-2 border-slate-200 rounded-2xl hover:border-slate-400 hover:bg-slate-50 transition-all duration-300 aspect-square group cursor-pointer shadow-sm"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center mb-2 font-serif font-bold text-sm">
-                          §
-                        </div>
-                        <span className="text-[11px] font-extrabold text-slate-800">
-                          Justice
-                        </span>
-                      </button>
-
-                      {/* Preset Logo 3 */}
-                      <button
-                        type="button"
-                        onClick={() => addPresetImage("/placeholder.svg", "Satyamev Jayate Logo")}
-                        className="flex flex-col items-center justify-center p-4 border-2 border-slate-200 rounded-2xl hover:border-slate-400 hover:bg-slate-50 transition-all duration-300 aspect-square group cursor-pointer shadow-sm"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center mb-2 font-serif font-bold text-sm">
-                          🦁
-                        </div>
-                        <span className="text-[11px] font-extrabold text-slate-800">
-                          Satyamev
-                        </span>
-                      </button>
-
-                      {/* Blank / Clear option */}
+                      {/* Blank / Clear */}
                       <button
                         type="button"
                         onClick={clearZoneImage}
@@ -771,25 +750,6 @@ export const ProductStudio: React.FC = () => {
                           Blank
                         </span>
                       </button>
-
-                      {/* Gallery Images from Manage Images */}
-                      {galleryImages.map((imgItem, idx) => (
-                        <button
-                          key={imgItem.id || idx}
-                          type="button"
-                          onClick={() => addPresetImage(imgItem.url, imgItem.originalName || `Image ${idx + 1}`)}
-                          className="flex flex-col items-center justify-center p-2 border-2 border-slate-200 rounded-2xl hover:border-slate-400 hover:bg-slate-50 transition-all duration-300 aspect-square group cursor-pointer shadow-sm overflow-hidden bg-white"
-                        >
-                          <img
-                            src={getImageUrl(imgItem.url)}
-                            alt={imgItem.originalName || ""}
-                            className="w-8 h-8 object-contain mb-1"
-                          />
-                          <span className="text-[10px] font-extrabold text-slate-800 truncate w-full text-center">
-                            {imgItem.originalName?.replace(/\.[^/.]+$/, "") || `Logo ${idx + 1}`}
-                          </span>
-                        </button>
-                      ))}
                     </div>
                   </div>
                 )}

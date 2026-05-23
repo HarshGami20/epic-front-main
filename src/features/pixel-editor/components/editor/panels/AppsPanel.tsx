@@ -106,6 +106,12 @@ export const AppsPanel: React.FC = () => {
         scaleX: originalScaleX,
         scaleY: originalScaleY,
       });
+      fabricImg.setControlsVisibility({
+        mt: false,
+        mb: false,
+        ml: false,
+        mr: false,
+      });
       if (zoneId) {
         (fabricImg as { editableZoneId?: string }).editableZoneId = zoneId;
       }

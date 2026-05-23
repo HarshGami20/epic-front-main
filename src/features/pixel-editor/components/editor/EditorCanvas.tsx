@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
-import { Canvas as FabricCanvas, FabricImage, Point, Textbox } from 'fabric';
+import { Canvas as FabricCanvas, FabricImage, Point, Textbox, type FabricObject } from 'fabric';
 import { useEditor, products, type EditableZoneCanvas } from '@pixel/contexts/EditorContext';
 import {
   resolveProductAssetUrl,
@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight, ImageIcon, Type } from 'lucide-react';
 import { Button } from '@pixel/components/ui/button';
 import { cn } from '@pixel/lib/utils';
 import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
-import { bakeTextboxScaleIntoMetrics } from '@pixel/lib/textAdaptiveSizing';
+import { bakeTextboxScaleIntoMetrics, fitSingleLineTextInZone } from '@pixel/lib/textAdaptiveSizing';
 
 type Mat2D = [number, number, number, number, number, number];
 
@@ -126,6 +126,7 @@ export const EditorCanvas: React.FC = () => {
       backgroundColor: '#e8ecf1',
       selection: true,
       preserveObjectStacking: true,
+      allowTouchScrolling: true,
     });
     fabricCanvas.upperCanvasEl.classList.add('editor-fabric-upper');
     fabricCanvas.lowerCanvasEl.classList.add('editor-fabric-upper');
@@ -268,12 +269,6 @@ export const EditorCanvas: React.FC = () => {
       bakeTextboxScaleIntoMetrics(obj);
       const zone = getZoneForObject(obj);
       if (zone) {
-        if (obj.type === 'textbox' || obj.type === 'i-text') {
-          const tf = zone.textFields?.find(f => f.id === obj.textFieldId);
-          obj.set('whiteSpace', 'nowrap');
-          obj.set('splitByGrapheme', false);
-          obj.set('width', Math.max(obj.calcTextWidth() + 10, tf?.width || zone.width || 50));
-        }
         fitObjInExactArea(obj, zone);
       }
       canvas.renderAll();
@@ -283,14 +278,17 @@ export const EditorCanvas: React.FC = () => {
       const obj = e.target as { type?: string; isBackground?: boolean };
       if (!obj || obj.isBackground) return;
 
+      if (obj.type === 'image') {
+        (obj as any).setControlsVisibility({
+          mt: false,
+          mb: false,
+          ml: false,
+          mr: false,
+        });
+      }
+
       const zone = getZoneForObject(obj);
       if (zone) {
-        if (obj.type === 'textbox' || obj.type === 'i-text') {
-          const tf = zone.textFields?.find(f => f.id === (obj as any).textFieldId);
-          (obj as any).set('whiteSpace', 'nowrap');
-          (obj as any).set('splitByGrapheme', false);
-          (obj as any).set('width', Math.max((obj as any).calcTextWidth() + 10, tf?.width || zone.width || 50));
-        }
         fitObjInExactArea(obj as any, zone);
       }
 
@@ -303,8 +301,8 @@ export const EditorCanvas: React.FC = () => {
         (obj as any).on('changed', () => {
           const z = getZoneForObject(obj);
           if (z) {
-            let currentText = (obj as any).text || '';
-            let modified = false;
+            let currentText = String((obj as any).text || '').replace(/\s*[\r\n\u2028\u2029]+\s*/g, ' ');
+            let modified = /[\r\n\u2028\u2029]/.test(String((obj as any).text || ''));
 
             const tf = z.textFields?.find(f => f.id === (obj as any).textFieldId);
             const effMaxLength = tf?.maxLength ?? z.maxLength;
@@ -316,7 +314,7 @@ export const EditorCanvas: React.FC = () => {
             }
 
             if (effMaxWords) {
-              const words = currentText.split(/\s+/);
+              const words = currentText.split(/\s+/) as string[];
               if (words.length > effMaxWords) {
                 const match = currentText.match(new RegExp(`^\\s*(?:\\S+\\s+){0,${effMaxWords - 1}}\\S+`));
                 if (match) {
@@ -334,10 +332,6 @@ export const EditorCanvas: React.FC = () => {
                 (obj as any).hiddenTextarea.value = currentText;
               }
             }
-
-            (obj as any).set('whiteSpace', 'nowrap');
-            (obj as any).set('splitByGrapheme', false);
-            (obj as any).set('width', Math.max((obj as any).calcTextWidth() + 10, tf?.width || z.width || 50));
 
             fitObjInExactArea(obj as any, z);
             canvas.requestRenderAll();
@@ -833,58 +827,70 @@ export const EditorCanvas: React.FC = () => {
           if (zone.type === 'text') {
             if (zone.textFields && zone.textFields.length > 0) {
               zone.textFields.forEach((tf) => {
-                const scaleFactor = imgWidth / customizationDesignSize.width;
-                const fontSize = Math.round((tf.fontSize || 24) * scaleFactor);
+                // Auto-fit: derive max font size from the field's own height (not admin-set fontSize).
+                // Binary search in fitSingleLineTextInZone will grow short text to fill
+                // the full area and shrink long text automatically.
+                const autoMaxFontSize = Math.max(8, Math.floor(tf.height * 0.85));
                 const text = new Textbox(tf.text || tf.label || 'Text', {
                   left: tf.x + tf.width / 2,
                   top: tf.y + tf.height / 2,
                   originX: 'center',
                   originY: 'center',
-                  fontSize,
+                  fontSize: autoMaxFontSize,
                   fontFamily: tf.fontFamily || zone.fontFamily || 'Arial',
                   fill: tf.textColor || zone.textColor || '#000000',
                   width: tf.width,
                   textAlign: 'center',
                   whiteSpace: 'nowrap',
+                  splitByGrapheme: false,
+                  dynamicMinWidth: 0,
                   lockMovementX: true,
                   lockMovementY: true,
                   lockRotation: true,
                   lockScalingX: true,
                   lockScalingY: true,
                   hasControls: false,
-                  editable: true,
-                  selectable: true,
+                  editable: false,
+                  selectable: false,
+                  evented: false,
                 });
                 (text as any).editableZoneId = zone.id;
                 (text as any).textFieldId = tf.id;
+                (text as any).zoneMaxFontSize = autoMaxFontSize;
                 canvas.add(text);
+                fitSingleLineTextInZone(text, { width: tf.width, height: tf.height }, autoMaxFontSize);
                 fitObjectInZone(text, { x: tf.x, y: tf.y, width: tf.width, height: tf.height, bleed: 0 });
               });
             } else {
-              const scaleFactor = imgWidth / customizationDesignSize.width;
-              const fontSize = Math.round((zone.fontSize || 24) * scaleFactor);
+              // Auto-fit: derive max font size from zone height — no admin fontSize needed.
+              const autoMaxFontSize = Math.max(8, Math.floor(zone.height * 0.85));
               const text = new Textbox(zone.label || 'Text', {
                 left: zone.x + zone.width / 2,
                 top: zone.y + zone.height / 2,
                 originX: 'center',
                 originY: 'center',
-                fontSize,
+                fontSize: autoMaxFontSize,
                 fontFamily: zone.fontFamily || 'Arial',
                 fill: zone.textColor || '#000000',
                 width: zone.width,
                 textAlign: 'center',
                 whiteSpace: 'nowrap',
+                splitByGrapheme: false,
+                dynamicMinWidth: 0,
                 lockMovementX: true,
                 lockMovementY: true,
                 lockRotation: true,
                 lockScalingX: true,
                 lockScalingY: true,
                 hasControls: false,
-                editable: true,
-                selectable: true,
+                editable: false,
+                selectable: false,
+                evented: false,
               });
               (text as any).editableZoneId = zone.id;
+              (text as any).zoneMaxFontSize = autoMaxFontSize;
               canvas.add(text);
+              fitSingleLineTextInZone(text, { width: zone.width, height: zone.height }, autoMaxFontSize);
               fitObjectInZone(text, zone);
             }
           }
@@ -1013,7 +1019,7 @@ export const EditorCanvas: React.FC = () => {
   void viewportTick;
 
   return (
-    <div ref={containerRef} className="flex-1 relative bg-editor-bg overflow-hidden min-h-0 touch-none">
+    <div ref={containerRef} className="flex-1 relative bg-editor-bg overflow-hidden min-h-0 touch-pan-y">
       <canvas ref={canvasRef} className="absolute inset-0" />
 
       {imageLoaded && (

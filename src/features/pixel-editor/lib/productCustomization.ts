@@ -174,7 +174,7 @@ export function resolveStorefrontCustomization(
     return {
       slice: {
         baseImage: row.baseImage,
-        editableAreas: mergedAreas,
+        editableAreas: updateGenericLabels(mergedAreas),
       },
       designSize: { width: dw, height: dh },
       usesStyleVariants: true,
@@ -188,7 +188,10 @@ export function resolveStorefrontCustomization(
   const dw = c.designWidth ?? DESIGN_CANVAS_WIDTH;
   const dh = c.designHeight ?? DESIGN_CANVAS_HEIGHT;
   return {
-    slice,
+    slice: {
+      ...slice,
+      editableAreas: updateGenericLabels(slice.editableAreas),
+    },
     designSize: { width: dw, height: dh },
     usesStyleVariants: false,
     styleVariants: [],
@@ -363,4 +366,28 @@ export function mapEditableAreaToCanvas(
   const w = (area.width / designWidth) * displayWidth;
   const h = (area.height / designHeight) * displayHeight;
   return { x, y, width: w, height: h };
+}
+
+export function updateGenericLabels(areas: EditableAreaDef[]): EditableAreaDef[] {
+  let textCount = 0;
+  let imageCount = 0;
+  return areas.map((area) => {
+    const labelTrim = (area.label || '').trim();
+    const isGeneric =
+      !labelTrim ||
+      /^(text|image)\s*\d*$/i.test(labelTrim) ||
+      labelTrim.toLowerCase() === 'text area' ||
+      labelTrim.toLowerCase() === 'image area';
+
+    if (isGeneric) {
+      if (area.type === 'text') {
+        textCount++;
+        return { ...area, label: `Text ${textCount}` };
+      } else {
+        imageCount++;
+        return { ...area, label: `Image ${imageCount}` };
+      }
+    }
+    return area;
+  });
 }

@@ -24,10 +24,10 @@ const getLayerIcon = (type: string) => {
 };
 
 export const LayersPanel: React.FC = () => {
-  const { 
-    setActiveTool, 
-    canvas, 
-    layers, 
+  const {
+    setActiveTool,
+    canvas,
+    layers,
     selectedObject,
     setSelectedObject,
     deleteSelectedObject,
@@ -44,7 +44,12 @@ export const LayersPanel: React.FC = () => {
 
   const handleSelectLayer = (layer: LayerItem) => {
     if (!canvas) return;
-    canvas.setActiveObject(layer.object);
+    const isText = layer.type === 'textbox' || layer.type === 'i-text' || layer.type === 'text';
+    if (isText) {
+      canvas.discardActiveObject();
+    } else {
+      canvas.setActiveObject(layer.object);
+    }
     setSelectedObject(layer.object);
     canvas.renderAll();
   };
@@ -52,7 +57,7 @@ export const LayersPanel: React.FC = () => {
   const handleToggleVisibility = (layer: LayerItem, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!canvas) return;
-    
+
     layer.object.set('visible', !layer.visible);
     canvas.renderAll();
     pushHistory();
@@ -62,19 +67,22 @@ export const LayersPanel: React.FC = () => {
   const handleToggleLock = (layer: LayerItem, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!canvas) return;
-    
+
+    const isText = layer.type === 'textbox' || layer.type === 'i-text' || layer.type === 'text';
     const isLocked = !layer.locked;
-    layer.object.set({
-      selectable: !isLocked,
-      evented: !isLocked,
-      hasControls: !isLocked,
-    });
-    
+    if (!isText) {
+      layer.object.set({
+        selectable: !isLocked,
+        evented: !isLocked,
+        hasControls: !isLocked,
+      });
+    }
+
     if (isLocked && selectedObject === layer.object) {
       canvas.discardActiveObject();
       setSelectedObject(null);
     }
-    
+
     canvas.renderAll();
     pushHistory();
     updateLayers();
@@ -83,7 +91,7 @@ export const LayersPanel: React.FC = () => {
   const handleDeleteLayer = (layer: LayerItem, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!canvas) return;
-    
+
     canvas.remove(layer.object);
     if (selectedObject === layer.object) {
       canvas.discardActiveObject();
@@ -173,8 +181,8 @@ export const LayersPanel: React.FC = () => {
                 onClick={() => handleSelectLayer(layer)}
                 className={cn(
                   "flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors group",
-                  isSelected(layer) 
-                    ? "bg-primary/20 border border-primary/50" 
+                  isSelected(layer)
+                    ? "bg-primary/20 border border-primary/50"
                     : "hover:bg-secondary/50 border border-transparent",
                   layer.locked && "opacity-60"
                 )}
