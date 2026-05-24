@@ -5,7 +5,7 @@ import IMAGES from "@/constant/theme";
 import PasswordInputBox from "@/components/PasswordInputBox";
 import AuthSlider from "@/components/AuthSlider";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { loginUser } from "@/lib/authApi";
 
@@ -14,6 +14,8 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get("redirect") || "/account-dashboard";
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,7 +30,7 @@ export default function Login() {
             
             // Wait for a short duration, then redirect
             setTimeout(() => {
-                router.push("/account-dashboard");
+                router.push(redirectUrl);
             }, 1000);
         } catch (err: any) {
             toast.error(err.message || "Failed to login. Please check your credentials.");

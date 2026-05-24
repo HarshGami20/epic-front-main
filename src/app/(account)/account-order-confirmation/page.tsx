@@ -7,9 +7,12 @@ import CommanSidebar from "@/elements/MyAccount/CommanSidebar";
 import Image from "next/image";
 import CommanLayout from "@/components/CommanLayout";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
+import { useSearchParams } from "next/navigation";
 
 export default function AccountOrderConfirm() {
     const { clearCart } = useCartWishlistStore();
+    const searchParams = useSearchParams();
+    const orderId = searchParams.get("orderId") || `ORD-${Date.now().toString().slice(-8)}`;
 
     useEffect(() => {
         clearCart();
@@ -31,7 +34,7 @@ export default function AccountOrderConfirm() {
                                     <div className="text-center mt-4">
                                         <h4 className="mb-3 text-capitalize">Your Order Is Completed !</h4>
                                         <p className="mb-2">You will receive an order confirmation email with details of your order.</p>
-                                        <p className="mb-0">Order ID: ORD-{Date.now().toString().slice(-8)}</p>
+                                        <p className="mb-0">Order ID: {orderId}</p>
                                         <div className="mt-4 d-sm-flex gap-3 justify-content-center">
                                             <Link href="/account-orders" className="btn my-1 btn-secondary">View Order </Link>
                                             <Link href="/" className="btn btn-outline-secondary my-1 btnhover20">Back To Home </Link>

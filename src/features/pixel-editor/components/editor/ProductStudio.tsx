@@ -44,6 +44,7 @@ export const ProductStudio: React.FC = () => {
   const {
     canvas,
     editorProduct,
+    selectedVariantId,
     styleVariantsForPicker,
     selectedStyleVariantId,
     setSelectedStyleVariantId,
@@ -292,10 +293,88 @@ export const ProductStudio: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    toast.success("Design confirmed! Redirecting to checkout...");
-    setTimeout(() => {
-      router.push("/checkout");
-    }, 1500);
+    if (!canvas) {
+      toast.error("Editor canvas is not ready yet.");
+      return;
+    }
+
+    const toastId = toast.loading("Capturing your design details...");
+
+    try {
+      // Capture canvas dataURL
+      const previewImage = canvas.toDataURL({
+        format: 'png',
+        quality: 0.95,
+        multiplier: 1.5, // 1.5x resolution for good detail download
+      });
+
+      // Gather customization inputs from canvas objects
+      const textInputs: any[] = [];
+      const imageInputs: any[] = [];
+
+      const objects = canvas.getObjects();
+      objects.forEach((obj) => {
+        if ((obj as any).isBackground) return;
+
+        // Custom properties are preserved in Fabric.js objects on canvas
+        const isTextbox = obj.type === 'textbox' || obj.type === 'i-text';
+        if (isTextbox || (obj as any).textFieldId) {
+          textInputs.push({
+            zoneId: (obj as any).editableZoneId || null,
+            textFieldId: (obj as any).textFieldId || null,
+            text: (obj as any).text || '',
+            fontFamily: (obj as any).fontFamily || 'Arial',
+            textColor: (obj as any).fill || '#000000',
+          });
+        } else if (obj.type === 'image' || (obj as any).editableZoneId) {
+          imageInputs.push({
+            zoneId: (obj as any).editableZoneId || null,
+            imageUrl: (obj as any).src || (obj as any)._element?.src || '',
+          });
+        }
+      });
+
+      // Save checkout product payload into localStorage
+      const checkoutPayload = {
+        productId: editorProduct?.id,
+        name: editorProduct?.name,
+        slug: editorProduct?.slug,
+        price: grandTotal,
+        basePrice: basePrice,
+        addonsTotal: addonsTotal,
+        quantity: 1,
+        image: editorProduct?.customization?.baseImage || '',
+        previewImage,
+        selectedVariantId,
+        selectedStyleVariantId,
+        customizationData: {
+          selectedVariantId,
+          selectedStyleVariantId,
+          textInputs,
+          imageInputs,
+          previewImage,
+        },
+        isCustomized: true,
+      };
+
+      localStorage.setItem("checkout_item", JSON.stringify(checkoutPayload));
+
+      toast.success("Design confirmed! Redirecting to checkout...", { id: toastId });
+
+      // Check if user is logged in
+      const storedUser = localStorage.getItem("user");
+      setTimeout(() => {
+        if (storedUser) {
+          router.push("/checkout");
+        } else {
+          router.push("/login?redirect=/checkout");
+        }
+      }, 1000);
+
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Failed to capture design details: " + err.message, { id: toastId });
+    }
   };
 
   // Image upload handling for image zone
@@ -340,6 +419,7 @@ export const ProductStudio: React.FC = () => {
   const addPresetImage = (url: string, label: string) => {
     if (!canvas || !activeZone) return;
     const imgObj = new Image();
+    imgObj.crossOrigin = "anonymous";
     imgObj.src = getImageUrl(url);
     imgObj.onload = () => {
       const existing = canvas.getObjects().find((o) => (o as any).editableZoneId === activeZone.id);

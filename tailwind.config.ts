@@ -7,7 +7,10 @@ export default {
   corePlugins: {
     preflight: false,
   },
-  content: ["./src/features/pixel-editor/**/*.{js,ts,jsx,tsx,mdx}"],
+  content: [
+    "./src/features/pixel-editor/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/checkout/**/*.{js,ts,jsx,tsx,mdx}"
+  ],
   theme: {
     extend: {
       fontFamily: {
