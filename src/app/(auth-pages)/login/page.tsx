@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
 import Login from "./_components/Login";
 
@@ -9,7 +10,9 @@ export const metadata = {
 const LoginPage = () =>{
     return(
         <MainLayout>
-            <Login />
+            <Suspense fallback={<div className="container py-5 text-center">Loading login form...</div>}>
+                <Login />
+            </Suspense>
         </MainLayout>
     )
 }

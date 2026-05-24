@@ -1,5 +1,5 @@
 "use client"
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import Link from "next/link";
 import CommanBanner from "@/components/CommanBanner";
 import IMAGES from "@/constant/theme";
@@ -9,7 +9,7 @@ import CommanLayout from "@/components/CommanLayout";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 import { useSearchParams } from "next/navigation";
 
-export default function AccountOrderConfirm() {
+function AccountOrderConfirmContent() {
     const { clearCart } = useCartWishlistStore();
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId") || `ORD-${Date.now().toString().slice(-8)}`;
@@ -47,5 +47,20 @@ export default function AccountOrderConfirm() {
                 </div>
             </div>
         </CommanLayout>
-    )
+    );
+}
+
+export default function AccountOrderConfirm() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[#faf9f5]">
+                <div className="text-center space-y-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto"></div>
+                    <p className="text-sm font-semibold text-slate-500">Loading order confirmation...</p>
+                </div>
+            </div>
+        }>
+            <AccountOrderConfirmContent />
+        </Suspense>
+    );
 }
