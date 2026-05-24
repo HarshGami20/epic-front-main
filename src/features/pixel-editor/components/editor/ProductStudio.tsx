@@ -115,12 +115,56 @@ export const ProductStudio: React.FC = () => {
 
   const activeZone = editableZones.find((z) => z.id === activeEditableZoneId) ?? editableZones[0];
 
-  const getDisplayFonts = () => {
-    if (editorProduct?.customization?.allowedFonts && editorProduct.customization.allowedFonts.length > 0) {
-      return editorProduct.customization.allowedFonts;
+  const getDisplayFonts = (allowedFonts?: string[]) => {
+    const hasAllField = allowedFonts && allowedFonts.some((f) => f.toLowerCase() === "all");
+    if (allowedFonts && allowedFonts.length > 0 && !hasAllField) {
+      return allowedFonts;
     }
+
     const customNames = fetchedFonts.map((f) => f.name);
-    return Array.from(new Set([...AVAILABLE_FONTS, ...customNames]));
+
+    // Extract all fonts used in the fields/zones of this product customization
+    const usedFonts = new Set<string>();
+    
+    // Look at root customization editableAreas
+    editorProduct?.customization?.editableAreas?.forEach((area) => {
+      if (area.fontFamily) usedFonts.add(area.fontFamily);
+      area.textFields?.forEach((tf) => {
+        if (tf.fontFamily) usedFonts.add(tf.fontFamily);
+      });
+    });
+
+    // Look at styleVariants in customization
+    editorProduct?.customization?.styleVariants?.forEach((sv) => {
+      sv.editableAreas?.forEach((area) => {
+        if (area.fontFamily) usedFonts.add(area.fontFamily);
+        area.textFields?.forEach((tf) => {
+          if (tf.fontFamily) usedFonts.add(tf.fontFamily);
+        });
+      });
+    });
+
+    // Look at variants in customization (if any)
+    if (editorProduct?.customization?.variants) {
+      Object.values(editorProduct.customization.variants).forEach((v: any) => {
+        v.editableAreas?.forEach((area: any) => {
+          if (area.fontFamily) usedFonts.add(area.fontFamily);
+          area.textFields?.forEach((tf: any) => {
+            if (tf.fontFamily) usedFonts.add(tf.fontFamily);
+          });
+        });
+      });
+    }
+
+    return Array.from(new Set([...customNames, ...Array.from(usedFonts)]));
+  };
+
+  const getDisplayColors = (allowedColors?: string[]) => {
+    const hasAll = allowedColors && allowedColors.some((c) => c.toLowerCase() === "all");
+    if (allowedColors && allowedColors.length > 0 && !hasAll) {
+      return allowedColors;
+    }
+    return DEFAULT_COLORS;
   };
 
   // Helper to find canvas Textbox by textFieldId or zoneId
@@ -472,7 +516,7 @@ export const ProductStudio: React.FC = () => {
 
         <div className="max-w-7xl m-auto grid lg:flex items-start w-full justify-center gap-10">
           {/* Creative Canvas Section */}
-          <section className="space-y-3 flex-1">
+          <section className="space-y-3 flex-1 lg:sticky lg:top-24">
             <h2 className="hidden sm:block text-center text-base font-bold tracking-wide text-slate-900 uppercase">
               Creative Canvas
             </h2>
@@ -530,7 +574,7 @@ export const ProductStudio: React.FC = () => {
                         const calculatedMax = calcW > 0 ? Math.floor(Math.min((maxW * currentFontSize) / calcW, (maxH * currentFontSize) / (tb.height || currentFontSize * 1.2))) : 120;
                         const maxAllowedFontSize = Math.max(12, Math.min(120, calculatedMax));
                         const currentColor = tb ? tb.fill : tf.textColor || activeZone.textColor || "#000000";
-                        const colorsList = tf.allowedColors && tf.allowedColors.length > 0 ? tf.allowedColors : activeZone.allowedColors && activeZone.allowedColors.length > 0 ? activeZone.allowedColors : DEFAULT_COLORS;
+                        const colorsList = getDisplayColors(tf.allowedColors && tf.allowedColors.length > 0 ? tf.allowedColors : activeZone.allowedColors);
 
                         return (
                           <div key={tf.id} className={cn("space-y-5", tfIdx > 0 && "pt-6 border-t border-slate-100")}>
@@ -557,7 +601,7 @@ export const ProductStudio: React.FC = () => {
                                 Select Font :
                               </label>
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                {getDisplayFonts().map((fontName) => {
+                                {getDisplayFonts(tf.allowedFonts && tf.allowedFonts.length > 0 ? tf.allowedFonts : activeZone.allowedFonts).map((fontName) => {
                                   const isSelected = currentFont === fontName;
                                   return (
                                     <button
@@ -637,7 +681,7 @@ export const ProductStudio: React.FC = () => {
                           Select Font :
                         </label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                          {getDisplayFonts().map((fontName) => {
+                          {getDisplayFonts(activeZone.allowedFonts).map((fontName) => {
                             const tb = getTextboxForField(undefined, activeZone.id);
                             const currentFont = tb ? tb.fontFamily : activeZone.fontFamily || "Arial";
                             const isSelected = currentFont === fontName;
@@ -667,7 +711,7 @@ export const ProductStudio: React.FC = () => {
                           Select Color :
                         </label>
                         <div className="flex flex-wrap gap-2.5 items-center">
-                          {(activeZone.allowedColors && activeZone.allowedColors.length > 0 ? activeZone.allowedColors : DEFAULT_COLORS).map((colVal) => {
+                          {getDisplayColors(activeZone.allowedColors).map((colVal) => {
                             const tb = getTextboxForField(undefined, activeZone.id);
                             const currentColor = tb ? tb.fill : activeZone.textColor || "#000000";
                             const isSelected = currentColor === colVal;

@@ -14,6 +14,7 @@ export interface CustomTextFieldDef {
   maxLength?: number;
   maxWords?: number;
   allowedColors?: string[];
+  allowedFonts?: string[];
   x: number;
   y: number;
   width: number;
@@ -39,6 +40,7 @@ export interface EditableAreaDef {
   maxWords?: number;
   maxElements?: number;
   allowedColors?: string[];
+  allowedFonts?: string[];
   imageUrl?: string;
   textFields?: CustomTextFieldDef[];
 }
@@ -151,6 +153,7 @@ export function resolveStorefrontCustomization(
           maxWords: a.maxWords ?? rootA.maxWords,
           maxElements: a.maxElements ?? rootA.maxElements,
           allowedColors: (a.allowedColors && a.allowedColors.length > 0) ? a.allowedColors : rootA.allowedColors,
+          allowedFonts: (a.allowedFonts && a.allowedFonts.length > 0) ? a.allowedFonts : rootA.allowedFonts,
           fontFamily: a.fontFamily || rootA.fontFamily,
           fontSize: a.fontSize || rootA.fontSize,
           textColor: a.textColor || rootA.textColor,
