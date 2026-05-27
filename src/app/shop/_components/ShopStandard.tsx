@@ -290,11 +290,11 @@ function ShopStandardContent() {
         >
             <CommanBanner
                 parentText="Home"
-                currentText={selectedCategoryObj?.name || shopCmsData?.currentText || shopCmsData?.title || "Shop Standard"}
-                mainText={selectedCategoryObj?.name || shopCmsData?.mainText || shopCmsData?.title || "Shop Standard"}
-                image={(typeof shopBannerUrl === 'string' && shopBannerUrl) ? shopBannerUrl : (shopCmsData?.image ? getImageUrl(shopCmsData.image) : IMAGES.BackBg1.src)}
+                currentText={selectedCategoryObj?.name || shopCmsData?.currentText || shopCmsData?.title || "Shop"}
+                mainText={selectedCategoryObj?.name || shopCmsData?.mainText || shopCmsData?.title || "Shop"}
+                image={(typeof shopBannerUrl === 'string' && shopBannerUrl) ? shopBannerUrl : ""}
             />
-            <section className="content-inner-3 pt-3 z-index-unset">
+            <section className="content-inner-3 pt-3 z-index-unset bg-light" >
                 <div className="container-fluid">
                     <div className="row">
                         <div className="col-20 col-xl-3">

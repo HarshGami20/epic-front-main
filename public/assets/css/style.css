@@ -40768,9 +40768,16 @@ video#video-background {
   align-items: end;
   gap: 5px;
   padding: 15px;
+  pointer-events: none;
   -webkit-transition: all 0.2s;
   -ms-transition: all 0.2s;
   transition: all 0.2s;
+}
+
+.shop-card .shop-meta .btn,
+.shop-card .shop-meta .meta-icon,
+.shop-card .shop-meta a {
+  pointer-events: auto;
 }
 
 @media only screen and (max-width: 575px) {

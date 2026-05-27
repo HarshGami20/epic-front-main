@@ -99,7 +99,7 @@ function measureTextFitsInBounds(
 
   const lh = typeof obj.lineHeight === 'number' ? obj.lineHeight : LINE_HEIGHT_MULT;
   const textH = fontSize * lh;
-  if (textH > maxH + 0.5) {
+  if (textH > maxH * 1.35) {
     return false;
   }
 

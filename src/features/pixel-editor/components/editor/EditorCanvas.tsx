@@ -83,6 +83,8 @@ export const EditorCanvas: React.FC = () => {
   } = useEditor();
 
   const [productIndex, setProductIndex] = React.useState(0);
+  const [canvasScale, setCanvasScale] = React.useState(1);
+  const [logicalSize, setLogicalSize] = React.useState({ width: 520, height: 520 });
   /** Bumps when the canvas viewport changes so zone overlays stay aligned while panning/zooming. */
   /** Bumps on every Fabric `after:render` so zone overlays stay in sync with pan/zoom (no rAF delay). */
   const [viewportTick, setViewportTick] = React.useState(0);
@@ -348,7 +350,24 @@ export const EditorCanvas: React.FC = () => {
     canvas.on('object:modified', handleModified);
     canvas.on('object:added', handleAdded);
 
+    let active = true;
+    if (typeof document !== 'undefined' && document.fonts) {
+      document.fonts.ready.then(() => {
+        if (!active || !canvas) return;
+        canvas.getObjects().forEach((obj) => {
+          if (obj.type === 'textbox' || obj.type === 'i-text') {
+            const z = getZoneForObject(obj);
+            if (z) {
+              fitObjInExactArea(obj, z);
+            }
+          }
+        });
+        canvas.requestRenderAll();
+      });
+    }
+
     return () => {
+      active = false;
       canvas.off('object:moving', handleMoving);
       canvas.off('object:scaling', handleScaling);
       canvas.off('object:rotating', handleRotating);
@@ -573,12 +592,20 @@ export const EditorCanvas: React.FC = () => {
   const relayoutFitContainer = useCallback(() => {
     if (!canvas || !containerRef.current) return;
     const container = containerRef.current;
+
+    const isMobileDevice = container.clientWidth < 520;
+    const cw = isMobileDevice ? 520 : container.clientWidth;
+    const ch = isMobileDevice ? 520 : container.clientHeight;
+
+    setLogicalSize({ width: cw, height: ch });
+    setCanvasScale(isMobileDevice ? container.clientWidth / 520 : 1);
+
     canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
     setZoom(100);
 
     canvas.setDimensions({
-      width: container.clientWidth,
-      height: container.clientHeight,
+      width: cw,
+      height: ch,
     });
 
     const bg = backgroundImgRef.current;
@@ -589,8 +616,6 @@ export const EditorCanvas: React.FC = () => {
     }
 
     const padding = isMobile ? 0 : 10;
-    const cw = canvas.getWidth();
-    const ch = canvas.getHeight();
     const maxW = Math.max(1, cw - padding * 2);
     const maxH = Math.max(1, ch - padding * 2);
     const nw = src.naturalWidth || src.width;
@@ -692,6 +717,7 @@ export const EditorCanvas: React.FC = () => {
     recalcDemoSelection,
     setEditableZones,
     updateLayers,
+    isMobile,
   ]);
 
   useEffect(() => {
@@ -705,9 +731,14 @@ export const EditorCanvas: React.FC = () => {
     const el = containerRef.current;
     const ro = new ResizeObserver(() => {
       if (!backgroundImgRef.current || !sourceImgRef.current) {
+        const isMobileDevice = el.clientWidth < 520;
+        const cw = isMobileDevice ? 520 : el.clientWidth;
+        const ch = isMobileDevice ? 520 : el.clientHeight;
+        setLogicalSize({ width: cw, height: ch });
+        setCanvasScale(isMobileDevice ? el.clientWidth / 520 : 1);
         canvas.setDimensions({
-          width: el.clientWidth,
-          height: el.clientHeight,
+          width: cw,
+          height: ch,
         });
         canvas.requestRenderAll();
         return;
@@ -1021,8 +1052,94 @@ export const EditorCanvas: React.FC = () => {
   void viewportTick;
 
   return (
-    <div ref={containerRef} className="flex-1 relative bg-editor-bg overflow-hidden min-h-0 touch-pan-y">
-      <canvas ref={canvasRef} className="absolute inset-0" />
+    <div ref={containerRef} className="flex-1 relative bg-editor-bg overflow-hidden min-h-0 touch-pan-y flex items-center justify-center">
+      <div
+        style={{
+          width: logicalSize.width,
+          height: logicalSize.height,
+          transform: `scale(${canvasScale})`,
+          transformOrigin: 'center center',
+          position: 'relative',
+          flexShrink: 0,
+        }}
+      >
+        <canvas ref={canvasRef} className="absolute inset-0" />
+
+        {editableZones.map((zone) => {
+          const bleed = zone.bleed;
+          const vpt = canvas?.viewportTransform as Mat2D | undefined;
+          const isZoneActive = zone.id === activeEditableZoneId;
+          const outer =
+            canvas && vpt
+              ? sceneRectToViewportCss(vpt, zone.x - bleed, zone.y - bleed, zone.width + bleed * 2, zone.height + bleed * 2)
+              : { left: 0, top: 0, width: 0, height: 0 };
+          const inner =
+            canvas && vpt
+              ? sceneRectToViewportCss(vpt, zone.x, zone.y, zone.width, zone.height)
+              : { left: 0, top: 0, width: 0, height: 0 };
+          const labelPos =
+            canvas && vpt
+              ? new Point(zone.x + zone.width / 2, zone.y).transform(vpt)
+              : new Point(0, 0);
+
+          const tone =
+            zone.type === 'text'
+              ? 'shadow-[0_0_0_1px_hsl(var(--editor-zone-text)/0.35)]'
+              : 'shadow-[0_0_0_1px_hsl(var(--editor-zone-image)/0.35)]';
+
+          return (
+            <div
+              key={zone.id}
+              className="absolute pointer-events-none z-[5]"
+              style={{
+                left: `${outer.left}px`,
+                top: `${outer.top}px`,
+                width: `${outer.width}px`,
+                height: `${outer.height}px`,
+              }}
+            >
+              <div
+                className={cn(
+                  'absolute inset-0 ',
+                  bleed > 0 ? 'border border-dashed border-foreground/15 bg-foreground/[0.02]' : 'opacity-0'
+                )}
+              />
+              <div
+                className={cn(
+                  'absolute ',
+                  tone,
+                  isZoneActive
+                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-slate-100 bg-primary/8 shadow-md'
+                    : zone.type === 'text'
+                      ? 'bg-red-500/[0.07] border-2 border-dashed border-sky-500/50'
+                      : 'bg-emerald-500/[0.07] border-2 border-dashed border-emerald-500/50'
+                )}
+                style={{
+                  left: `${inner.left - outer.left}px`,
+                  top: `${inner.top - outer.top}px`,
+                  width: `${inner.width}px`,
+                  height: `${inner.height}px`,
+                }}
+              />
+              {isZoneActive && (
+                <div
+                  className={cn(
+                    'absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[9px] font-bold text-white shadow-sm flex items-center gap-1 uppercase tracking-wide whitespace-nowrap',
+                    zone.type === 'text' ? 'bg-sky-500' : 'bg-emerald-500'
+                  )}
+                  style={{
+                    left: `${labelPos.x - outer.left}px`,
+                    top: `${labelPos.y - outer.top - 20}px`,
+                  }}
+                >
+                  {zone.type === 'text' ? <Type className="w-2.5 h-2.5" /> : <ImageIcon className="w-2.5 h-2.5" />}
+                  <span>{zone.label}</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {imageLoaded && (
         <p className="pointer-events-none absolute bottom-3 left-3 z-10 hidden max-w-[min(240px,45vw)] text-[10px] leading-snug text-muted-foreground/85 sm:block">
@@ -1052,83 +1169,6 @@ export const EditorCanvas: React.FC = () => {
         </div>
       )}
 
-      {editableZones.map((zone) => {
-        const bleed = zone.bleed;
-        const vpt = canvas?.viewportTransform as Mat2D | undefined;
-        const isZoneActive = zone.id === activeEditableZoneId;
-        const outer =
-          canvas && vpt
-            ? sceneRectToViewportCss(vpt, zone.x - bleed, zone.y - bleed, zone.width + bleed * 2, zone.height + bleed * 2)
-            : { left: 0, top: 0, width: 0, height: 0 };
-        const inner =
-          canvas && vpt
-            ? sceneRectToViewportCss(vpt, zone.x, zone.y, zone.width, zone.height)
-            : { left: 0, top: 0, width: 0, height: 0 };
-        const labelPos =
-          canvas && vpt
-            ? new Point(zone.x + zone.width / 2, zone.y).transform(vpt)
-            : new Point(0, 0);
-
-        const tone =
-          zone.type === 'text'
-            ? 'shadow-[0_0_0_1px_hsl(var(--editor-zone-text)/0.35)]'
-            : 'shadow-[0_0_0_1px_hsl(var(--editor-zone-image)/0.35)]';
-
-        return (
-          <div
-            key={zone.id}
-            className="absolute pointer-events-none z-[5]"
-            style={{
-              left: `${outer.left}px`,
-              top: `${outer.top}px`,
-              width: `${outer.width}px`,
-              height: `${outer.height}px`,
-            }}
-          >
-            <div
-              className={cn(
-                'absolute inset-0 ',
-                bleed > 0 ? 'border border-dashed border-foreground/15 bg-foreground/[0.02]' : 'opacity-0'
-              )}
-            />
-            <div
-              className={cn(
-                'absolute ',
-                tone,
-                isZoneActive
-                  ? 'ring-2 ring-primary ring-offset-2 ring-offset-slate-100 bg-primary/8 shadow-md'
-                  : zone.type === 'text'
-                    ? 'bg-red-500/[0.07] border-2 border-dashed border-sky-500/50'
-                    : 'bg-emerald-500/[0.07] border-2 border-dashed border-emerald-500/50'
-              )}
-              style={{
-                left: `${inner.left - outer.left}px`,
-                top: `${inner.top - outer.top}px`,
-                width: `${inner.width}px`,
-                height: `${inner.height}px`,
-              }}
-            />
-            <span
-              className={cn(
-                'absolute z-[1] text-[10px] sm:text-[11px] font-semibold px-2 py-1 rounded-md whitespace-nowrap shadow-sm border',
-                isZoneActive
-                  ? 'bg-primary text-primary-foreground border-primary/80'
-                  : zone.type === 'text'
-                    ? 'bg-sky-500/90 text-white border-sky-600/50'
-                    : 'bg-emerald-600/90 text-white border-emerald-700/50'
-              )}
-              style={{
-                left: `${labelPos.x - outer.left}px`,
-                top: `${labelPos.y - outer.top - 26}px`,
-                transform: 'translateX(-50%)',
-              }}
-            >
-              {zone.label}
-              {isZoneActive ? ' · active' : ''}
-            </span>
-          </div>
-        );
-      })}
 
       {editorSource === 'demo' && (
         <div

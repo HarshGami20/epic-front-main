@@ -229,7 +229,7 @@ const ProductSection = ({ data }: { data?: any }) => {
                                             </div>
                                         </div>
                                         <div className="dz-content">
-                                            <h5 className="title" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}><Link href={productUrl}>{name}</Link></h5>
+                                            <h5 className="title" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}><Link href={productUrl}>{name}</Link></h5>
                                             <h5 className="price">₹{price} {comparePrice && <del className="text-muted fs-6 ms-2">₹{comparePrice}</del>}</h5>
                                         </div>
                                         {discount > 0 && (

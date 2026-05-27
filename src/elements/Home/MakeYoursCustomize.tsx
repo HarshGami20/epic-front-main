@@ -36,7 +36,7 @@ export interface MakeYoursCustomizeData {
   fonts?: MakeYoursFontRow[];
 }
 
-const ACCENT = "#5c4033";
+const ACCENT = "#000000";
 
 function buildGoogleFontsHref(fontList: MakeYoursFontRow[]): string {
   const names = [...new Set(fontList.map((f) => f.googleFont).filter(Boolean))];
@@ -52,40 +52,72 @@ function AdaptivePreviewText({
   text: string;
   fontFamily: string;
 }) {
-  const boxRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
   const [fontSize, setFontSize] = useState(22);
 
   useEffect(() => {
-    const el = boxRef.current;
-    if (!el) return;
-    const measure = () => {
-      const w = el.clientWidth;
-      const h = el.clientHeight;
-      const t = text.trim() || "Preview";
-      const len = Math.max(t.length, 3);
-      const byW = w / (len * 0.55);
-      const byH = h * 0.42;
-      const next = Math.max(11, Math.min(byW, byH, 64));
-      setFontSize(next);
+    const container = containerRef.current;
+    const textEl = textRef.current;
+    if (!container || !textEl) return;
+
+    const fitText = () => {
+      const maxW = container.clientWidth;
+      const maxH = container.clientHeight;
+      if (maxW <= 0 || maxH <= 0) return;
+
+      let minFS = 8;
+      let maxFS = Math.min(120, maxH * 1.3);
+      let bestFS = minFS;
+
+      while (minFS <= maxFS) {
+        const mid = Math.floor((minFS + maxFS) / 2);
+        textEl.style.fontSize = `${mid}px`;
+        textEl.style.fontFamily = fontFamily;
+        textEl.style.whiteSpace = "nowrap";
+
+        const currentW = textEl.offsetWidth;
+        const currentH = textEl.offsetHeight;
+
+        if (currentW <= maxW && currentH <= maxH * 1.35) {
+          bestFS = mid;
+          minFS = mid + 1;
+        } else {
+          maxFS = mid - 1;
+        }
+      }
+
+      setFontSize(bestFS);
+      textEl.style.fontSize = `${bestFS}px`;
     };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
+
+    fitText();
+
+    const ro = new ResizeObserver(fitText);
+    ro.observe(container);
+
+    if (typeof document !== "undefined" && document.fonts) {
+      document.fonts.ready.then(fitText);
+    }
+
     return () => ro.disconnect();
   }, [text, fontFamily]);
 
   return (
     <div
-      ref={boxRef}
+      ref={containerRef}
       className="w-100 h-100 d-flex align-items-center justify-content-center text-center px-1"
+      style={{ overflow: "hidden" }}
     >
       <span
+        ref={textRef}
         style={{
           fontFamily,
-          fontSize,
+          fontSize: `${fontSize}px`,
           lineHeight: 1.05,
-          wordBreak: "break-word",
+          whiteSpace: "nowrap",
           color: "#1a1a1a",
+          display: "inline-block",
         }}
       >
         {text.trim() || "Preview"}
