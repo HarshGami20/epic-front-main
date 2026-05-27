@@ -7,6 +7,7 @@ import Image from "next/image";
 
 import IMAGES from "@/constant/theme";
 import FeaturedBlog from "@/components/FeaturedBlog";
+import AnimatedLogo from "@/components/AnimatedLogo";
 import AboutusBlog from "@/elements/Home/AboutusBlog";
 import AllProduction from "@/elements/Home/AllProduction";
 import BlockbusterDeal from "@/elements/Home/BlockbusterDeal";
@@ -421,18 +422,20 @@ const MainSection = () => {
 
     useEffect(() => {
         const fetchHomeLayout = async () => {
+            const startTime = Date.now();
             try {
                 const url = getPublicApiUrl();
                 const headers = { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' };
                 const timestamp = new Date().getTime();
                 const res = await fetch(`${url}/cms/slug/startupkit-home-layout?t=${timestamp}`, { headers, cache: 'no-store' });
 
+                let populatedSections = null;
                 if (res.ok) {
                     const data = await res.json();
                     const fetchedSections = data?.data?.content?.sections || data?.content?.sections;
 
                     if (fetchedSections && Array.isArray(fetchedSections)) {
-                        const populatedSections = await Promise.all(
+                        populatedSections = await Promise.all(
                             fetchedSections.map(async (sec: any) => {
                                 if (!sec.enabled) return sec;
                                 try {
@@ -447,18 +450,25 @@ const MainSection = () => {
                                 return { ...sec, data: {} };
                             })
                         );
-                        setSections(populatedSections);
-                        setIsLoading(false);
-                        return;
                     }
+                }
+
+                if (populatedSections) {
+                    setSections(populatedSections);
+                } else {
+                    setSections(DEFAULT_LAYOUT);
                 }
             } catch (err) {
                 console.error("Failed to fetch layout:", err);
+                setSections(DEFAULT_LAYOUT);
             }
 
-            // Fallback to DEFAULT_LAYOUT if no sections provided from CMS or error
-            setSections(DEFAULT_LAYOUT);
-            setIsLoading(false);
+            // Enforce minimum delay of 2.5 seconds (2500ms)
+            const elapsedTime = Date.now() - startTime;
+            const remainingTime = Math.max(0, 2500 - elapsedTime);
+            setTimeout(() => {
+                setIsLoading(false);
+            }, remainingTime);
         };
 
         fetchHomeLayout();
@@ -466,9 +476,14 @@ const MainSection = () => {
 
     if (isLoading) {
         return (
-            <div className="page-content bg-light d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
-                <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
+            <div className="d-flex flex-column justify-content-center align-items-center bg-white" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 99999 }}>
+                <div className="d-flex flex-column align-items-center gap-3">
+                    <img 
+                        src="/loadding.gif" 
+                        alt="Loading..." 
+                        style={{ width: '120px', height: '120px', objectFit: 'contain' }} 
+                    />
+                    <AnimatedLogo animationType={9} width={185} height={55} />
                 </div>
             </div>
         );
