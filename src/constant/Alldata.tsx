@@ -1230,7 +1230,7 @@ export const menuDataOne: MenuItemOne[] = [
         links: [
             { name: "Wishlist", path: "/shop-wishlist" },
             { name: "Cart", path: "/shop-cart" },
-            { name: "Checkout", path: "/shop-checkout" },
+            { name: "Checkout", path: "/checkout" },
             { name: "Compare", path: "/shop-compare" },
             { name: "Order Tracking", path: "/shop-order-tracking" },
             { name: "Login", path: "/login" },
@@ -1473,7 +1473,6 @@ export const menuData4 = [
                 title: "Footer Style",
                 link: "#",
                 subMenu: [
-                    { name: "Dashboard", path: "/account-dashboard" },
                     { name: "Orders", path: "/account-orders" },
                     { name: "Orders Details", path: "/account-order-details" },
                     { name: "Orders Confirmation", path: "/account-order-confirmation" },
@@ -1512,22 +1511,12 @@ export const portfolioMenu: portfolioMenuType[] = [
 
 
 export const accountMenuItem = [
-    { name: "Dashboard", url: "/account-dashboard" },
     { name: "Orders", url: "/account-orders" },
-    { name: "Orders Details", url: "/account-order-details" },
-    { name: "Orders Confirmation", url: "/account-order-confirmation" },
     { name: "Downloads", url: "/account-downloads" },
     { name: "Return Request", url: "/account-return-request" },
-    { name: "Return Request Detail", url: "/account-return-request-detail" },
-    { name: "Return Request Confirmed", url: "/account-refund-requests-confirmed" },
     { name: "Profile", url: "/account-profile" },
     { name: "Address", url: "/account-address" },
-    { name: "Shipping methods", url: "/account-shipping-methods" },
-    { name: "Payment Methods", url: "/account-payment-methods" },
     { name: "Review", url: "/account-review" },
-    { name: "Billing address", url: "/account-billing-address" },
-    { name: "Shipping address", url: "/account-shipping-address" },
-    { name: "Cancellation Requests", url: "/account-cancellation-requests" },
 ];
 
 
