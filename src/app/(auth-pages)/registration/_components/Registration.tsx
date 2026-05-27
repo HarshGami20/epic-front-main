@@ -29,7 +29,7 @@ export default function Registration() {
             toast.success("Registration successful! You can now log in.");
 
             setTimeout(() => {
-                router.push("/account-dashboard");
+                router.push("/account-orders");
             }, 1500);
         } catch (err: any) {
             toast.error(err.message || "Failed to register. Please try again.");

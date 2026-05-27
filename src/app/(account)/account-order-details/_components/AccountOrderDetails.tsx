@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Nav, Tab } from "react-bootstrap";
 import { toast, Toaster } from "sonner";
-import { Download, Package, Truck, Calendar, MapPin, Eye, ArrowLeft } from "lucide-react";
+import { Download, Package, Truck, Calendar, MapPin, Eye, ArrowLeft, RotateCcw } from "lucide-react";
 import CommanBanner from "@/components/CommanBanner";
 import IMAGES from "@/constant/theme";
 import CommanSidebar from "@/elements/MyAccount/CommanSidebar";
 import { fetchOrderById } from "@/lib/ordersApi";
+import { submitReturnRequest } from "@/lib/returnsApi";
 
 export default function AccountOrderDetails() {
   const router = useRouter();
@@ -18,6 +19,9 @@ export default function AccountOrderDetails() {
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnSubmitting, setReturnSubmitting] = useState(false);
 
   useEffect(() => {
     if (!orderId) {
@@ -179,6 +183,26 @@ export default function AccountOrderDetails() {
     }
   };
 
+  const handleReturnRequest = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !order) return;
+    if (!returnReason.trim() || returnReason.trim().length < 10) {
+      toast.error("Please provide a reason of at least 10 characters.");
+      return;
+    }
+    setReturnSubmitting(true);
+    try {
+      await submitReturnRequest(order.id, returnReason.trim(), token);
+      toast.success("Return request submitted successfully!");
+      setShowReturnModal(false);
+      setReturnReason("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit return request.");
+    } finally {
+      setReturnSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="page-content bg-light min-h-screen">
@@ -235,7 +259,7 @@ export default function AccountOrderDetails() {
 
               <div className="account-card order-details">
                 <div className="order-head flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3">
                     <div className="head-thumb bg-slate-50 border border-slate-100 rounded-lg p-1 overflow-hidden relative w-16 h-16 shrink-0 flex items-center justify-center">
                       <img src={previewImage || IMAGES.ShopSmallPic1.src} alt="thumbnail" className="max-w-full max-h-full object-contain" />
                     </div>
@@ -246,6 +270,16 @@ export default function AccountOrderDetails() {
                       <h4 className="mb-0 font-extrabold text-slate-900 leading-snug">Order {order.orderNumber}</h4>
                     </div>
                   </div>
+                  {/* Return Request button for DELIVERED orders */}
+                  {order.status === "DELIVERED" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowReturnModal(true)}
+                      className="btn btn-sm btn-outline-secondary font-bold uppercase tracking-wider text-[10px] px-3.5 py-2 flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Request Return
+                    </button>
+                  )}
                 </div>
 
                 <div className="row mb-sm-4 mb-2 mt-4">
@@ -443,6 +477,81 @@ export default function AccountOrderDetails() {
           </div>
         </div>
       </div>
+
+      {/* Return Request Modal */}
+      {showReturnModal && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowReturnModal(false); }}
+        >
+          <div
+            style={{
+              background: "#fff", borderRadius: 16, padding: 32, width: "100%", maxWidth: 480,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+            }}
+          >
+            <div className="d-flex align-items-center justify-content-between mb-4">
+              <h5 className="mb-0 fw-extrabold">Request Return</h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowReturnModal(false)}
+                aria-label="Close"
+              />
+            </div>
+
+            <p className="text-muted mb-1" style={{ fontSize: 13 }}>
+              Order: <strong>{order.orderNumber}</strong>
+            </p>
+            <p className="text-muted mb-3" style={{ fontSize: 13 }}>
+              Please explain your reason for requesting a return. Our team will review within 2–3 business days.
+            </p>
+
+            <div className="mb-3">
+              <label className="form-label fw-bold" style={{ fontSize: 13 }}>
+                Reason for Return <span className="text-danger">*</span>
+              </label>
+              <textarea
+                className="form-control"
+                rows={4}
+                placeholder="Describe the issue with your order (min 10 characters)..."
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+                disabled={returnSubmitting}
+              />
+              <small className="text-muted">{returnReason.length} / min 10 chars</small>
+            </div>
+
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary flex-1"
+                onClick={handleReturnRequest}
+                disabled={returnSubmitting || returnReason.trim().length < 10}
+              >
+                {returnSubmitting ? (
+                  <><span className="spinner-border spinner-border-sm me-2" role="status" />Submitting...</>
+                ) : (
+                  "Submit Return Request"
+                )}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setShowReturnModal(false)}
+                disabled={returnSubmitting}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Toaster position="top-center" richColors closeButton />
     </div>
   );

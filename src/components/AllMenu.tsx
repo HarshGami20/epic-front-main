@@ -42,7 +42,7 @@ export const AllMenu = [
         subchild: [
           { children: "Wishlist", to: "/shop-wishlist" },          
           { children: "Cart", to: "/shop-cart" },          
-          { children: "Checkout", to: "/shop-checkout" },          
+          { children: "Checkout", to: "/checkout" },          
           { children: "Compare", to: "/shop-compare" },          
           { children: "Order Tracking", to: "/shop-order-tracking" },          
           { children: "Login", to: "/login" },          
@@ -232,14 +232,13 @@ export const AllMenu = [
         ],
       },
       {
-        child: "Dashboard",
+        child: "My Account",
         subchild: [
-          { children: "Dashboard", to: "/account-dashboard" },       
-          { children: "Orders", to: "/account-order" },       
+          { children: "Orders", to: "/account-orders" },       
           { children: "Orders Details", to: "/account-order-details" },       
           { children: "Orders Confirmation", to: "/account-order-confirmation" },       
           { children: "Downloads", to: "/account-downloads" },       
-          { children: "Return Request", to: "/account-return-reques" },       
+          { children: "Return Request", to: "/account-return-request" },       
           { children: "Return Request Detail", to: "/account-return-request-detail" },       
           { children: "Return Request Confirmed", to: "/account-refund-requests-confirmed" },       
         ],
@@ -253,7 +252,6 @@ export const AllMenu = [
     submenu: [
       {        
         subchild: [
-          { children: "Dashboard", to: "/account-dashboard" },          
           { children: "Orders", to: "/account-orders" },          
           { children: "Orders Details", to: "/account-order-details" },          
           { children: "Orders Confirmation", to: "/account-order-confirmation" },          
@@ -263,8 +261,6 @@ export const AllMenu = [
           { children: "Return Request Confirmed", to: "/account-refund-requests-confirmed" },          
           { children: "Profile", to: "/account-profile" },          
           { children: "Address", to: "/account-address" },          
-          { children: "Shipping methods", to: "/account-shipping-methods" },          
-          { children: "Payment Methods", to: "/account-payment-methods" },          
           { children: "Review", to: "/account-review" },          
           { children: "Billing address", to: "/account-billing-address" },          
           { children: "Shipping address", to: "/account-shipping-address" },          

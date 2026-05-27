@@ -15,7 +15,7 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectUrl = searchParams.get("redirect") || "/account-dashboard";
+    const redirectUrl = searchParams.get("redirect") || "/account-orders";
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

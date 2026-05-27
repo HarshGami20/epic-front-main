@@ -45,7 +45,7 @@ export default function ForgetPassword(){
                                         </div>
                                     </div>
                                     <div className="text-center">
-                                        <Link href="/account-dashboard" className="btn btn-secondary btnhover text-uppercase sign-btn">Reset Password</Link>
+                                        <Link href="/account-orders" className="btn btn-secondary btnhover text-uppercase sign-btn">Reset Password</Link>
                                     </div>
                                 </form>
                             </div> 

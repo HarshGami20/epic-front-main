@@ -11,7 +11,6 @@ type MenuItem = {
   };
   
   const accountMenu: MenuItem[] = [
-    { title: "Dashboard", url: "/account-dashboard" },
     { title: "Orders", url: "/account-orders" },
     { title: "Downloads", url: "/account-downloads" },
     { title: "Return request", url: "/account-return-request" },
@@ -20,8 +19,6 @@ type MenuItem = {
   const accountSettingsMenu: MenuItem[] = [
     { title: "Profile", url: "/account-profile" },
     { title: "Address", url: "/account-address" },
-    { title: "Shipping methods", url: "/account-shipping-methods" },
-    { title: "Payment Methods", url: "/account-payment-methods" },
     { title: "Review", url: "/account-review" },
 ];
 

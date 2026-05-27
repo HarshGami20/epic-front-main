@@ -365,9 +365,9 @@ export const ProductStudio: React.FC = () => {
       const storedUser = localStorage.getItem("user");
       setTimeout(() => {
         if (storedUser) {
-          router.push("/checkout");
+          router.push("/checkout?mode=direct");
         } else {
-          router.push("/login?redirect=/checkout");
+          router.push("/login?redirect=/checkout?mode=direct");
         }
       }, 1000);
 

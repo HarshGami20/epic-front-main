@@ -99,7 +99,7 @@ export default function HeaderSideShoppingCard(props: propType) {
                                                 </div>
                                             </div>
                                         </div>
-                                        <Link href="/shop-checkout" className="btn btn-outline-secondary btn-block m-b20">Checkout</Link>
+                                        <Link href="/checkout" className="btn btn-outline-secondary btn-block m-b20">Checkout</Link>
                                         <Link href="/shop-cart" className="btn btn-secondary btn-block">View Cart</Link>
                                     </div>
                                 </>
