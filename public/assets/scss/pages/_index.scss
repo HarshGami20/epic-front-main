@@ -949,6 +949,13 @@ del{
     border-top: 1px solid #000;
     border-bottom: 1px solid #000;
     transform: rotate(-2deg);
+    
+    .dz-features-inner {
+        display: flex;
+        flex-wrap: nowrap;
+        width: max-content;
+    }
+    
 	.dz-features {
 		margin-bottom: 0;
 		display: flex;
@@ -956,7 +963,8 @@ del{
 		flex-wrap: nowrap;
 		animation: ticker 0s linear infinite 0s normal;
 		animation-duration: 0s;
-		animation-duration: 32.9528s;
+		animation-duration: 20s;
+		flex-shrink: 0;
 		.item {
 			padding: 15px 20px;
 			display: -ms-flexbox;
@@ -976,6 +984,16 @@ del{
 	&:hover{
 		.dz-features {
 			animation-play-state: paused;
+		}
+	}
+	@include respond('phone-land'){
+		.dz-features {
+			animation-duration: 6s;
+		}
+	}
+	@include respond('phone'){
+		.dz-features {
+			animation-duration: 5s;
 		}
 	}
 }

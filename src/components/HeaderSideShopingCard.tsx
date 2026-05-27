@@ -45,7 +45,9 @@ export default function HeaderSideShoppingCard(props: propType) {
                                             <li key={elem.id}>
                                                 <div className="cart-widget">
                                                     <div className="dz-media me-3">
-                                                        <Image src={getImageUrl(elem.image)} alt={elem.name} width={60} height={60} />
+                                                        <Link href={`/products/${elem.slug}`}>
+                                                            <Image src={getImageUrl(elem.image)} alt={elem.name} width={60} height={60} />
+                                                        </Link>
                                                     </div>
                                                     <div className="cart-content">
                                                         <h6 className="title">
@@ -118,7 +120,9 @@ export default function HeaderSideShoppingCard(props: propType) {
                                             <li key={elem.productId}>
                                                 <div className="cart-widget">
                                                     <div className="dz-media me-3">
-                                                        <Image src={getImageUrl(elem.image)} alt={elem.name} width={60} height={60} />
+                                                        <Link href={`/products/${elem.slug}`}>
+                                                            <Image src={getImageUrl(elem.image)} alt={elem.name} width={60} height={60} />
+                                                        </Link>
                                                     </div>
                                                     <div className="cart-content">
                                                         <h6 className="title">

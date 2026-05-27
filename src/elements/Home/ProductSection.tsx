@@ -179,31 +179,33 @@ const ProductSection = ({ data }: { data?: any }) => {
                                                 if (hoverImg) hoverImg.style.opacity = '0';
                                             }}
                                         >
-                                            {isDynamic ? (
-                                                <>
-                                                    <img src={getImageUrl(mainImage)} alt={name} width={400} height={500} style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '4/5' }} />
-                                                    {hoverImage && (
-                                                        <img
-                                                            className="hover-product-image"
-                                                            src={hoverImage}
-                                                            alt={`${name} hover`}
-                                                            style={{
-                                                                width: '100%',
-                                                                height: '100%',
-                                                                objectFit: 'cover',
-                                                                position: 'absolute',
-                                                                top: 0,
-                                                                left: 0,
-                                                                opacity: 0,
-                                                                transition: 'opacity 0.4s ease-in-out',
-                                                                pointerEvents: 'none'
-                                                            }}
-                                                        />
-                                                    )}
-                                                </>
-                                            ) : (
-                                                <img src={mainImage} alt="media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            )}
+                                            <Link href={productUrl} className="d-block">
+                                                {isDynamic ? (
+                                                    <>
+                                                        <img src={getImageUrl(mainImage)} alt={name} width={400} height={500} style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '4/5' }} />
+                                                        {hoverImage && (
+                                                            <img
+                                                                className="hover-product-image"
+                                                                src={hoverImage}
+                                                                alt={`${name} hover`}
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    objectFit: 'cover',
+                                                                    position: 'absolute',
+                                                                    top: 0,
+                                                                    left: 0,
+                                                                    opacity: 0,
+                                                                    transition: 'opacity 0.4s ease-in-out',
+                                                                    pointerEvents: 'none'
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <img src={mainImage} alt="media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                )}
+                                            </Link>
                                             <div className="shop-meta">
                                                 <div className="btn btn-secondary btn-md btn-rounded"
                                                     onClick={(e) => { e.preventDefault(); setSelectedProduct({ ...item, isDynamic }); setDetailModal(true); }}

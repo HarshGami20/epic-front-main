@@ -74,25 +74,27 @@ export default function ShopGridCard({ product, showdetailModal }: cardType) {
                     if (hoverImg) hoverImg.style.opacity = '0';
                 }}
             >
-                <img src={mainImage} alt={name} width={400} height={500} style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '4/5' }} />
-                {hoverImage && (
-                    <img
-                        className="hover-product-image"
-                        src={hoverImage}
-                        alt={`${name} hover`}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            opacity: 0,
-                            transition: 'opacity 0.4s ease-in-out',
-                            pointerEvents: 'none'
-                        }}
-                    />
-                )}
+                <Link href={productUrl} className="d-block">
+                    <img src={mainImage} alt={name} width={400} height={500} style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '4/5' }} />
+                    {hoverImage && (
+                        <img
+                            className="hover-product-image"
+                            src={hoverImage}
+                            alt={`${name} hover`}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                opacity: 0,
+                                transition: 'opacity 0.4s ease-in-out',
+                                pointerEvents: 'none'
+                            }}
+                        />
+                    )}
+                </Link>
                 <div className="shop-meta">
                     <div className="btn btn-secondary btn-md btn-rounded"
                         onClick={(e) => { e.preventDefault(); if (showdetailModal) showdetailModal(); }}

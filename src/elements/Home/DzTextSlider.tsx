@@ -4,11 +4,11 @@ import { PopluarProdutData } from '../../constant/Alldata';
 const DzTextSlider = ({ data }: { data?: any }) => {
     const items = data?.items?.length ? data.items : PopluarProdutData;
 
-    return (
+    const renderItems = (keyPrefix: string) => (
         <ul className="dz-features text-wrapper">
             {items.map((item: any, i: number) => (
-                <React.Fragment key={i}>
-                    <li className="item" key={i}>
+                <React.Fragment key={`${keyPrefix}-${i}`}>
+                    <li className="item">
                         <h2 className="title">{item.name || item.title || item.text || item}</h2>
                     </li>
                     <li className="item">
@@ -19,6 +19,13 @@ const DzTextSlider = ({ data }: { data?: any }) => {
                 </React.Fragment>
             ))}
         </ul>
+    );
+
+    return (
+        <div className="dz-features-inner">
+            {renderItems("first")}
+            {renderItems("second")}
+        </div>
     );
 };
 

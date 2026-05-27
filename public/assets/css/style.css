@@ -43382,6 +43382,12 @@ del {
   transform: rotate(-2deg);
 }
 
+.dz-features-wrapper .dz-features-inner {
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+}
+
 .dz-features-wrapper .dz-features {
   margin-bottom: 0;
   display: flex;
@@ -43389,7 +43395,8 @@ del {
   flex-wrap: nowrap;
   animation: ticker 0s linear infinite 0s normal;
   animation-duration: 0s;
-  animation-duration: 32.9528s;
+  animation-duration: 20s;
+  flex-shrink: 0;
 }
 
 .dz-features-wrapper .dz-features .item {
@@ -43419,6 +43426,18 @@ del {
 
 .dz-features-wrapper:hover .dz-features {
   animation-play-state: paused;
+}
+
+@media only screen and (max-width: 767px) {
+  .dz-features-wrapper .dz-features {
+    animation-duration: 20s;
+  }
+}
+
+@media only screen and (max-width: 575px) {
+  .dz-features-wrapper .dz-features {
+    animation-duration: 18s;
+  }
 }
 
 .text-wrapper {

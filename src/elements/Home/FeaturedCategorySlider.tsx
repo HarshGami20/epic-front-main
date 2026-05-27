@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Navigation } from "swiper/modules";
+import { Navigation, Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FeaturedSliderData } from "../../constant/Alldata";
 import Image from "next/image";
@@ -102,12 +102,17 @@ const FeaturedCategorySlider = ({ data }: { data?: any }) => {
             slidesPerView={5}
             spaceBetween={15}
             loop={slides.length > 1}
+            autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+            }}
             navigation={{
                 nextEl: ".shop-button-next",
                 prevEl: ".shop-button-prev",
             }}
             className="swiper-shop"
-            modules={[Navigation]}
+            modules={[Navigation, Autoplay]}
             breakpoints={{
                 1600: { slidesPerView: 5 },
                 1400: { slidesPerView: 4 },

@@ -135,7 +135,16 @@ const MainBannerSlider2 = ({ data }: { data?: any }) => {
                                         headline || " "
                                     )}
                                 </h1>
-                                {!isNarrowLayout ? (
+                                {isNarrowLayout ? (
+                                    <div className="content-btn m-b30">
+                                        <Link
+                                            href={detailHref}
+                                            className="btn btn-outline-secondary btnhover20"
+                                        >
+                                            {viewDetail}
+                                        </Link>
+                                    </div>
+                                ) : (
                                     <>
                                         <div className="swiper-meta-items">
                                             <div className="meta-content">
@@ -162,7 +171,7 @@ const MainBannerSlider2 = ({ data }: { data?: any }) => {
                                             </Link>
                                         </div>
                                     </>
-                                ) : null}
+                                )}
                             </div>
                         );
                     })}

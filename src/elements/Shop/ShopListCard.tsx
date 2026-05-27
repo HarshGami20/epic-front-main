@@ -66,7 +66,9 @@ export default function ShopListCard({ product, inputtype }: cardType) {
     return (
         <div className="dz-shop-card style-2">
             <div className="dz-media">
-                <img src={mainImage} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <Link href={productUrl} className="d-block w-100 h-100">
+                    <img src={mainImage} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </Link>
             </div>
             <div className="dz-content">
                 <div className="dz-header">

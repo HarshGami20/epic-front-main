@@ -102,7 +102,9 @@ const FeaturedNowSlider = ({ data }: { data?: any }) => {
                 <SwiperSlide key={ind}>
                     <div className="shop-card style-4">
                         <div className="dz-media">
-                            <Image src={item.image ? getImageUrl(item.image) : '/assets/images/placeholder.jpg'} alt="image" width={300} height={300} className="w-100 object-cover" />
+                            <Link href={item.slug ? `/products/${item.slug}` : "/shop-list"}>
+                                <Image src={item.image ? getImageUrl(item.image) : '/assets/images/placeholder.jpg'} alt="image" width={300} height={300} className="w-100 object-cover" />
+                            </Link>
                         </div>
                         <div className="dz-content">
                             <div>

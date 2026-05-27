@@ -10,6 +10,13 @@ const AboutusBlog = ({ data }: { data?: any }) => {
     const title = data?.title || "Set your wardrobe with our amazing selection!";
     const description = data?.description || "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the";
 
+    const womanLinkText = data?.womanLinkText || "Woman collection";
+    const womanLink = data?.womanLink || "/shop-list";
+    const childLinkText = data?.childLinkText || "Child Fashion";
+    const childLink = data?.childLink || "/shop-list";
+    const manLinkText = data?.manLinkText || "Man collection";
+    const manLink = data?.manLink || "/shop-list";
+
     return (
         <div className="row about-style1">
             <div className="col-lg-6 col-md-12 m-b30">
@@ -17,7 +24,7 @@ const AboutusBlog = ({ data }: { data?: any }) => {
                     <div className="dz-media h-100">
                         <Image src={womanImg} alt="Woman collection" width={800} height={800} className="w-100 h-100 object-cover" />
                     </div>
-                    <Link href="/shop-list" className="btn btn-outline-secondary btn-light btn-xl">Woman collection</Link>
+                    <Link href={womanLink} className="btn btn-outline-secondary btn-light btn-xl">{womanLinkText}</Link>
                 </div>
             </div>
             <div className="col-lg-6 col-md-12 align-self-center">
@@ -36,7 +43,7 @@ const AboutusBlog = ({ data }: { data?: any }) => {
                                     <Image src={childImg} alt="Child Fashion" width={500} height={500} className="w-100 h-100 object-cover" />
                                 </div>
                                 <div className="dz-content">
-                                    <Link href="/shop-list" className="btn btn-outline-secondary btn-light btn-md">Child Fashion</Link>
+                                    <Link href={childLink} className="btn btn-outline-secondary btn-light btn-md">{childLinkText}</Link>
                                 </div>
                             </div>
                         </div>
@@ -46,7 +53,7 @@ const AboutusBlog = ({ data }: { data?: any }) => {
                                     <Image src={manImg} alt="Man collection" width={500} height={500} className="w-100 h-100 object-cover" />
                                 </div>
                                 <div className="dz-content">
-                                    <Link href="/shop-list" className="btn btn-outline-secondary btn-light btn-md">Man collection</Link>
+                                    <Link href={manLink} className="btn btn-outline-secondary btn-light btn-md">{manLinkText}</Link>
                                 </div>
                                 <span className="sale-badge">50% <br />Sale <Image src={IMAGES.starpng} alt="" /></span>
                             </div>
