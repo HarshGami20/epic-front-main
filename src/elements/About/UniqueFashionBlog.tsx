@@ -52,13 +52,16 @@ const UniqueFashionBlog = ({ cms }: { cms?: UniqueFashionBlogCms }) => {
                             <p>{p2}</p>
                         </div>
                         <div className="about-bx-detail">
-                            <div className="about-bx-pic radius">
+                            <div
+                                className="about-bx-pic overflow-hidden"
+                                style={{ width: 80, height: 60, borderRadius: "50%" }}
+                            >
                                 <Image
                                     src={quoteSrc}
                                     alt="testimonial"
                                     width={120}
                                     height={120}
-                                    className="w-100 h-auto"
+                                    className="w-100 h-100"
                                 />
                             </div>
                             <div>

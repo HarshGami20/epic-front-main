@@ -36,15 +36,15 @@ const TeamCreators = ({ cms }: { cms?: TeamCreatorsCms }) => {
     const joinHref = cms?.joinHref?.trim() || DEFAULT_JOIN_HREF;
 
     const cmsMembers = Array.isArray(cms?.members) ? cms.members : [];
-    const hasAnyCmsMember = cmsMembers.some((m) => m?.image?.trim() || m?.name?.trim() || m?.post?.trim());
-    const members = allteamDataItem.map((fallback, idx) => {
-        const m = cmsMembers[idx];
-        if (!hasAnyCmsMember || !m) return fallback;
-        const img = m?.image?.trim() ? getImageUrl(m.image) : fallback.image;
-        const name = m?.name?.trim() || fallback.name;
-        const post = m?.post?.trim() || fallback.post;
-        return { image: img, name, post };
-    });
+    const hasAnyCmsMember = cmsMembers.length > 0 && cmsMembers.some((m) => m?.image?.trim() || m?.name?.trim() || m?.post?.trim());
+    
+    const members = hasAnyCmsMember
+        ? cmsMembers.map((m) => ({
+              image: m?.image?.trim() ? getImageUrl(m.image) : IMAGES.Teampic1,
+              name: m?.name?.trim() || "Team Member",
+              post: m?.post?.trim() || "",
+          }))
+        : allteamDataItem;
 
     return (
         <div className="row g-3 g-xl-4">

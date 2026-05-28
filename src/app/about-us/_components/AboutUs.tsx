@@ -480,7 +480,7 @@ const AboutUs = () => {
                 <div className="m-r100 m-md-r0 m-sm-r0">
                     <h3 className="dz-title mb-lg-0 mb-3">
                         {ctaTitle}
-                        <span>{ctaSubtitle}</span>
+                        
                     </h3>
                 </div>
                 <Link href={ctaButtonLink || DEFAULT_CTA_LINK} className="btn btn-light">
