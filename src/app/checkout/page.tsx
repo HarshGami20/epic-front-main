@@ -9,7 +9,10 @@ import CommanLayout from "@/components/CommanLayout";
 import CommanBanner from "@/components/CommanBanner";
 import IMAGES from "@/constant/theme";
 import { createRazorpayOrder, verifyPayment } from "@/lib/ordersApi";
+import { validateCoupon, type CouponValidationResult } from "@/lib/couponApi";
 import { getImageUrl } from "@/lib/imageUtils";
+import { loadRazorpayScript, openRazorpayCheckout } from "@/lib/razorpay";
+import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 
 interface Address {
   firstName: string;
@@ -51,10 +54,15 @@ export default function CheckoutPage() {
     return today.toISOString().split("T")[0];
   });
   const [deliveryTime, setDeliveryTime] = useState("1 pm - 6 pm");
-  const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const clearCart = useCartWishlistStore((state) => state.clearCart);
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   // Authenticate and load item
   useEffect(() => {
@@ -128,20 +136,10 @@ export default function CheckoutPage() {
       router.push("/shop");
     }
 
-    // Dynamically load Razorpay SDK script
-    const loadRazorpay = () => {
-      if ((window as any).Razorpay) {
-        setRazorpayLoaded(true);
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => setRazorpayLoaded(true);
-      script.onerror = () => toast.error("Failed to load Razorpay SDK");
-      document.body.appendChild(script);
-    };
-
-    loadRazorpay();
+    // Load Razorpay SDK
+    loadRazorpayScript()
+      .then(() => setRazorpayLoaded(true))
+      .catch(() => toast.error("Failed to load Razorpay SDK"));
   }, [router]);
 
   if (!user || checkoutItems.length === 0) {
@@ -166,12 +164,35 @@ export default function CheckoutPage() {
     return acc + (base + addons) * (item.quantity || 1);
   }, 0);
   const checkoutItem = checkoutItems[0];
-  const basePrice = checkoutMode === "direct" && checkoutItem ? Number(checkoutItem.basePrice || checkoutItem.price || 0) : 0;
-  const addonsTotal = checkoutMode === "direct" && checkoutItem ? Number(checkoutItem.addonsTotal || 0) : 0;
-  const tax = subtotal * 0.1; // 10% tax
-  const shipping = 0.0; // Free shipping
-  const grandTotal = subtotal + tax + shipping;
-  const originalMockPrice = subtotal * 1.5; // Mock cross-out price
+  const couponDiscount = appliedCoupon?.discount || 0;
+  const discountedSubtotal = subtotal - couponDiscount;
+  const tax = discountedSubtotal * 0.1;
+  const shipping = 0.0;
+  const grandTotal = discountedSubtotal + tax + shipping;
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) {
+      toast.error("Please enter a coupon code.");
+      return;
+    }
+    setCouponLoading(true);
+    try {
+      const result = await validateCoupon(couponInput.trim(), subtotal);
+      setAppliedCoupon(result);
+      toast.success(`Coupon "${result.coupon.code}" applied! You save ₹${result.discount.toFixed(2)}`);
+    } catch (err: any) {
+      setAppliedCoupon(null);
+      toast.error(err.message || "Invalid coupon code");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    toast.info("Coupon removed");
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -364,6 +385,7 @@ export default function CheckoutPage() {
         items: orderItems,
         shippingAddress: address,
         billingAddress: address,
+        couponCode: appliedCoupon?.coupon.code || undefined,
         notes: checkoutMode === "direct"
           ? `Variant: ${checkoutItems[0].selectedVariantId || "Default"}. Style: ${checkoutItems[0].selectedStyleVariantId || "Default"}. Est Delivery: ${deliveryDate} @ ${deliveryTime}.`
           : `Cart Checkout of ${checkoutItems.length} items. Est Delivery: ${deliveryDate} @ ${deliveryTime}.`,
@@ -375,56 +397,49 @@ export default function CheckoutPage() {
 
       toast.success("Redirecting to secure gateway...", { id: orderToast });
 
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder_key",
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-        name: "Epiclance",
-        description: `Secure checkout Order #${order.orderNumber}`,
-        order_id: razorpayOrder.id,
-        image: IMAGES.Logo2 ? IMAGES.Logo2.src : "",
-        handler: async function (response: any) {
+      await openRazorpayCheckout({
+        razorpayOrder,
+        orderNumber: order.orderNumber,
+        customer: {
+          name: `${address.firstName} ${address.lastName}`,
+          email: address.email,
+          phone: address.phone,
+        },
+        logoUrl: IMAGES.Logo2 ? IMAGES.Logo2.src : undefined,
+        onSuccess: async (response) => {
           const verifyToast = toast.loading("Validating payment signature...");
           try {
-            const verificationPayload = {
-              orderId: order.id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpaySignature: response.razorpay_signature,
-            };
-
-            const verifiedOrder = await verifyPayment(verificationPayload, token);
+            const verifiedOrder = await verifyPayment(
+              {
+                orderId: order.id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+              },
+              token
+            );
             toast.success("Payment verified! Your order is completed.", { id: verifyToast });
-            
-            // Clear checkout item from storage or clear shopping cart
+
             if (checkoutMode === "direct") {
               localStorage.removeItem("checkout_item");
             } else {
-              localStorage.removeItem("epiclance-cart-wishlist");
-              // Also dispatch clearCart locally if possible, or reload page/redirect
+              clearCart();
             }
 
-            // Redirect to confirmation page
             router.push(`/account-order-confirmation?orderId=${verifiedOrder.orderNumber}`);
           } catch (err: any) {
             toast.error(err.message || "Signature verification failed.", { id: verifyToast });
           }
         },
-        prefill: {
-          name: `${address.firstName} ${address.lastName}`,
-          email: address.email,
-          contact: address.phone,
+        onDismiss: () => {
+          setLoading(false);
+          toast.info("Payment cancelled. You can try again when ready.");
         },
-        theme: {
-          color: "#2563EB", 
+        onFailure: (message) => {
+          setLoading(false);
+          toast.error(`Payment failed: ${message}`);
         },
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on("payment.failed", function (response: any) {
-        toast.error(`Payment cancelled or failed: ${response.error.description}`);
       });
-      rzp.open();
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Failed to create transaction.", { id: orderToast });
@@ -623,30 +638,56 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <h4 className="title m-b20 m-t20">3. Payment Options</h4>
+                  <h4 className="title m-b20 m-t20">3. Coupon Code</h4>
+
+                  <div className="m-b25">
+                    {appliedCoupon ? (
+                      <div className="d-flex align-items-center justify-content-between p-3 border rounded bg-success bg-opacity-10">
+                        <div>
+                          <span className="badge bg-success me-2">{appliedCoupon.coupon.code}</span>
+                          <span className="text-success fw-semibold small">
+                            − ₹{appliedCoupon.discount.toFixed(2)} saved
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          className="btn btn-sm btn-outline-danger"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="input-group">
+                        <input
+                          type="text"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          className="form-control"
+                          placeholder="Enter coupon code"
+                          onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading}
+                          className="btn btn-outline-secondary"
+                        >
+                          {couponLoading ? "Checking..." : "Apply"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <h4 className="title m-b20">4. Payment</h4>
                   
-                  <div className="d-flex flex-wrap gap-2 m-b25">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("razorpay")}
-                      className={`btn btn-lg ${paymentMethod === "razorpay" ? "btn-secondary" : "btn-outline-secondary"}`}
-                    >
-                      Razorpay
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("visa")}
-                      className={`btn btn-lg ${paymentMethod === "visa" ? "btn-secondary" : "btn-outline-secondary"}`}
-                    >
-                      Visa Card
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("gpay")}
-                      className={`btn btn-lg ${paymentMethod === "gpay" ? "btn-secondary" : "btn-outline-secondary"}`}
-                    >
-                      Google Pay
-                    </button>
+                  <div className="p-4 border rounded bg-light m-b25">
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="bg-white border rounded p-2 px-3 fw-bold text-primary">Razorpay</div>
+                      <p className="mb-0 text-muted small">
+                        Pay securely via UPI, cards, net banking, or wallets through Razorpay.
+                      </p>
+                    </div>
                   </div>
 
                 </form>
@@ -688,10 +729,14 @@ export default function CheckoutPage() {
                         <td className="border-0">Subtotal</td>
                         <td className="price border-0">₹{subtotal.toFixed(2)}</td>
                       </tr>
-                      <tr>
-                        <td>Discount (33% OFF)</td>
-                        <td className="price text-success">- ₹{(originalMockPrice - subtotal).toFixed(2)}</td>
-                      </tr>
+                      {couponDiscount > 0 && (
+                        <tr>
+                          <td className="text-success">
+                            Coupon ({appliedCoupon?.coupon.code})
+                          </td>
+                          <td className="price text-success">− ₹{couponDiscount.toFixed(2)}</td>
+                        </tr>
+                      )}
                       <tr>
                         <td>Shipping</td>
                         <td className="price text-success font-semibold">Free</td>
@@ -723,7 +768,7 @@ export default function CheckoutPage() {
                       disabled={loading}
                       className="btn btn-secondary w-100 py-3 text-uppercase font-bold tracking-wider"
                     >
-                      {loading ? "Processing..." : "Place Order"}
+                      {loading ? "Processing..." : "Pay with Razorpay"}
                     </button>
                   </div>
 

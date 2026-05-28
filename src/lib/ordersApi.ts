@@ -13,7 +13,12 @@ export const createRazorpayOrder = async (orderData: any, token: string) => {
 
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(json.message || `Failed to create order (${res.status})`);
+    const msg =
+      json.message ||
+      json.error ||
+      (typeof json.errors === "string" ? json.errors : null) ||
+      `Failed to create order (${res.status})`;
+    throw new Error(msg);
   }
   return json.data;
 };

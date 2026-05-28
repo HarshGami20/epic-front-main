@@ -23,3 +23,8 @@ export function getPublicAssetOrigin(): string {
   const withoutApi = stripTrailingSlash(api.replace(/\/api\/?$/, ""));
   return withoutApi || DEFAULT_ASSET_ORIGIN;
 }
+
+/** Razorpay publishable key (safe for browser). */
+export function getRazorpayKeyId(): string {
+  return process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() || "";
+}
