@@ -9,12 +9,13 @@ import CommanLayout from "@/components/CommanLayout";
 import CommanBanner from "@/components/CommanBanner";
 import IMAGES from "@/constant/theme";
 import { createRazorpayOrder, verifyPayment } from "@/lib/ordersApi";
-import { validateCoupon, type CouponValidationResult } from "@/lib/couponApi";
+import { validateCoupon, fetchPublicCoupons, type CouponValidationResult, type PublicCoupon } from "@/lib/couponApi";
 import { getImageUrl } from "@/lib/imageUtils";
 import { loadRazorpayScript, openRazorpayCheckout } from "@/lib/razorpay";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 
 interface Address {
+  id?: string;
   firstName: string;
   lastName: string;
   phone: string;
@@ -25,6 +26,7 @@ interface Address {
   state: string;
   zipCode: string;
   country: string;
+  isDefault?: boolean;
 }
 
 export default function CheckoutPage() {
@@ -48,6 +50,24 @@ export default function CheckoutPage() {
     country: "India",
   });
   
+  // Multiple address states
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [showAddressForm, setShowAddressForm] = useState<boolean>(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [addressForm, setAddressForm] = useState<Address>({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "India",
+    zipCode: "",
+    country: "India",
+  });
+
   const [deliveryDate, setDeliveryDate] = useState(() => {
     const today = new Date();
     today.setDate(today.getDate() + 3); // Default to 3 days from now
@@ -63,6 +83,7 @@ export default function CheckoutPage() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResult | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [publicCoupons, setPublicCoupons] = useState<PublicCoupon[]>([]);
 
   // Authenticate and load item
   useEffect(() => {
@@ -79,23 +100,61 @@ export default function CheckoutPage() {
     setUser(userData);
     setToken(storedToken);
 
-    // Populate default from user profile
-    setAddress((prev) => ({
-      ...prev,
-      firstName: userData.firstName || "",
-      lastName: userData.lastName || "",
-      email: userData.email || "",
-      phone: userData.phone || "",
-    }));
+    // Fetch coupons publicly
+    fetchPublicCoupons()
+      .then((data) => setPublicCoupons(data))
+      .catch((err) => console.error("Failed to load active coupons:", err));
 
-    // Load saved address from local storage if available
-    const savedAddr = localStorage.getItem("user_shipping_address");
-    if (savedAddr) {
+    // Load saved addresses
+    let loadedAddresses: Address[] = [];
+    const savedAddressesStr = localStorage.getItem("user_shipping_addresses");
+    
+    if (savedAddressesStr) {
       try {
-        setAddress(JSON.parse(savedAddr));
+        loadedAddresses = JSON.parse(savedAddressesStr);
       } catch (e) {
-        console.error("Failed to parse saved address", e);
+        console.error("Failed to parse saved addresses", e);
       }
+    } else {
+      // Migrate from single shipping address if exists
+      const savedSingle = localStorage.getItem("user_shipping_address");
+      if (savedSingle) {
+        try {
+          const parsedSingle = JSON.parse(savedSingle);
+          loadedAddresses = [{ ...parsedSingle, id: "addr_default", isDefault: true }];
+        } catch (e) {
+          console.error("Failed to parse single address", e);
+        }
+      }
+    }
+
+    // If still no addresses, initialize with user info
+    if (loadedAddresses.length === 0) {
+      const defaultAddr: Address = {
+        id: "addr_default",
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+        email: userData.email || "",
+        phone: userData.phone || "",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        state: "India",
+        zipCode: "",
+        country: "India",
+        isDefault: true,
+      };
+      loadedAddresses = [defaultAddr];
+      localStorage.setItem("user_shipping_addresses", JSON.stringify(loadedAddresses));
+    }
+
+    setSavedAddresses(loadedAddresses);
+
+    // Find default or first address to select
+    const defaultAddr = loadedAddresses.find((a) => a.isDefault) || loadedAddresses[0];
+    if (defaultAddr && defaultAddr.id) {
+      setSelectedAddressId(defaultAddr.id);
+      setAddress(defaultAddr);
     }
 
     // Load checkout items
@@ -188,15 +247,139 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleSelectCoupon = async (code: string) => {
+    setCouponLoading(true);
+    try {
+      const result = await validateCoupon(code, subtotal);
+      setAppliedCoupon(result);
+      setCouponInput(code);
+      toast.success(`Coupon "${result.coupon.code}" applied! You save ₹${result.discount.toFixed(2)}`);
+    } catch (err: any) {
+      setAppliedCoupon(null);
+      toast.error(err.message || "Invalid coupon code");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponInput("");
     toast.info("Coupon removed");
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // Multiple Addresses Helpers
+  const handleSelectAddress = (id: string) => {
+    setSelectedAddressId(id);
+    const selected = savedAddresses.find((a) => a.id === id);
+    if (selected) {
+      setAddress(selected);
+    }
+  };
+
+  const handleAddNewAddressClick = () => {
+    setAddressForm({
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      phone: user?.phone || "",
+      email: user?.email || "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "India",
+      zipCode: "",
+      country: "India",
+    });
+    setEditingAddressId(null);
+    setShowAddressForm(true);
+  };
+
+  const handleEditAddressClick = (addr: Address, e: React.MouseEvent) => {
+    e.stopPropagation(); // Avoid triggering card selection
+    setAddressForm({ ...addr });
+    setEditingAddressId(addr.id || null);
+    setShowAddressForm(true);
+  };
+
+  const handleDeleteAddress = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Avoid triggering card selection
+    const updated = savedAddresses.filter((a) => a.id !== id);
+    
+    let newSelectedId = selectedAddressId;
+    if (selectedAddressId === id) {
+      if (updated.length > 0) {
+        newSelectedId = updated[0].id || "";
+        setAddress(updated[0]);
+      } else {
+        newSelectedId = "";
+        setAddress({
+          firstName: "",
+          lastName: "",
+          phone: "",
+          email: "",
+          addressLine1: "",
+          addressLine2: "",
+          city: "",
+          state: "India",
+          zipCode: "",
+          country: "India",
+        });
+      }
+    }
+    
+    setSavedAddresses(updated);
+    setSelectedAddressId(newSelectedId);
+    localStorage.setItem("user_shipping_addresses", JSON.stringify(updated));
+    toast.success("Address deleted.");
+  };
+
+  const handleSaveAddress = () => {
+    if (
+      !addressForm.firstName ||
+      !addressForm.lastName ||
+      !addressForm.phone ||
+      !addressForm.addressLine1 ||
+      !addressForm.city ||
+      !addressForm.zipCode
+    ) {
+      toast.error("Please fill in all required shipping address fields.");
+      return;
+    }
+
+    let updatedList: Address[] = [];
+    
+    if (editingAddressId) {
+      updatedList = savedAddresses.map((a) => 
+        a.id === editingAddressId ? { ...addressForm, id: editingAddressId } : a
+      );
+      toast.success("Address updated!");
+    } else {
+      const newId = `addr_${Date.now()}`;
+      const newAddr = { ...addressForm, id: newId };
+      if (savedAddresses.length === 0) {
+        newAddr.isDefault = true;
+      }
+      updatedList = [...savedAddresses, newAddr];
+      toast.success("New address added!");
+    }
+
+    setSavedAddresses(updatedList);
+    localStorage.setItem("user_shipping_addresses", JSON.stringify(updatedList));
+    
+    const targetId = editingAddressId || updatedList[updatedList.length - 1].id;
+    if (targetId) {
+      setSelectedAddressId(targetId);
+      const active = updatedList.find((a) => a.id === targetId);
+      if (active) setAddress(active);
+    }
+
+    setShowAddressForm(false);
+    setEditingAddressId(null);
+  };
+
+  const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setAddress((prev) => ({ ...prev, [name]: value }));
+    setAddressForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // Specs Sheet Downloader
@@ -474,139 +657,233 @@ export default function CheckoutPage() {
                           router.push(`/customize/${checkoutItem?.slug || ""}`);
                         }
                       }}
-                      className="btn-link text-secondary fw-bold p-0 text-decoration-none"
+                      className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 border border-slate-300 hover:bg-slate-900 hover:text-white px-3 py-2 text-xs font-bold text-uppercase transition-all"
+                      style={{ borderRadius: "50px", letterSpacing: "0.5px" }}
                     >
-                      <i className="fa-solid fa-arrow-left me-2" /> Back
+                      <i className="fa-solid fa-arrow-left" /> Back to {checkoutMode === "cart" ? "Cart" : "Customize"}
                     </button>
                   </div>
 
-                  <h4 className="title m-b20">1. Billing & Shipping Details</h4>
+                  <h4 className="title m-b20">1. Shipping & Billing Details</h4>
                   
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="form-group m-b25">
-                        <label className="label-title">First Name <span className="text-danger">*</span></label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          value={address.firstName}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          required
-                        />
+                  {showAddressForm ? (
+                    // Add/Edit Address Form View
+                    <div className="p-4 border rounded bg-white m-b30">
+                      <h5 className="mb-4 fw-bold text-slate-800">
+                        {editingAddressId ? "Edit Address Details" : "Add New Address"}
+                      </h5>
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="form-group m-b20">
+                            <label className="label-title">First Name <span className="text-danger">*</span></label>
+                            <input
+                              type="text"
+                              name="firstName"
+                              value={addressForm.firstName}
+                              onChange={handleAddressFormChange}
+                              className="form-control"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="form-group m-b20">
+                            <label className="label-title">Last Name <span className="text-danger">*</span></label>
+                            <input
+                              type="text"
+                              name="lastName"
+                              value={addressForm.lastName}
+                              onChange={handleAddressFormChange}
+                              className="form-control"
+                              required
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group m-b25">
-                        <label className="label-title">Last Name <span className="text-danger">*</span></label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          value={address.lastName}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="form-group m-b25">
-                        <label className="label-title">Phone <span className="text-danger">*</span></label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={address.phone}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          placeholder="e.g. 9876543210"
-                          required
-                        />
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="form-group m-b20">
+                            <label className="label-title">Phone <span className="text-danger">*</span></label>
+                            <input
+                              type="tel"
+                              name="phone"
+                              value={addressForm.phone}
+                              onChange={handleAddressFormChange}
+                              className="form-control"
+                              placeholder="e.g. 9876543210"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="form-group m-b20">
+                            <label className="label-title">E-mail <span className="text-danger">*</span></label>
+                            <input
+                              type="email"
+                              name="email"
+                              value={addressForm.email}
+                              onChange={handleAddressFormChange}
+                              className="form-control"
+                              required
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group m-b25">
-                        <label className="label-title">E-mail <span className="text-danger">*</span></label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={address.email}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="row">
-                    <div className="col-md-12">
-                      <div className="form-group m-b25">
-                        <label className="label-title">Street Address <span className="text-danger">*</span></label>
-                        <input
-                          type="text"
-                          name="addressLine1"
-                          value={address.addressLine1}
-                          onChange={handleInputChange}
-                          className="form-control m-b15"
-                          placeholder="House/flat number, street name, landmark"
-                          required
-                        />
-                        <input
-                          type="text"
-                          name="addressLine2"
-                          value={address.addressLine2}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          placeholder="Apartment, suite, unit (optional)"
-                        />
+                      <div className="row">
+                        <div className="col-md-12">
+                          <div className="form-group m-b20">
+                            <label className="label-title">Street Address <span className="text-danger">*</span></label>
+                            <input
+                              type="text"
+                              name="addressLine1"
+                              value={addressForm.addressLine1}
+                              onChange={handleAddressFormChange}
+                              className="form-control m-b10"
+                              placeholder="House/flat number, street name, landmark"
+                              required
+                            />
+                            <input
+                              type="text"
+                              name="addressLine2"
+                              value={addressForm.addressLine2 || ""}
+                              onChange={handleAddressFormChange}
+                              className="form-control"
+                              placeholder="Apartment, suite, unit (optional)"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="form-group m-b25">
-                        <label className="label-title">City <span className="text-danger">*</span></label>
-                        <input
-                          type="text"
-                          name="city"
-                          value={address.city}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          required
-                        />
+                      <div className="row">
+                        <div className="col-md-6">
+                          <div className="form-group m-b20">
+                            <label className="label-title">City <span className="text-danger">*</span></label>
+                            <input
+                              type="text"
+                              name="city"
+                              value={addressForm.city}
+                              onChange={handleAddressFormChange}
+                              className="form-control"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-3">
+                          <div className="form-group m-b20">
+                            <label className="label-title">State <span className="text-danger">*</span></label>
+                            <input
+                              type="text"
+                              name="state"
+                              value={addressForm.state}
+                              onChange={handleAddressFormChange}
+                              className="form-control"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-3">
+                          <div className="form-group m-b20">
+                            <label className="label-title">Postcode / ZIP <span className="text-danger">*</span></label>
+                            <input
+                              type="text"
+                              name="zipCode"
+                              value={addressForm.zipCode}
+                              onChange={handleAddressFormChange}
+                              className="form-control"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="d-flex justify-content-end gap-2 mt-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddressForm(false);
+                            setEditingAddressId(null);
+                          }}
+                          className="btn btn-sm btn-outline-secondary px-4 py-2 text-uppercase font-bold text-xs"
+                          style={{ borderRadius: "5px" }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveAddress}
+                          className="btn btn-sm btn-secondary px-4 py-2 text-uppercase font-bold text-xs"
+                          style={{ borderRadius: "5px" }}
+                        >
+                          {editingAddressId ? "Update Address" : "Save Address"}
+                        </button>
                       </div>
                     </div>
-                    <div className="col-md-3">
-                      <div className="form-group m-b25">
-                        <label className="label-title">State <span className="text-danger">*</span></label>
-                        <input
-                          type="text"
-                          name="state"
-                          value={address.state}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          required
-                        />
+                  ) : (
+                    // Saved Addresses List View
+                    <div className="m-b30">
+                      <div className="row g-3">
+                        {savedAddresses.map((addr) => {
+                          const isSelected = selectedAddressId === addr.id;
+                          return (
+                            <div key={addr.id} className="col-md-6">
+                              <div 
+                                onClick={() => handleSelectAddress(addr.id || "")}
+                                className={`p-4 rounded border h-100 position-relative d-flex flex-column justify-content-between transition-all cursor-pointer ${isSelected ? 'border-secondary bg-slate-100 bg-opacity-5' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                                style={{ borderWidth: isSelected ? '2px' : '1px' }}
+                              >
+                                <div>
+                                  <div className="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 className="mb-0 text-secondary fw-black" style={{ fontSize: '15px' }}>{addr.firstName} {addr.lastName}</h6>
+                                    {isSelected && (
+                                      <span className="badge bg-secondary text-white text-[9px] uppercase font-black tracking-wider px-2 py-1 rounded">
+                                        DELIVER HERE
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-slate-600 text-xs mb-1 font-semibold">{addr.addressLine1}</p>
+                                  {addr.addressLine2 && <p className="text-slate-600 text-xs mb-1 font-semibold">{addr.addressLine2}</p>}
+                                  <p className="text-slate-600 text-xs mb-2 font-semibold">{addr.city}, {addr.state} - {addr.zipCode}</p>
+                                  <p className="text-slate-800 text-xs mb-0 font-black"><i className="fa-solid fa-phone text-muted me-1.5" />Mo: {addr.phone}</p>
+                                </div>
+                                <div className="d-flex justify-content-end gap-2 mt-4 pt-2 border-top border-slate-100">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleEditAddressClick(addr, e)}
+                                    className="btn btn-xs btn-outline-secondary py-1 px-3 text-xs font-bold"
+                                    style={{ fontSize: '10px', height: '24px', lineHeight: '22px' }}
+                                  >
+                                    <i className="fa-solid fa-pen me-1" /> Edit
+                                  </button>
+                                  {savedAddresses.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleDeleteAddress(addr.id || "", e)}
+                                      className="btn btn-xs btn-outline-danger py-1 px-3 text-xs font-bold"
+                                      style={{ fontSize: '10px', height: '24px', lineHeight: '22px' }}
+                                    >
+                                      <i className="fa-solid fa-trash me-1" /> Delete
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="mt-4 text-start">
+                        <button
+                          type="button"
+                          onClick={handleAddNewAddressClick}
+                          className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 font-black text-uppercase px-4 py-2 border border-slate-300 text-xs"
+                          style={{ borderRadius: "5px" }}
+                        >
+                          <i className="fa-solid fa-plus" /> Add New Address
+                        </button>
                       </div>
                     </div>
-                    <div className="col-md-3">
-                      <div className="form-group m-b25">
-                        <label className="label-title">Postcode / ZIP <span className="text-danger">*</span></label>
-                        <input
-                          type="text"
-                          name="zipCode"
-                          value={address.zipCode}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   <h4 className="title m-b20 m-t20">2. Delivery Schedule</h4>
                   
@@ -652,29 +929,94 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={handleRemoveCoupon}
-                          className="btn btn-sm btn-outline-danger"
+                          className="btn btn-sm btn-outline-danger font-bold text-xs py-1 px-3"
                         >
                           Remove
                         </button>
                       </div>
                     ) : (
-                      <div className="input-group">
-                        <input
-                          type="text"
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          className="form-control"
-                          placeholder="Enter coupon code"
-                          onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                        />
-                        <button
-                          type="button"
-                          onClick={handleApplyCoupon}
-                          disabled={couponLoading}
-                          className="btn btn-outline-secondary"
-                        >
-                          {couponLoading ? "Checking..." : "Apply"}
-                        </button>
+                      <div>
+                        <div className="input-group mb-3">
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                            className="form-control"
+                            placeholder="Enter coupon code"
+                            onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleApplyCoupon}
+                            disabled={couponLoading}
+                            className="btn btn-outline-secondary font-bold text-uppercase px-4"
+                          >
+                            {couponLoading ? "Checking..." : "Apply"}
+                          </button>
+                        </div>
+                        
+                        {publicCoupons.length > 0 && (
+                          <div className="mt-3">
+                            <label className="label-title text-muted mb-2.5 small fw-bold tracking-wider uppercase">Available Offers</label>
+                            <div className="row g-3">
+                              {publicCoupons.map((coupon) => {
+                                const isApplied = false;
+                                const isMinMet = subtotal >= (coupon.minOrderAmount || 0);
+                                return (
+                                  <div key={coupon.id} className="col-12 col-md-6">
+                                    <div className={`p-3 border rounded h-100 d-flex flex-column justify-content-between transition-all ${isApplied ? 'border-success bg-success bg-opacity-5' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
+                                      <div>
+                                        <div className="d-flex align-items-center justify-content-between mb-2">
+                                          <span className={`px-2.5 py-1 rounded text-xs font-black border border-dashed tracking-wider ${isApplied ? 'bg-success text-white border-success' : 'bg-slate-50 text-slate-700 border-slate-300'}`}>
+                                            {coupon.code}
+                                          </span>
+                                          {coupon.type === "PERCENTAGE" ? (
+                                            <span className="text-success font-black text-sm">{coupon.value}% OFF</span>
+                                          ) : (
+                                            <span className="text-success font-black text-sm">₹{coupon.value} OFF</span>
+                                          )}
+                                        </div>
+                                        {coupon.description && (
+                                          <p className="mb-2 text-muted text-xs font-semibold leading-relaxed" style={{ fontSize: '11px' }}>
+                                            {coupon.description}
+                                          </p>
+                                        )}
+                                        {coupon.minOrderAmount && (
+                                          <p className="mb-0 text-slate-500 text-[10px]" style={{ fontSize: '10px' }}>
+                                            Min. Order: ₹{Number(coupon.minOrderAmount).toFixed(0)}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div className="mt-3 pt-2 border-top border-slate-100 text-end">
+                                        {isApplied ? (
+                                          <button
+                                            type="button"
+                                            onClick={handleRemoveCoupon}
+                                            className="btn btn-sm btn-danger py-1 px-3 text-xs font-bold"
+                                            style={{ fontSize: '11px' }}
+                                          >
+                                            Remove
+                                          </button>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSelectCoupon(coupon.code)}
+                                            disabled={!isMinMet || couponLoading}
+                                            className={`btn btn-sm py-1 px-3 text-xs font-bold ${isMinMet ? 'btn-outline-secondary' : 'btn-light text-slate-400 border border-slate-200'}`}
+                                            style={{ fontSize: '11px' }}
+                                            title={!isMinMet ? `Requires minimum order of ₹${Number(coupon.minOrderAmount).toFixed(2)}` : ''}
+                                          >
+                                            Apply
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

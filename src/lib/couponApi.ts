@@ -27,3 +27,23 @@ export const validateCoupon = async (code: string, subtotal: number): Promise<Co
   }
   return json.data;
 };
+
+export interface PublicCoupon {
+  id: string;
+  code: string;
+  description?: string;
+  type: "PERCENTAGE" | "FIXED";
+  value: number;
+  minOrderAmount?: number;
+  maxDiscount?: number;
+}
+
+export const fetchPublicCoupons = async (): Promise<PublicCoupon[]> => {
+  const base = getPublicApiUrl();
+  const res = await fetch(`${base}/public/coupons`, {
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+};
