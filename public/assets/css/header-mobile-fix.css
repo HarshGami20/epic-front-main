@@ -449,3 +449,25 @@
     bottom: 20px !important;
   }
 }
+
+/* ============================================================
+   Account Breadcrumb Adjustments for Small Screens (≤ 1199px)
+   ============================================================ */
+@media only screen and (max-width: 1199px) {
+  .dz-bnr-inr {
+    --dz-banner-height: 140px !important;
+    min-height: 140px !important;
+  }
+  .dz-bnr-inr .dz-bnr-inr-entry {
+    height: 140px !important;
+    padding: 25px 0 !important;
+  }
+  .dz-bnr-inr h1,
+  .dz-bnr-inr .h1 {
+    font-size: 22px !important;
+    margin-bottom: 4px !important;
+  }
+  .dz-bnr-inr .breadcrumb-row ul li {
+    font-size: 12px !important;
+  }
+}

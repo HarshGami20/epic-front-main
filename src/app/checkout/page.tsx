@@ -589,6 +589,16 @@ export default function CheckoutPage() {
           email: address.email,
           phone: address.phone,
         },
+        shippingAddress: {
+          line1: address.addressLine1,
+          line2: address.addressLine2 || "",
+          city: address.city,
+          state: address.state,
+          zipcode: address.zipCode,
+          country: address.country || "India",
+          first_name: address.firstName,
+          last_name: address.lastName,
+        },
         logoUrl: IMAGES.Logo2 ? IMAGES.Logo2.src : undefined,
         appliedCoupon: appliedCoupon
           ? {

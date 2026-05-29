@@ -5,7 +5,7 @@ import IMAGES from "@/constant/theme";
 import PasswordInputBox from "@/components/PasswordInputBox";
 import AuthSlider from "@/components/AuthSlider";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { registerUser } from "@/lib/authApi";
 
@@ -17,6 +17,8 @@ export default function Registration() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get("redirect") || (typeof window !== "undefined" && sessionStorage.getItem("last_non_auth_page")) || "/account-orders";
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,7 +32,7 @@ export default function Registration() {
             toast.success("Registration successful! You can now log in.");
 
             setTimeout(() => {
-                router.push("/account-orders");
+                router.push(redirectUrl);
             }, 1500);
         } catch (err: any) {
             toast.error(err.message || "Failed to register. Please try again.");

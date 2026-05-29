@@ -15,7 +15,7 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectUrl = searchParams.get("redirect") || "/account-orders";
+    const redirectUrl = searchParams.get("redirect") || (typeof window !== "undefined" && sessionStorage.getItem("last_non_auth_page")) || "/account-orders";
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -96,7 +96,7 @@ export default function Login() {
                                     <button type="submit" disabled={loading} className="btn btn-secondary btnhover text-uppercase me-2 sign-btn">
                                         {loading ? "Signing in..." : "Sign In"}
                                     </button>
-                                    <Link href="/registration" className="btn btn-outline-secondary btnhover text-uppercase">Register</Link>
+                                    <Link href={`/registration${searchParams.get("redirect") ? `?redirect=${searchParams.get("redirect")}` : ""}`} className="btn btn-outline-secondary btnhover text-uppercase">Register</Link>
                                 </div>
                             </form>
                             <Toaster position="top-center" richColors closeButton />

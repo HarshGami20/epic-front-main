@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import MainLayout from "@/components/MainLayout";
 import Registration from "./_components/Registration";
 
@@ -10,7 +11,9 @@ export const metadata = {
 export default function RegistrationPage(){
     return(
         <MainLayout>
-            <Registration />
+            <Suspense fallback={<div className="container py-5 text-center">Loading registration form...</div>}>
+                <Registration />
+            </Suspense>
         </MainLayout>
     )
 }

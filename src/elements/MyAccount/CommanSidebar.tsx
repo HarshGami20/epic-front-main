@@ -55,7 +55,7 @@ export default function CommanSidebar() {
 
   return (
     <aside className="col-xl-3">
-      <div className="toggle-info">
+      <div className="toggle-info d-none">
         <h5 className="title mb-0">Account Navbar</h5>
         <a className="toggle-btn" href="#accountSidebar">
           Account Menu

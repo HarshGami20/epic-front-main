@@ -17,9 +17,17 @@ import './pixel-editor.css'
 import '../../public/assets/css/header-mobile-fix.css'
 
 
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+
 export default function RootLayout({children,}: Readonly<{children: React.ReactNode;}>) {
-  
-  
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && pathname && !["/login", "/registration", "/forget-password"].includes(pathname)) {
+      sessionStorage.setItem("last_non_auth_page", pathname + window.location.search);
+    }
+  }, [pathname]);
   
   return (
     <html lang="en">

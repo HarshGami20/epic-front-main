@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Nav, Tab } from "react-bootstrap";
 import { toast, Toaster } from "sonner";
-import { Download, Package, Truck, Calendar, MapPin, Eye, ArrowLeft, RotateCcw } from "lucide-react";
+import { Download, Package, Truck, Calendar, MapPin, Eye, ArrowLeft, RotateCcw, FileText } from "lucide-react";
 import CommanBanner from "@/components/CommanBanner";
 import IMAGES from "@/constant/theme";
 import CommanSidebar from "@/elements/MyAccount/CommanSidebar";
@@ -183,6 +183,193 @@ export default function AccountOrderDetails() {
     }
   };
 
+  // ─────────────── CUSTOMER GST INVOICE ───────────────
+  const handleDownloadInvoice = () => {
+    if (!order) return;
+    toast.loading("Generating invoice...", { id: "invoice" });
+    try {
+      const W = 1100, H = 900;
+      const canvas = document.createElement("canvas");
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext("2d")!;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(4, 4, W - 8, H - 8);
+
+      // Header
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(4, 4, W - 8, 80);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 36px sans-serif";
+      ctx.fillText("EPICLANCE", 30, 54);
+      ctx.font = "13px sans-serif";
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillText("Pvt. Ltd.", 30, 72);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 24px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("TAX INVOICE", W - 30, 44);
+      ctx.font = "12px sans-serif";
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillText("GSTIN: 24AADCE1234F1Z5", W - 30, 64);
+      ctx.textAlign = "left";
+
+      let y = 105;
+      ctx.fillStyle = "#374151";
+      ctx.font = "12px sans-serif";
+      ctx.fillText("474, 1st Floor, New GIDC, Katargam, Surat, Gujarat \u2013 395004", 20, y);
+      ctx.fillText("+91 97379 41313 | info@epiclance.in | epiclance.in", 20, y + 18);
+      ctx.textAlign = "right";
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillText(`Invoice No: ${order.orderNumber}`, W - 20, y);
+      ctx.font = "12px sans-serif";
+      ctx.fillText(`Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}`, W - 20, y + 18);
+      ctx.textAlign = "left";
+
+      y += 38;
+      ctx.strokeStyle = "#d1d5db";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(W - 10, y); ctx.stroke();
+      y += 14;
+
+      const addr = order.shippingAddress || {};
+      const custName = `${addr.firstName || ""} ${addr.lastName || ""}`.trim() || "Valued Customer";
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "bold 10px sans-serif";
+      ctx.fillText("BILL TO:", 20, y);
+      ctx.fillText("SHIP TO:", W / 2 + 20, y);
+      y += 16;
+      ctx.fillStyle = "#111827";
+      ctx.font = "bold 14px sans-serif";
+      ctx.fillText(custName, 20, y);
+      ctx.fillText(custName, W / 2 + 20, y);
+      y += 18;
+      ctx.font = "12px sans-serif";
+      ctx.fillStyle = "#374151";
+      const addrStr = [addr.addressLine1, addr.city, addr.state, addr.zipCode, addr.country || "India"]
+        .filter(Boolean).join(", ");
+      const addrDisplay = addrStr.length > 60 ? addrStr.substring(0, 60) + "\u2026" : addrStr;
+      ctx.fillText(addrDisplay, 20, y);
+      ctx.fillText(addrDisplay, W / 2 + 20, y);
+      if (addr.phone) {
+        y += 16;
+        ctx.fillText(`Mob: ${addr.phone}`, 20, y);
+        ctx.fillText(`Mob: ${addr.phone}`, W / 2 + 20, y);
+      }
+
+      // Table
+      y += 28;
+      ctx.strokeStyle = "#d1d5db";
+      ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(W - 10, y); ctx.stroke();
+      y += 4;
+
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(10, y, W - 20, 30);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 11px sans-serif";
+      const colX = [14, 44, 470, 555, 635, 710, 790, 875, W - 20];
+      const colAlignRight = [false, false, false, true, true, true, true, true, true];
+      const headers = ["#", "Product", "HSN", "Qty", "Unit \u20b9", "GST%", "CGST \u20b9", "SGST \u20b9", "Total \u20b9"];
+      headers.forEach((h, i) => {
+        ctx.textAlign = colAlignRight[i] ? "right" : "left";
+        ctx.fillText(h, colX[i], y + 21);
+      });
+      ctx.textAlign = "left";
+      y += 30;
+
+      (order.orderItems || []).forEach((item: any, idx: number) => {
+        const unitPrice = Number(item.price);
+        const qty = item.quantity;
+        const productMeta = item.product?.metadata || {};
+        const gstRate = Number(productMeta.gstRate) || 0;
+        const hsnCode = productMeta.hsnCode || "\u2014";
+        const baseAmt = unitPrice * qty;
+        const gstAmt = baseAmt * (gstRate / 100);
+        const cgst = gstAmt / 2;
+        const sgst = gstAmt / 2;
+        const lineTotal = baseAmt + gstAmt;
+
+        ctx.fillStyle = idx % 2 === 0 ? "#f9fafb" : "#ffffff";
+        ctx.fillRect(10, y, W - 20, 30);
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(10, y, W - 20, 30);
+        ctx.fillStyle = "#111827";
+        ctx.font = "11px sans-serif";
+        const rowData = [
+          `${idx + 1}`,
+          (item.product?.name || "Product").substring(0, 40),
+          hsnCode,
+          `${qty}`,
+          `\u20b9${unitPrice.toFixed(2)}`,
+          `${gstRate}%`,
+          `\u20b9${cgst.toFixed(2)}`,
+          `\u20b9${sgst.toFixed(2)}`,
+          `\u20b9${lineTotal.toFixed(2)}`,
+        ];
+        rowData.forEach((val, i) => {
+          ctx.textAlign = colAlignRight[i] ? "right" : "left";
+          ctx.fillText(val, colX[i], y + 20);
+        });
+        ctx.textAlign = "left";
+        y += 30;
+      });
+
+      // Totals
+      y += 14;
+      ctx.strokeStyle = "#d1d5db";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(W / 2, y); ctx.lineTo(W - 10, y); ctx.stroke();
+      y += 16;
+
+      const totLines: [string, string][] = [
+        ["Subtotal:", `\u20b9 ${Number(order.subtotal).toFixed(2)}`],
+        ["Tax (GST):", `\u20b9 ${Number(order.tax).toFixed(2)}`],
+        ["Shipping:", `\u20b9 ${Number(order.shipping).toFixed(2)}`],
+      ];
+      ctx.fillStyle = "#374151";
+      ctx.font = "12px sans-serif";
+      totLines.forEach(([label, val]) => {
+        ctx.fillText(label, W / 2 + 20, y);
+        ctx.textAlign = "right";
+        ctx.fillText(val, W - 20, y);
+        ctx.textAlign = "left";
+        y += 22;
+      });
+
+      y += 8;
+      ctx.strokeStyle = "#d1d5db";
+      ctx.beginPath(); ctx.moveTo(W / 2, y); ctx.lineTo(W - 10, y); ctx.stroke();
+      y += 16;
+      ctx.fillStyle = "#111827";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText("GRAND TOTAL:", W / 2 + 20, y);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#db2777";
+      ctx.fillText(`\u20b9 ${Number(order.total).toFixed(2)}`, W - 20, y);
+      ctx.textAlign = "left";
+
+      // Footer
+      ctx.fillStyle = "#f3f4f6";
+      ctx.fillRect(4, H - 46, W - 8, 42);
+      ctx.fillStyle = "#9ca3af";
+      ctx.font = "10px sans-serif";
+      ctx.fillText("This is a computer-generated invoice and does not require a physical signature.", 16, H - 28);
+      ctx.fillText(`\u00a9 ${new Date().getFullYear()} Epiclance Pvt. Ltd. | GSTIN: 24AADCE1234F1Z5`, 16, H - 12);
+
+      const link = document.createElement("a");
+      link.download = `invoice-${order.orderNumber}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      toast.success("Invoice downloaded successfully!", { id: "invoice" });
+    } catch (e: any) {
+      toast.error("Failed to generate invoice: " + e.message, { id: "invoice" });
+    }
+  };
+
   const handleReturnRequest = async () => {
     const token = localStorage.getItem("token");
     if (!token || !order) return;
@@ -258,7 +445,7 @@ export default function AccountOrderDetails() {
               </div>
 
               <div className="account-card order-details">
-                <div className="order-head flex flex-wrap items-center justify-between gap-4">
+                  <div className="order-head flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="head-thumb bg-slate-50 border border-slate-100 rounded-lg p-1 overflow-hidden relative w-16 h-16 shrink-0 flex items-center justify-center">
                       <img src={previewImage || IMAGES.ShopSmallPic1.src} alt="thumbnail" className="max-w-full max-h-full object-contain" />
@@ -270,16 +457,26 @@ export default function AccountOrderDetails() {
                       <h4 className="mb-0 font-extrabold text-slate-900 leading-snug">Order {order.orderNumber}</h4>
                     </div>
                   </div>
-                  {/* Return Request button for DELIVERED orders */}
-                  {order.status === "DELIVERED" && (
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {/* Download Invoice button – always visible */}
                     <button
                       type="button"
-                      onClick={() => setShowReturnModal(true)}
+                      onClick={handleDownloadInvoice}
                       className="btn btn-sm btn-outline-secondary font-bold uppercase tracking-wider text-[10px] px-3.5 py-2 flex items-center gap-1.5"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" /> Request Return
+                      <FileText className="w-3.5 h-3.5" /> Download Invoice
                     </button>
-                  )}
+                    {/* Return Request button for DELIVERED orders */}
+                    {order.status === "DELIVERED" && (
+                      <button
+                        type="button"
+                        onClick={() => setShowReturnModal(true)}
+                        className="btn btn-sm btn-outline-secondary font-bold uppercase tracking-wider text-[10px] px-3.5 py-2 flex items-center gap-1.5"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> Request Return
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="row mb-sm-4 mb-2 mt-4">
