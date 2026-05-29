@@ -81,6 +81,8 @@ export default function SearchCategorySlider() {
                     : "/assets/images/placeholder.jpg";
                 const price = p?.basePrice ?? p?.price ?? 0;
                 const href = `/products/${p?.slug || ""}`;
+                const orig = p?.originPrice ? Number(p.originPrice) : 0;
+                const showCompare = orig > Number(price);
 
                 return (
                     <SwiperSlide key={p?.id ?? ind}>
@@ -91,10 +93,23 @@ export default function SearchCategorySlider() {
                                 </Link>
                             </div>
                             <div className="dz-content">
-                                <h6 className="title">
+                                <h6 className="title" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: "2.4em" }}>
                                     <Link href={href}>{name}</Link>
                                 </h6>
-                                <h6 className="price">₹{Number(price).toFixed(2)}</h6>
+                                <h6 className="price">
+                                    ₹{Number(price).toFixed(2)}
+                                    {showCompare && (
+                                        <>
+                                            {" "}
+                                            <del style={{ fontSize: "0.85em", color: "#999", marginLeft: "8px" }}>
+                                                ₹{orig.toFixed(2)}
+                                            </del>
+                                            <span style={{ fontSize: "0.75em", color: "green", marginLeft: "8px" }}>
+                                                -{Math.round(((orig - Number(price)) / orig) * 100)}%
+                                            </span>
+                                        </>
+                                    )}
+                                </h6>
                             </div>
                         </div>
                     </SwiperSlide>

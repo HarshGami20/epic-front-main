@@ -71,7 +71,7 @@ export default function HeaderSideShoppingCard(props: propType) {
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <h6 className="dz-price mb-0">${(elem.price * elem.quantity).toFixed(2)}</h6>
+                                                            <h6 className="dz-price mb-0">₹{(elem.price * elem.quantity).toFixed(2)}</h6>
                                                         </div>
                                                     </div>
                                                     <Link href="#" className="dz-close" onClick={() => removeFromCart(elem.id)}>
@@ -83,7 +83,7 @@ export default function HeaderSideShoppingCard(props: propType) {
                                     </ul>
                                     <div className="cart-total">
                                         <h5 className="mb-0">Subtotal:</h5>
-                                        <h5 className="mb-0">${totalPrice.toFixed(2)}</h5>
+                                        <h5 className="mb-0">₹{totalPrice.toFixed(2)}</h5>
                                     </div>
                                     <div className="mt-auto">
                                         <div className="shipping-time">
@@ -129,7 +129,7 @@ export default function HeaderSideShoppingCard(props: propType) {
                                                             <Link href={`/products/${elem.slug}`}>{elem.name}</Link>
                                                         </h6>
                                                         <div className="d-flex align-items-center">
-                                                            <h6 className="dz-price mb-0">${elem.price.toFixed(2)}</h6>
+                                                            <h6 className="dz-price mb-0">₹{elem.price.toFixed(2)}</h6>
                                                         </div>
                                                     </div>
                                                     <Link href="#" className="dz-close" onClick={() => removeFromWishlist(elem.productId)}>

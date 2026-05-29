@@ -106,10 +106,12 @@ export default function ShopListCard({ product, inputtype }: cardType) {
                             </div>
                         </div>
                         <div className="d-flex align-items-center">
-                            <button onClick={handleAddToCart} className="btn btn-secondary btn-md btn-icon me-2">
-                                <i className="icon feather icon-shopping-cart d-md-none d-block" />
-                                <span className="d-md-block d-none">Add to cart</span>
-                            </button>
+                            {!p?.hasCustomization && (
+                                <button onClick={handleAddToCart} className="btn btn-secondary btn-md btn-icon me-2">
+                                    <i className="icon feather icon-shopping-cart d-md-none d-block" />
+                                    <span className="d-md-block d-none">Add to cart</span>
+                                </button>
+                            )}
                             <div className="bookmark-btn style-1">
                                 <input 
                                     className="form-check-input" 

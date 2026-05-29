@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
+import { Navigation, Autoplay } from 'swiper/modules';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Modal } from 'react-bootstrap';
@@ -134,6 +134,11 @@ const VideoReels = ({ data }: { data?: any }) => {
             </div>
 
             <Swiper
+                modules={[Autoplay]}
+                autoplay={{
+                    delay: 3000,
+                    disableOnInteraction: false,
+                }}
                 slidesPerView={4}
                 spaceBetween={15}
                 breakpoints={{

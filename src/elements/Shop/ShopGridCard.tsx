@@ -109,12 +109,14 @@ export default function ShopGridCard({ product, showdetailModal }: cardType) {
                         <i className="icon feather icon-heart dz-heart" />
                         <i className="icon feather icon-heart-on dz-heart-fill" />
                     </div>
-                    <div className={`btn btn-primary meta-icon dz-carticon`}
-                        onClick={handleAddToCart}
-                    >
-                        <i className="flaticon flaticon-basket" />
-                        <i className="flaticon flaticon-shopping-basket-on dz-heart-fill" />
-                    </div>
+                    {!product?.hasCustomization && (
+                        <div className={`btn btn-primary meta-icon dz-carticon`}
+                            onClick={handleAddToCart}
+                        >
+                            <i className="flaticon flaticon-basket" />
+                            <i className="flaticon flaticon-shopping-basket-on dz-heart-fill" />
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="dz-content mt-3">

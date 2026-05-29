@@ -29,6 +29,16 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
     const [localColorIndex, setLocalColorIndex] = useState<number | null>(null);
     const [reviewStats, setReviewStats] = useState({ rating: 0, count: 0 });
     const [quantity, setQuantity] = useState<number>(1);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const { addToCart, toggleWishlist, isInWishlist } = useCartWishlistStore();
 
@@ -237,28 +247,36 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                         </div>
                     )}
                 </div>
-                <div className="btn-group cart-btn mt-4 flex-wrap gap-2">
+                <div 
+                    className="btn-group cart-btn mt-4 flex-wrap gap-2"
+                    style={isMobile ? { display: 'flex', flexDirection: 'column', width: '100%', gap: '10px' } : undefined}
+                >
                     {product?.hasCustomization && product?.customization && product?.slug && (
                         <Link
                             href={customizeHref}
                             className="btn btn-primary text-uppercase"
+                            style={isMobile ? { width: '100%', margin: '0' } : undefined}
                         >
                             Customize
                         </Link>
                     )}
-                    <button 
-                        type="button" 
-                        className="btn btn-secondary text-uppercase"
-                        onClick={handleAddToCart}
-                    >
-                        Add To Cart
-                    </button>
+                    {!product?.hasCustomization && (
+                        <button 
+                            type="button" 
+                            className="btn btn-secondary text-uppercase"
+                            onClick={handleAddToCart}
+                            style={isMobile ? { width: '100%', margin: '0' } : undefined}
+                        >
+                            Add To Cart
+                        </button>
+                    )}
                     <button 
                         type="button" 
                         className={`btn btn-icon ${isInWishlist(product.id) ? 'btn-secondary' : 'btn-outline-secondary'}`}
                         onClick={handleToggleWishlist}
+                        style={isMobile ? { width: '100%', margin: '0', display: 'flex', justifyContent: 'center', alignItems: 'center' } : undefined}
                     >
-                        <i className={`icon feather icon-heart${isInWishlist(product.id) ? '-on' : ''}`}></i>
+                        <i className={`icon feather icon-heart${isInWishlist(product.id) ? '-on' : ''} me-2`}></i>
                         {isInWishlist(product.id) ? 'In Wishlist' : 'Add To Wishlist'}
                     </button>
                 </div>

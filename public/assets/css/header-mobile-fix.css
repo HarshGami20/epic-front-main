@@ -408,3 +408,44 @@
     transform: translateY(0);
   }
 }
+
+/* ============================================================
+   Mobile Search & Offcanvas Styles (added for mobile header align and drawer size)
+   ============================================================ */
+
+@media only screen and (max-width: 991px) {
+  .search-btn-mobile {
+    float: right;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 18px 0 16px 0;
+    cursor: pointer;
+  }
+}
+
+@media only screen and (max-width: 575px) {
+  .search-btn-mobile {
+    margin: 10px 0 10px 0;
+  }
+  
+  .dz-offcanvas.offcanvas.offcanvas-end {
+    width: 100% !important;
+  }
+}
+
+/* ============================================================
+   About Us Blog section button alignment for mobile
+   ============================================================ */
+@media only screen and (max-width: 991px) {
+  .about-style1 .about-thumb .btn {
+    left: 20px !important;
+    bottom: 20px !important;
+  }
+  
+  .shop-card.style-6 .dz-content {
+    left: 20px !important;
+    bottom: 20px !important;
+  }
+}

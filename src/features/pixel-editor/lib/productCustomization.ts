@@ -63,6 +63,7 @@ export interface ProductCustomizationPayload {
   /** When true, storefront shows text tools only; when false, image upload only (single area). */
   textOnly?: boolean;
   allowedFonts?: string[];
+  logoUploadPrice?: number;
   /** Logical design stage in px (from admin crop / canvas). */
   designWidth?: number;
   designHeight?: number;

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
-import { Canvas as FabricCanvas, FabricImage, Point, Textbox, type FabricObject } from 'fabric';
+import { Canvas as FabricCanvas, FabricImage, Point, Textbox, Rect, type FabricObject } from 'fabric';
 import { useEditor, products, type EditableZoneCanvas } from '@pixel/contexts/EditorContext';
 import {
   resolveProductAssetUrl,
@@ -231,12 +231,66 @@ export const EditorCanvas: React.FC = () => {
   useEffect(() => {
     if (!canvas) return;
 
+    const constrainImageInZone = (obj: FabricObject, zone: any) => {
+      if ((obj as { isBackground?: boolean }).isBackground) return;
+      obj.setCoords();
+      const br = obj.getBoundingRect();
+
+      const bleed = zone.bleed ?? 0;
+      const minX = zone.x - bleed;
+      const minY = zone.y - bleed;
+      const maxX = zone.x + zone.width + bleed;
+      const maxY = zone.y + zone.height + bleed;
+
+      const overlap = 20; // Maintain at least 20px overlap
+      let dx = 0;
+      let dy = 0;
+
+      if (br.left + br.width < minX + overlap) {
+        dx = (minX + overlap) - (br.left + br.width);
+      } else if (br.left > maxX - overlap) {
+        dx = (maxX - overlap) - br.left;
+      }
+
+      if (br.top + br.height < minY + overlap) {
+        dy = (minY + overlap) - (br.top + br.height);
+      } else if (br.top > maxY - overlap) {
+        dy = (maxY - overlap) - br.top;
+      }
+
+      if (dx !== 0 || dy !== 0) {
+        obj.set({
+          left: (obj.left ?? 0) + dx,
+          top: (obj.top ?? 0) + dy,
+        });
+        obj.setCoords();
+      }
+    };
+
+    const applyClipPathToObject = (obj: any, zone: EditableZoneCanvas) => {
+      if (obj.type === 'image') {
+        obj.set({
+          clipPath: new Rect({
+            left: zone.x,
+            top: zone.y,
+            width: zone.width,
+            height: zone.height,
+            absolutePositioned: true,
+          }),
+        });
+      }
+    };
+
     const fitObjInExactArea = (obj: any, zone: EditableZoneCanvas) => {
       const tf = zone.textFields?.find(f => f.id === obj.textFieldId);
       if (tf) {
         fitObjectInZone(obj, { x: tf.x, y: tf.y, width: tf.width, height: tf.height, bleed: 0 });
       } else {
-        fitObjectInZone(obj, zone);
+        if (obj.type === 'image') {
+          constrainImageInZone(obj, zone);
+        } else {
+          fitObjectInZone(obj, zone);
+        }
       }
     };
 
@@ -291,6 +345,7 @@ export const EditorCanvas: React.FC = () => {
 
       const zone = getZoneForObject(obj);
       if (zone) {
+        applyClipPathToObject(obj, zone);
         fitObjInExactArea(obj as any, zone);
       }
 
@@ -653,7 +708,7 @@ export const EditorCanvas: React.FC = () => {
     if (editorSource === 'demo' && selectedProduct) {
       recalcDemoSelection();
     } else if (editorSource === 'product' && customizationSlice) {
-      const zones: EditableZoneCanvas[] = customizationSlice.editableAreas.map((area) => {
+      const mappedZones: EditableZoneCanvas[] = customizationSlice.editableAreas.map((area) => {
         const m = mapEditableAreaToCanvas(
           area,
           newLeft,
@@ -702,7 +757,45 @@ export const EditorCanvas: React.FC = () => {
           textFields: mappedTextFields,
         };
       });
-      setEditableZones(zones);
+      setEditableZones(mappedZones);
+
+      canvas.getObjects().forEach((obj) => {
+        if ((obj as any).isBackground) return;
+        const zoneId = (obj as any).editableZoneId;
+        if (!zoneId) return;
+        const z = mappedZones.find((item: EditableZoneCanvas) => item.id === zoneId);
+        if (z && obj.type === 'image') {
+          obj.set({
+            clipPath: new Rect({
+              left: z.x,
+              top: z.y,
+              width: z.width,
+              height: z.height,
+              absolutePositioned: true,
+            }),
+          });
+        }
+      });
+    }
+
+    if (editorSource === 'demo') {
+      canvas.getObjects().forEach((obj) => {
+        if ((obj as any).isBackground) return;
+        const zoneId = (obj as any).editableZoneId;
+        if (!zoneId) return;
+        const z = editableZones.find((item: EditableZoneCanvas) => item.id === zoneId);
+        if (z && obj.type === 'image') {
+          obj.set({
+            clipPath: new Rect({
+              left: z.x,
+              top: z.y,
+              width: z.width,
+              height: z.height,
+              absolutePositioned: true,
+            }),
+          });
+        }
+      });
     }
 
     canvas.requestRenderAll();

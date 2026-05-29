@@ -32,7 +32,21 @@ export default function ProductDefaultSlider({
             isStatic: false
         }));
     } else if (Array.isArray(productData?.images) && productData.images.length > 0) {
-        sliderImages = productData.images.map((img: string) => ({
+        let thumbImages: string[] = [];
+        if (Array.isArray(productData?.thumbImage)) {
+            thumbImages = productData.thumbImage.filter(Boolean);
+        } else if (typeof productData?.thumbImage === 'string' && productData.thumbImage.trim()) {
+            thumbImages = [productData.thumbImage];
+        }
+
+        const combinedImages = [...thumbImages];
+        for (const img of productData.images) {
+            if (img && !combinedImages.includes(img)) {
+                combinedImages.push(img);
+            }
+        }
+
+        sliderImages = combinedImages.map((img: string) => ({
             url: getImageUrl(img),
             thumbUrl: getImageUrl(img),
             isStatic: false

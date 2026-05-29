@@ -165,6 +165,13 @@ const Header = ({ design }: DesignType) => {
                                 <span></span>
                                 <span></span>
                             </button>
+                            <button className="search-btn-mobile d-lg-none border-0 bg-transparent"
+                                type="button"
+                                onClick={() => dispatch({ type: 'TOGGLE_SEARCH_BAR' })}
+                                style={{ fontSize: '20px', color: 'var(--title)', padding: '5px' }}
+                            >
+                                <i className="iconly-Light-Search" />
+                            </button>
 
                             {/*  Main Nav  */}
                             <div className={`header-nav w3menu navbar-collapse collapse justify-content-start ${state.openSidebar ? "show" : ""}`}
@@ -205,6 +212,26 @@ const Header = ({ design }: DesignType) => {
                                 {/* All menus item */}
                                 <Menus />
                                 {/* All menus item end*/}
+                                <ul className="nav navbar-nav d-lg-none" style={{ borderTop: "1px solid rgba(0,0,0,0.08)", marginTop: "15px", paddingTop: "15px" }}>
+                                    <li className="nav-item">
+                                        <Link href="#" onClick={(e) => {
+                                            e.preventDefault();
+                                            dispatch({ type: 'TOGGLE_SIDEBAR' });
+                                            dispatch({ type: 'TOGGLE_BASKET_SHOPPING_CARD' });
+                                        }}>
+                                            <span>Cart ({cart.length})</span>
+                                        </Link>
+                                    </li>
+                                    <li className="nav-item">
+                                        <Link href="#" onClick={(e) => {
+                                            e.preventDefault();
+                                            dispatch({ type: 'TOGGLE_SIDEBAR' });
+                                            dispatch({ type: 'TOGGLE_HEAD_SHOPPING_SIDEBAR' });
+                                        }}>
+                                            <span>Wishlist ({wishlist.length})</span>
+                                        </Link>
+                                    </li>
+                                </ul>
                                 <div className="dz-social-icon">
                                     <ul>
                                         <li><Link className="fab fa-facebook-f" target="_blank" href="https://www.facebook.com/dexignzone"></Link></li>

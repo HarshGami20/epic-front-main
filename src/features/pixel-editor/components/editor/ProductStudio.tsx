@@ -11,7 +11,7 @@ import { fitSingleLineTextInZone, toSingleLineText } from "@pixel/lib/textAdapti
 import { fitObjectInZone } from "@pixel/lib/canvasZoneFit";
 import { toast } from "sonner";
 import { EditorCanvas } from "./EditorCanvas";
-import { FabricImage } from "fabric";
+import { FabricImage, Rect } from "fabric";
 import { getImageUrl } from "@/lib/imageUtils";
 import { getPublicApiUrl } from "@/lib/env";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -60,6 +60,24 @@ export const ProductStudio: React.FC = () => {
   const [fetchedFonts, setFetchedFonts] = useState<any[]>([]);
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [presetImages, setPresetImages] = useState<any[]>([]);
+
+  const [hasUserUploadedLogo, setHasUserUploadedLogo] = useState(false);
+
+  useEffect(() => {
+    if (!canvas) return;
+    const checkUserUpload = () => {
+      const hasUpload = canvas.getObjects().some((o) => (o as any).isUserUploaded);
+      setHasUserUploadedLogo(hasUpload);
+    };
+
+    checkUserUpload();
+
+    canvas.on("after:render", checkUserUpload);
+
+    return () => {
+      canvas.off("after:render", checkUserUpload);
+    };
+  }, [canvas]);
 
   // Fetch fonts and media from backend
   useEffect(() => {
@@ -341,7 +359,7 @@ export const ProductStudio: React.FC = () => {
         slug: editorProduct?.slug,
         price: grandTotal,
         basePrice: basePrice,
-        addonsTotal: addonsTotal,
+        addonsTotal: addonsTotal + logoCharge,
         quantity: 1,
         image: editorProduct?.customization?.baseImage || '',
         previewImage,
@@ -397,6 +415,13 @@ export const ProductStudio: React.FC = () => {
           top: activeZone.y + (activeZone.height - imgObj.height * scale) / 2,
           scaleX: scale,
           scaleY: scale,
+          clipPath: new Rect({
+            left: activeZone.x,
+            top: activeZone.y,
+            width: activeZone.width,
+            height: activeZone.height,
+            absolutePositioned: true,
+          }),
         });
         fabImg.setControlsVisibility({
           mt: false,
@@ -405,6 +430,7 @@ export const ProductStudio: React.FC = () => {
           mr: false,
         });
         (fabImg as any).editableZoneId = activeZone.id;
+        (fabImg as any).isUserUploaded = true;
         canvas.add(fabImg);
         canvas.setActiveObject(fabImg);
         canvas.requestRenderAll();
@@ -431,6 +457,13 @@ export const ProductStudio: React.FC = () => {
         top: activeZone.y + (activeZone.height - imgObj.height * scale) / 2,
         scaleX: scale,
         scaleY: scale,
+        clipPath: new Rect({
+          left: activeZone.x,
+          top: activeZone.y,
+          width: activeZone.width,
+          height: activeZone.height,
+          absolutePositioned: true,
+        }),
       });
       fabImg.setControlsVisibility({
         mt: false,
@@ -460,9 +493,11 @@ export const ProductStudio: React.FC = () => {
 
   // Pricing calculations
   const basePrice = 299.0;
+  const logoUploadPrice = editorProduct?.customization?.logoUploadPrice ?? 0;
+  const logoCharge = hasUserUploadedLogo ? Number(logoUploadPrice) : 0;
   const activeStyle = styleVariantsForPicker.find((s) => s.id === selectedStyleVariantId);
   const addonsTotal = activeStyle ? Number(activeStyle.priceAddon || 0) : 0;
-  const grandTotal = basePrice + addonsTotal;
+  const grandTotal = basePrice + addonsTotal + logoCharge;
 
   return (
     <div className="min-h-screen bg-[#faf9f5] text-slate-900 flex flex-col font-sans pb-12 selection:bg-blue-500 selection:text-white">
@@ -837,7 +872,7 @@ export const ProductStudio: React.FC = () => {
                           Your Logo
                         </span>
                         <span className="text-[10px] text-pink-600 font-extrabold mt-0.5">
-                          + ₹50
+                          + ₹{logoUploadPrice}
                         </span>
                       </button>
 
@@ -896,6 +931,12 @@ export const ProductStudio: React.FC = () => {
               <span>Addons Total :</span>
               <span className="font-extrabold text-slate-900">₹ {addonsTotal.toFixed(2)}</span>
             </div>
+            {logoUploadPrice > 0 && (
+              <div className="flex justify-between">
+                <span>Logo Upload Charge :</span>
+                <span className="font-extrabold text-slate-900">₹ {logoCharge.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-slate-500">
               <span>Other Charges :</span>
               <span>₹ 0.00</span>

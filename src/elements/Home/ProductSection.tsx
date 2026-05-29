@@ -220,12 +220,14 @@ const ProductSection = ({ data }: { data?: any }) => {
                                                     <i className="icon feather icon-heart dz-heart" />
                                                     <i className="icon feather icon-heart-on dz-heart-fill" />
                                                 </div>
-                                                <div className={`btn btn-primary meta-icon dz-carticon`}
-                                                    onClick={() => handleAddToCart(item)}
-                                                >
-                                                    <i className="flaticon flaticon-basket" />
-                                                    <i className="flaticon flaticon-basket-on dz-heart-fill" />
-                                                </div>
+                                                {!item?.hasCustomization && (
+                                                    <div className={`btn btn-primary meta-icon dz-carticon`}
+                                                        onClick={() => handleAddToCart(item)}
+                                                    >
+                                                        <i className="flaticon flaticon-basket" />
+                                                        <i className="flaticon flaticon-basket-on dz-heart-fill" />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="dz-content">
@@ -299,13 +301,15 @@ const ProductSection = ({ data }: { data?: any }) => {
                                         </div>
                                     </div>
                                     <div className=" cart-btn">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleAddToCart(selectedProduct, modalQuantity)}
-                                            className="btn btn-secondary text-uppercase"
-                                        >
-                                            Add To Cart
-                                        </button>
+                                        {!selectedProduct?.hasCustomization && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAddToCart(selectedProduct, modalQuantity)}
+                                                className="btn btn-secondary text-uppercase"
+                                            >
+                                                Add To Cart
+                                            </button>
+                                        )}
                                         <button
                                             type="button"
                                             onClick={() => handleToggleWishlist(selectedProduct)}
