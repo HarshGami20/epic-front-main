@@ -545,7 +545,7 @@ export default function CheckoutPage() {
     }
 
     setLoading(true);
-    const orderToast = toast.loading("Connecting to secure Razorpay server...");
+    const orderToast = toast.loading("Opening Razorpay Magic Checkout...");
 
     try {
       // Save address profile for next time
@@ -576,12 +576,13 @@ export default function CheckoutPage() {
 
       // Call backend to create order
       const resData = await createRazorpayOrder(orderPayload, token);
-      const { order, razorpayOrder } = resData;
+      const { order, razorpayOrder, keyId } = resData;
 
       toast.success("Redirecting to secure gateway...", { id: orderToast });
 
       await openRazorpayCheckout({
         razorpayOrder,
+        keyId,
         orderNumber: order.orderNumber,
         customer: {
           name: `${address.firstName} ${address.lastName}`,
@@ -589,6 +590,12 @@ export default function CheckoutPage() {
           phone: address.phone,
         },
         logoUrl: IMAGES.Logo2 ? IMAGES.Logo2.src : undefined,
+        appliedCoupon: appliedCoupon
+          ? {
+              code: appliedCoupon.coupon.code,
+              discountAmount: appliedCoupon.discount,
+            }
+          : null,
         onSuccess: async (response) => {
           const verifyToast = toast.loading("Validating payment signature...");
           try {
@@ -1025,9 +1032,9 @@ export default function CheckoutPage() {
                   
                   <div className="p-4 border rounded bg-light m-b25">
                     <div className="d-flex align-items-center gap-3">
-                      <div className="bg-white border rounded p-2 px-3 fw-bold text-primary">Razorpay</div>
+                      <div className="bg-white border rounded p-2 px-3 fw-bold text-primary">Razorpay Magic Checkout</div>
                       <p className="mb-0 text-muted small">
-                        Pay securely via UPI, cards, net banking, or wallets through Razorpay.
+                        One-click checkout with UPI, cards, saved addresses, and in-checkout coupons.
                       </p>
                     </div>
                   </div>
@@ -1110,7 +1117,7 @@ export default function CheckoutPage() {
                       disabled={loading}
                       className="btn btn-secondary w-100 py-3 text-uppercase font-bold tracking-wider"
                     >
-                      {loading ? "Processing..." : "Pay with Razorpay"}
+                      {loading ? "Processing..." : "Pay with Magic Checkout"}
                     </button>
                   </div>
 

@@ -427,7 +427,7 @@ const MainSection = () => {
                 const url = getPublicApiUrl();
                 const headers = { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' };
                 const timestamp = new Date().getTime();
-                const res = await fetch(`${url}/cms/slug/startupkit-home-layout?t=${timestamp}`, { headers, cache: 'no-store' });
+                const res = await fetch(`${url}/public/cms/slug/startupkit-home-layout?t=${timestamp}`, { headers, cache: 'no-store' });
 
                 let populatedSections = null;
                 if (res.ok) {
@@ -439,7 +439,7 @@ const MainSection = () => {
                             fetchedSections.map(async (sec: any) => {
                                 if (!sec.enabled) return sec;
                                 try {
-                                    const secRes = await fetch(`${url}/cms/slug/${sec.slug}?t=${timestamp}`, { headers, cache: 'no-store' });
+                                    const secRes = await fetch(`${url}/public/cms/slug/${sec.slug}?t=${timestamp}`, { headers, cache: 'no-store' });
                                     if (secRes.ok) {
                                         const secData = await secRes.json();
                                         return { ...sec, data: secData?.data?.content || secData?.content || {} };

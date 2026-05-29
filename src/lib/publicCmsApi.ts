@@ -15,7 +15,7 @@ interface CmsResponse {
 
 export async function fetchPublicCmsPageBySlug(slug: string): Promise<PublicCmsPage | null> {
   const base = getPublicApiUrl();
-  const res = await fetch(`${base}/cms/slug/${encodeURIComponent(slug)}`, {
+  const res = await fetch(`${base}/public/cms/slug/${encodeURIComponent(slug)}`, {
     cache: "no-store",
   });
   if (!res.ok) return null;

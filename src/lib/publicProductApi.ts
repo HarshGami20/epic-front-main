@@ -22,7 +22,7 @@ export async function fetchPublicProducts(params: { limit?: number; category?: s
   if (params.limit) query.set("limit", params.limit.toString());
   if (params.category) query.set("category", params.category);
 
-  const res = await fetch(`${base}/products?${query.toString()}`, {
+  const res = await fetch(`${base}/public/products?${query.toString()}`, {
     cache: "no-store",
   });
   if (!res.ok) return [];
