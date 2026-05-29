@@ -54,7 +54,10 @@ export const fetchUserOrders = async (token: string, page = 1, limit = 10) => {
   if (!res.ok) {
     throw new Error(json.message || `Failed to fetch orders (${res.status})`);
   }
-  return json.data; // paginated: { orders, pagination }
+  return {
+    orders: json.data ?? [],
+    pagination: json.pagination ?? { page: 1, limit: 10, total: 0, pages: 1 },
+  };
 };
 
 export const fetchOrderById = async (orderId: string, token: string) => {
