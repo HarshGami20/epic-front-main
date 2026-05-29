@@ -334,7 +334,7 @@ export default function AccountOrderDetails() {
                         {order.orderItems?.map((item: any) => {
                           const hasCustom = item.customizationData?.textInputs?.length > 0;
                           return (
-                            <div key={item.id} className="border border-slate-100 p-4 bg-slate-50/50 mb-4 space-y-4">
+                            <div key={item.id} className="border border-slate-100 rounded-[5px] p-4 bg-slate-50/50 mb-4 space-y-4">
                               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <div className="tracking-item flex items-center gap-3">
                                   <div className="tracking-product bg-white border border-slate-200 rounded-lg p-1 w-20 h-20 shrink-0 flex items-center justify-center relative overflow-hidden">
@@ -344,8 +344,8 @@ export default function AccountOrderDetails() {
                                       className="max-w-full max-h-full object-contain"
                                     />
                                   </div>
-                                  <div className="tracking-product-content">
-                                    <h6 className="title font-bold text-slate-900 text-sm mb-1">{item.product?.name}</h6>
+                                  <div className="tracking-product-content min-w-0 flex-1">
+                                    <h6 className="title font-bold text-slate-900 text-sm mb-1 line-clamp-2">{item.product?.name}</h6>
                                     <small className="d-block text-slate-500 font-medium"><strong>Base Price</strong> : ₹ {Number(item.price - (item.metadata?.addonsTotal || 0)).toFixed(2)}</small>
                                     <small className="d-block text-slate-500 font-medium"><strong>Addons</strong> : ₹ {Number(item.metadata?.addonsTotal || 0).toFixed(2)}</small>
                                     <small className="d-block text-slate-500 font-medium"><strong>Quantity</strong> : {item.quantity}</small>
