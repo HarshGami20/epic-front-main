@@ -334,7 +334,7 @@ export default function AccountOrderDetails() {
                         {order.orderItems?.map((item: any) => {
                           const hasCustom = item.customizationData?.textInputs?.length > 0;
                           return (
-                            <div key={item.id} className="border border-slate-100 rounded-xl p-4 bg-slate-50/50 mb-4 space-y-4">
+                            <div key={item.id} className="border border-slate-100 p-4 bg-slate-50/50 mb-4 space-y-4">
                               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <div className="tracking-item flex items-center gap-3">
                                   <div className="tracking-product bg-white border border-slate-200 rounded-lg p-1 w-20 h-20 shrink-0 flex items-center justify-center relative overflow-hidden">
