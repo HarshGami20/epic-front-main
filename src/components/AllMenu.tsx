@@ -179,11 +179,7 @@ export const AllMenu = [
       },
       {
         child: "Contact Us",
-        subchild: [
-          { children: "Contact Us 1", to: "/contact-us-1" },
-          { children: "Contact Us 2", to: "/contact-us-2" },
-          { children: "Contact Us 3", to: "/contact-us-3" },          
-        ],
+        subchild: [{ children: "Contact Us", to: "/contact-us" }],
       },
       {
         child: "Web Pages",

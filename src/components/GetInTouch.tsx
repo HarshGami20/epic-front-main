@@ -10,7 +10,7 @@ const GetInTouch = () => {
 							<span>Our experts will help find the grar that’s right for you</span>
 						</h3>
 					</div>
-					<Link href="/contact-us-1" className="btn btn-light">Get In Touch</Link>
+					<Link href="/contact-us" className="btn btn-light">Get In Touch</Link>
 				</div>
 			</div>
 		</section>

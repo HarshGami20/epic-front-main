@@ -44,7 +44,7 @@ const DEFAULT_BANNER_TEXT =
 const DEFAULT_CTA_TITLE = "Questions ?";
 const DEFAULT_CTA_SUB = "Our experts will help find the grar that's right for you";
 const DEFAULT_CTA_BTN = "Get In Touch";
-const DEFAULT_CTA_LINK = "/contact-us-1";
+const DEFAULT_CTA_LINK = "/contact-us";
 const DEFAULT_BANNER_VIDEO = "/assets/images/background/bg-video.mp4";
 
 function videoMimeType(url: string): string {

@@ -117,7 +117,7 @@ const Header7 = () => {
                             <div className="dz-topbar-left">
                                 <ul>
                                     <li><Link href="/about-us">About Us</Link></li>
-                                    <li><Link href="/contact-us-1">Contact Us</Link></li>
+                                    <li><Link href="/contact-us">Contact Us</Link></li>
                                     <li><Link href="/faqs-2">Help Desk</Link></li>
                                 </ul>
                             </div>
