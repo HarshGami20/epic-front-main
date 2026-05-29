@@ -11,6 +11,7 @@ import { registerUser } from "@/lib/authApi";
 
 export default function Registration() {
     const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
@@ -21,7 +22,7 @@ export default function Registration() {
         e.preventDefault();
         setLoading(true);
         try {
-            const data = await registerUser({ firstName, email, phone, password });
+            const data = await registerUser({ firstName, lastName, email, phone, password });
             if (data?.token) {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data.user));
@@ -58,17 +59,30 @@ export default function Registration() {
                             <h2 className="text-secondary text-center">Registration Now</h2>
                             <p className="text-center m-b30">Welcome please registration to your account</p>
                             <form onSubmit={handleRegister}>
-                                <div className="m-b25">
-                                    <label className="label-title">Username</label>
-                                    <input
-                                        name="dzName"
-                                        required
-                                        className="form-control"
-                                        placeholder="Username"
-                                        type="text"
-                                        value={firstName}
-                                        onChange={(e) => setFirstName(e.target.value)}
-                                    />
+                                <div className="row">
+                                    <div className="col-md-6 m-b25">
+                                        <label className="label-title">First Name</label>
+                                        <input
+                                            name="firstName"
+                                            required
+                                            className="form-control"
+                                            placeholder="First name"
+                                            type="text"
+                                            value={firstName}
+                                            onChange={(e) => setFirstName(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-md-6 m-b25">
+                                        <label className="label-title">Last Name</label>
+                                        <input
+                                            name="lastName"
+                                            className="form-control"
+                                            placeholder="Last name"
+                                            type="text"
+                                            value={lastName}
+                                            onChange={(e) => setLastName(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="m-b25">
                                     <label className="label-title">Email Address</label>
