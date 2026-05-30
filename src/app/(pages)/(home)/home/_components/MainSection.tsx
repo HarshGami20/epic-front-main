@@ -454,7 +454,7 @@ function PageLoaderOverlay() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        marginTop: "-50px",
+                        // marginTop: "-50px",
                     }}
                 >
                     <Image
