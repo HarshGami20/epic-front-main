@@ -41,9 +41,46 @@ export function computeAdaptiveFontSizeForZone(
   );
 }
 
-/** Collapse line breaks and extra spaces so canvas text stays on one line. */
+/** Collapse line breaks and repeated spaces; keep a trailing space while typing. */
 export function toSingleLineText(text: string): string {
-  return text.replace(/\s*[\r\n\u2028\u2029]+\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  return text
+    .replace(/\s*[\r\n\u2028\u2029]+\s*/g, ' ')
+    .replace(/ {2,}/g, ' ')
+    .replace(/^\s+/, '');
+}
+
+/** Count completed words (ignores leading/trailing whitespace). */
+export function countWords(text: string): number {
+  const core = text.trim();
+  if (!core) return 0;
+  return core.split(/\s+/).filter(Boolean).length;
+}
+
+/**
+ * Enforce a word cap while preserving one trailing space when the user is
+ * still typing the next word (word count must stay below the limit).
+ */
+export function enforceMaxWords(text: string, maxWords: number): string {
+  if (!maxWords || maxWords <= 0) return text;
+
+  const normalized = text.replace(/^\s+/, '');
+  const wantsTrailingSpace = /\s$/.test(normalized);
+  const core = normalized.trimEnd();
+
+  if (!core) {
+    return wantsTrailingSpace ? ' ' : '';
+  }
+
+  const words = core.split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) {
+    const joined = words.join(' ');
+    if (wantsTrailingSpace && words.length < maxWords) {
+      return `${joined} `;
+    }
+    return joined;
+  }
+
+  return words.slice(0, maxWords).join(' ');
 }
 
 type TextLike = FabricObject & {

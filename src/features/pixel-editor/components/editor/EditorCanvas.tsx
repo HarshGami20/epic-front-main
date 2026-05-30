@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight, ImageIcon, Type } from 'lucide-react';
 import { Button } from '@pixel/components/ui/button';
 import { cn } from '@pixel/lib/utils';
 import { fitObjectInZone } from '@pixel/lib/canvasZoneFit';
-import { bakeTextboxScaleIntoMetrics, fitSingleLineTextInZone } from '@pixel/lib/textAdaptiveSizing';
+import { bakeTextboxScaleIntoMetrics, enforceMaxWords, fitSingleLineTextInZone, toSingleLineText } from '@pixel/lib/textAdaptiveSizing';
 
 type Mat2D = [number, number, number, number, number, number];
 
@@ -358,8 +358,9 @@ export const EditorCanvas: React.FC = () => {
         (obj as any).on('changed', () => {
           const z = getZoneForObject(obj);
           if (z) {
-            let currentText = String((obj as any).text || '').replace(/\s*[\r\n\u2028\u2029]+\s*/g, ' ');
-            let modified = /[\r\n\u2028\u2029]/.test(String((obj as any).text || ''));
+            const rawText = String((obj as any).text || '');
+            let currentText = toSingleLineText(rawText);
+            let modified = currentText !== rawText;
 
             const tf = z.textFields?.find(f => f.id === (obj as any).textFieldId);
             const effMaxLength = tf?.maxLength ?? z.maxLength;
@@ -371,20 +372,15 @@ export const EditorCanvas: React.FC = () => {
             }
 
             if (effMaxWords) {
-              const words = currentText.split(/\s+/) as string[];
-              if (words.length > effMaxWords) {
-                const match = currentText.match(new RegExp(`^\\s*(?:\\S+\\s+){0,${effMaxWords - 1}}\\S+`));
-                if (match) {
-                  currentText = match[0];
-                } else {
-                  currentText = words.slice(0, effMaxWords).join(' ');
-                }
+              const limited = enforceMaxWords(currentText, effMaxWords);
+              if (limited !== currentText) {
+                currentText = limited;
                 modified = true;
               }
             }
 
             if (modified) {
-              (obj as any).set('text', currentText);
+              (obj as any).set('text', currentText.trim() ? currentText : ' ');
               if ((obj as any).hiddenTextarea) {
                 (obj as any).hiddenTextarea.value = currentText;
               }

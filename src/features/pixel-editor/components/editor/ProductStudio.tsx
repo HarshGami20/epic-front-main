@@ -7,7 +7,7 @@ import { useEditor } from "@pixel/contexts/EditorContext";
 import { resolveProductAssetUrl } from "@pixel/lib/productCustomization";
 import { Button } from "@pixel/components/ui/button";
 import { cn } from "@pixel/lib/utils";
-import { fitSingleLineTextInZone, toSingleLineText } from "@pixel/lib/textAdaptiveSizing";
+import { countWords, enforceMaxWords, fitSingleLineTextInZone, toSingleLineText } from "@pixel/lib/textAdaptiveSizing";
 import { fitObjectInZone } from "@pixel/lib/canvasZoneFit";
 import { toast } from "sonner";
 import { EditorCanvas } from "./EditorCanvas";
@@ -251,11 +251,11 @@ export const ProductStudio: React.FC = () => {
     }
 
     if (maxWds) {
-      const words = newText.split(/\s+/).filter(Boolean);
-      if (words.length > maxWds) {
-        newText = words.slice(0, maxWds).join(" ");
+      const limited = enforceMaxWords(newText, maxWds);
+      if (limited !== newText) {
         toast.warning(`Maximum ${maxWds} words allowed`);
       }
+      newText = limited;
     }
 
     tb.set("text", newText.trim() ? newText : " ");
@@ -699,7 +699,7 @@ export const ProductStudio: React.FC = () => {
                                   <span className="text-red-500 text-sm">*</span> {tf.label || `Text Line ${tfIdx + 1}`} :
                                 </label>
                                 <span className="text-[11px] font-bold text-slate-400">
-                                  {tf.maxLength ? `${currentText.trim().length}/${tf.maxLength} chars` : tf.maxWords ? `${currentText.trim().split(/\s+/).filter(Boolean).length}/${tf.maxWords} words` : ""}
+                                  {tf.maxLength ? `${currentText.length}/${tf.maxLength} chars` : tf.maxWords ? `${countWords(currentText)}/${tf.maxWords} words` : ""}
                                 </span>
                               </div>
                               <input
@@ -779,7 +779,7 @@ export const ProductStudio: React.FC = () => {
                             <span className="text-red-500 text-sm">*</span> {activeZone.label || "Text Line"} :
                           </label>
                           <span className="text-[11px] font-bold text-slate-400">
-                            {activeZone.maxLength ? `${(getTextboxForField(undefined, activeZone.id)?.text || "").trim().length}/${activeZone.maxLength} chars` : activeZone.maxWords ? `${(getTextboxForField(undefined, activeZone.id)?.text || "").trim().split(/\s+/).filter(Boolean).length}/${activeZone.maxWords} words` : ""}
+                            {activeZone.maxLength ? `${(getTextboxForField(undefined, activeZone.id)?.text || "").length}/${activeZone.maxLength} chars` : activeZone.maxWords ? `${countWords(getTextboxForField(undefined, activeZone.id)?.text || "")}/${activeZone.maxWords} words` : ""}
                           </span>
                         </div>
                         <input
