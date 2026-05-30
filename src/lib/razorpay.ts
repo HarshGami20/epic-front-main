@@ -18,17 +18,6 @@ export interface RazorpayPrediscount {
   gift_card_applied?: boolean;
 }
 
-export interface RazorpayShippingAddress {
-  line1?: string;
-  line2?: string;
-  city?: string;
-  state?: string;
-  zipcode?: string;
-  country?: string;
-  first_name?: string;
-  last_name?: string;
-}
-
 export interface RazorpayMagicOptions {
   key: string;
   one_click_checkout: boolean;
@@ -42,7 +31,6 @@ export interface RazorpayMagicOptions {
     contact?: string;
     coupon_code?: string;
     prediscount?: RazorpayPrediscount[];
-    shipping_address?: RazorpayShippingAddress;
   };
   image?: string;
   theme?: {
@@ -105,7 +93,6 @@ export interface OpenRazorpayCheckoutParams {
   keyId?: string;
   orderNumber: string;
   customer: { name: string; email: string; phone: string };
-  shippingAddress?: RazorpayShippingAddress;
   logoUrl?: string;
   appliedCoupon?: { code: string; discountAmount: number } | null;
   onSuccess: (response: RazorpaySuccessResponse) => void | Promise<void>;
@@ -117,7 +104,6 @@ export async function openRazorpayCheckout({
   razorpayOrder,
   keyId,
   customer,
-  shippingAddress,
   logoUrl,
   appliedCoupon,
   onSuccess,
@@ -142,7 +128,6 @@ export async function openRazorpayCheckout({
     name: customer.name,
     email: customer.email,
     contact: formatRazorpayContact(customer.phone),
-    shipping_address: shippingAddress,
   };
 
   if (appliedCoupon?.code) {

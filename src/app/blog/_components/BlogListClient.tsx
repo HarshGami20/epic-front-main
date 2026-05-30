@@ -118,7 +118,6 @@ export default function BlogListClient() {
                     parentText="Home"
                     mainText="Blog"
                     currentText="Blog"
-                    image={IMAGES.BackBg1.src}
                 />
                 <section className="content-inner-1 z-index-unset pb-3">
                     <div className="container">

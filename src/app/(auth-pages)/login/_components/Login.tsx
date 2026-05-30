@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { loginUser } from "@/lib/authApi";
+import { persistUser } from "@/lib/userUtils";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ export default function Login() {
             const data = await loginUser({ email, password });
             if (data?.token) {
                 localStorage.setItem("token", data.token);
-                localStorage.setItem("user", JSON.stringify(data.user));
+                persistUser(data.user);
             }
             toast.success("Login successful!");
             

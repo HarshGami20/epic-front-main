@@ -13,20 +13,64 @@ import { validateCoupon, fetchPublicCoupons, type CouponValidationResult, type P
 import { getImageUrl } from "@/lib/imageUtils";
 import { loadRazorpayScript, openRazorpayCheckout } from "@/lib/razorpay";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
+import { fetchPublicProductBySlug } from "@/lib/publicProductApi";
 
-interface Address {
-  id?: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  email: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  isDefault?: boolean;
+function hasCustomPriceBreakdown(item: any): boolean {
+  return (
+    Boolean(item.customizationData) ||
+    Boolean(item.isCustomized) ||
+    (item.addonsTotal != null && Number(item.addonsTotal) > 0)
+  );
+}
+
+/** Unit price for display and order totals. Cart items use `price`; customized items use base + addons. */
+function getCheckoutLineUnitPrice(item: any): number {
+  if (hasCustomPriceBreakdown(item)) {
+    return Number(item.basePrice ?? 0) + Number(item.addonsTotal ?? 0);
+  }
+  return Number(item.price ?? item.basePrice ?? 0);
+}
+
+function getOrderItemMetadata(item: any, deliveryDate: string, deliveryTime: string) {
+  const unitPrice = getCheckoutLineUnitPrice(item);
+  const customized = hasCustomPriceBreakdown(item);
+
+  return {
+    previewImage: item.previewImage || item.image,
+    addonsTotal: customized ? Number(item.addonsTotal || 0) : 0,
+    basePrice: customized ? Number(item.basePrice ?? 0) : unitPrice,
+    deliveryDate,
+    deliveryTime,
+  };
+}
+
+/** Only refresh catalog base price for direct/customized checkout — never overwrite cart prices. */
+async function syncCheckoutItemPrices(items: any[]): Promise<any[]> {
+  return Promise.all(
+    items.map(async (item) => {
+      if (!hasCustomPriceBreakdown(item)) return item;
+
+      const slug = typeof item.slug === "string" ? item.slug.trim() : "";
+      if (!slug) return item;
+
+      try {
+        const product = await fetchPublicProductBySlug(slug);
+        if (!product) return item;
+
+        const catalogBase = Number(product.basePrice ?? product.price ?? 0);
+        if (!Number.isFinite(catalogBase) || catalogBase <= 0) return item;
+
+        const addonTotal = Number(item.addonsTotal ?? 0);
+        return {
+          ...item,
+          basePrice: catalogBase,
+          price: catalogBase + (Number.isFinite(addonTotal) ? addonTotal : 0),
+        };
+      } catch {
+        return item;
+      }
+    })
+  );
 }
 
 export default function CheckoutPage() {
@@ -35,38 +79,6 @@ export default function CheckoutPage() {
   const [token, setToken] = useState<string>("");
   const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
   const [checkoutMode, setCheckoutMode] = useState<"direct" | "cart">("cart");
-  
-  // Address & delivery details
-  const [address, setAddress] = useState<Address>({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "India",
-    zipCode: "",
-    country: "India",
-  });
-  
-  // Multiple address states
-  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
-  const [showAddressForm, setShowAddressForm] = useState<boolean>(false);
-  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
-  const [addressForm, setAddressForm] = useState<Address>({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "India",
-    zipCode: "",
-    country: "India",
-  });
 
   const [deliveryDate, setDeliveryDate] = useState(() => {
     const today = new Date();
@@ -105,58 +117,6 @@ export default function CheckoutPage() {
       .then((data) => setPublicCoupons(data))
       .catch((err) => console.error("Failed to load active coupons:", err));
 
-    // Load saved addresses
-    let loadedAddresses: Address[] = [];
-    const savedAddressesStr = localStorage.getItem("user_shipping_addresses");
-    
-    if (savedAddressesStr) {
-      try {
-        loadedAddresses = JSON.parse(savedAddressesStr);
-      } catch (e) {
-        console.error("Failed to parse saved addresses", e);
-      }
-    } else {
-      // Migrate from single shipping address if exists
-      const savedSingle = localStorage.getItem("user_shipping_address");
-      if (savedSingle) {
-        try {
-          const parsedSingle = JSON.parse(savedSingle);
-          loadedAddresses = [{ ...parsedSingle, id: "addr_default", isDefault: true }];
-        } catch (e) {
-          console.error("Failed to parse single address", e);
-        }
-      }
-    }
-
-    // If still no addresses, initialize with user info
-    if (loadedAddresses.length === 0) {
-      const defaultAddr: Address = {
-        id: "addr_default",
-        firstName: userData.firstName || "",
-        lastName: userData.lastName || "",
-        email: userData.email || "",
-        phone: userData.phone || "",
-        addressLine1: "",
-        addressLine2: "",
-        city: "",
-        state: "India",
-        zipCode: "",
-        country: "India",
-        isDefault: true,
-      };
-      loadedAddresses = [defaultAddr];
-      localStorage.setItem("user_shipping_addresses", JSON.stringify(loadedAddresses));
-    }
-
-    setSavedAddresses(loadedAddresses);
-
-    // Find default or first address to select
-    const defaultAddr = loadedAddresses.find((a) => a.isDefault) || loadedAddresses[0];
-    if (defaultAddr && defaultAddr.id) {
-      setSelectedAddressId(defaultAddr.id);
-      setAddress(defaultAddr);
-    }
-
     // Load checkout items
     const storedCartStr = localStorage.getItem("epiclance-cart-wishlist");
     let currentCart: any[] = [];
@@ -173,26 +133,30 @@ export default function CheckoutPage() {
     const mode = searchParams.get("mode");
     const storedItem = localStorage.getItem("checkout_item");
 
+    let loadedItems: any[] = [];
+    let loadedMode: "direct" | "cart" = "cart";
+
     if (mode === "direct" && storedItem) {
-      setCheckoutItems([JSON.parse(storedItem)]);
-      setCheckoutMode("direct");
-    } else if (mode === "cart" || !storedItem) {
-      if (currentCart && currentCart.length > 0) {
-        setCheckoutItems(currentCart);
-        setCheckoutMode("cart");
-      } else {
-        toast.error("Your cart is empty.");
-        router.push("/shop-cart");
-      }
+      loadedItems = [JSON.parse(storedItem)];
+      loadedMode = "direct";
+    } else if (currentCart.length > 0) {
+      // Cart wins over stale checkout_item unless mode=direct
+      localStorage.removeItem("checkout_item");
+      loadedItems = currentCart;
+      loadedMode = "cart";
     } else if (storedItem) {
-      setCheckoutItems([JSON.parse(storedItem)]);
-      setCheckoutMode("direct");
-    } else if (currentCart && currentCart.length > 0) {
-      setCheckoutItems(currentCart);
-      setCheckoutMode("cart");
+      loadedItems = [JSON.parse(storedItem)];
+      loadedMode = "direct";
     } else {
-      toast.error("No product found for checkout.");
-      router.push("/shop");
+      toast.error("Your cart is empty.");
+      router.push("/shop-cart");
+      return;
+    }
+
+    setCheckoutMode(loadedMode);
+    setCheckoutItems(loadedItems);
+    if (loadedMode === "direct") {
+      void syncCheckoutItemPrices(loadedItems).then(setCheckoutItems);
     }
 
     // Load Razorpay SDK
@@ -217,17 +181,15 @@ export default function CheckoutPage() {
   }
 
   // Calculate pricing breakdown
-  const subtotal = checkoutItems.reduce((acc, item) => {
-    const base = Number(item.basePrice || item.price || 0);
-    const addons = Number(item.addonsTotal || 0);
-    return acc + (base + addons) * (item.quantity || 1);
-  }, 0);
+  const subtotal = checkoutItems.reduce(
+    (acc, item) => acc + getCheckoutLineUnitPrice(item) * (item.quantity || 1),
+    0
+  );
   const checkoutItem = checkoutItems[0];
   const couponDiscount = appliedCoupon?.discount || 0;
   const discountedSubtotal = subtotal - couponDiscount;
-  const tax = discountedSubtotal * 0.1;
   const shipping = 0.0;
-  const grandTotal = discountedSubtotal + tax + shipping;
+  const grandTotal = discountedSubtotal + shipping;
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) {
@@ -268,126 +230,20 @@ export default function CheckoutPage() {
     toast.info("Coupon removed");
   };
 
-  // Multiple Addresses Helpers
-  const handleSelectAddress = (id: string) => {
-    setSelectedAddressId(id);
-    const selected = savedAddresses.find((a) => a.id === id);
-    if (selected) {
-      setAddress(selected);
-    }
-  };
-
-  const handleAddNewAddressClick = () => {
-    setAddressForm({
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      phone: user?.phone || "",
-      email: user?.email || "",
-      addressLine1: "",
-      addressLine2: "",
-      city: "",
-      state: "India",
-      zipCode: "",
-      country: "India",
-    });
-    setEditingAddressId(null);
-    setShowAddressForm(true);
-  };
-
-  const handleEditAddressClick = (addr: Address, e: React.MouseEvent) => {
-    e.stopPropagation(); // Avoid triggering card selection
-    setAddressForm({ ...addr });
-    setEditingAddressId(addr.id || null);
-    setShowAddressForm(true);
-  };
-
-  const handleDeleteAddress = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Avoid triggering card selection
-    const updated = savedAddresses.filter((a) => a.id !== id);
-    
-    let newSelectedId = selectedAddressId;
-    if (selectedAddressId === id) {
-      if (updated.length > 0) {
-        newSelectedId = updated[0].id || "";
-        setAddress(updated[0]);
-      } else {
-        newSelectedId = "";
-        setAddress({
-          firstName: "",
-          lastName: "",
-          phone: "",
-          email: "",
-          addressLine1: "",
-          addressLine2: "",
-          city: "",
-          state: "India",
-          zipCode: "",
-          country: "India",
-        });
-      }
-    }
-    
-    setSavedAddresses(updated);
-    setSelectedAddressId(newSelectedId);
-    localStorage.setItem("user_shipping_addresses", JSON.stringify(updated));
-    toast.success("Address deleted.");
-  };
-
-  const handleSaveAddress = () => {
-    if (
-      !addressForm.firstName ||
-      !addressForm.lastName ||
-      !addressForm.phone ||
-      !addressForm.addressLine1 ||
-      !addressForm.city ||
-      !addressForm.zipCode
-    ) {
-      toast.error("Please fill in all required shipping address fields.");
-      return;
-    }
-
-    let updatedList: Address[] = [];
-    
-    if (editingAddressId) {
-      updatedList = savedAddresses.map((a) => 
-        a.id === editingAddressId ? { ...addressForm, id: editingAddressId } : a
-      );
-      toast.success("Address updated!");
-    } else {
-      const newId = `addr_${Date.now()}`;
-      const newAddr = { ...addressForm, id: newId };
-      if (savedAddresses.length === 0) {
-        newAddr.isDefault = true;
-      }
-      updatedList = [...savedAddresses, newAddr];
-      toast.success("New address added!");
-    }
-
-    setSavedAddresses(updatedList);
-    localStorage.setItem("user_shipping_addresses", JSON.stringify(updatedList));
-    
-    const targetId = editingAddressId || updatedList[updatedList.length - 1].id;
-    if (targetId) {
-      setSelectedAddressId(targetId);
-      const active = updatedList.find((a) => a.id === targetId);
-      if (active) setAddress(active);
-    }
-
-    setShowAddressForm(false);
-    setEditingAddressId(null);
-  };
-
-  const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setAddressForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const customerName =
+    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Customer";
+  const customerEmail = user?.email || "";
+  const customerPhone = user?.phone || "";
 
   // Specs Sheet Downloader
   const handleDownloadSpecs = () => {
     const checkoutItem = checkoutItems[0];
     if (!checkoutItem) return;
-    const itemBasePrice = Number(checkoutItem.basePrice || checkoutItem.price || 0);
-    const itemAddonsTotal = Number(checkoutItem.addonsTotal || 0);
+    const itemUnitPrice = getCheckoutLineUnitPrice(checkoutItem);
+    const itemAddonsTotal = hasCustomPriceBreakdown(checkoutItem)
+      ? Number(checkoutItem.addonsTotal || 0)
+      : 0;
+    const itemBasePrice = itemUnitPrice - itemAddonsTotal;
     toast.loading("Generating specification sheet...", { id: "specs" });
     try {
       const canvas = document.createElement("canvas");
@@ -522,18 +378,6 @@ export default function CheckoutPage() {
 
   // Submit secure payment
   const handlePaymentSubmit = async () => {
-    if (
-      !address.firstName ||
-      !address.lastName ||
-      !address.phone ||
-      !address.addressLine1 ||
-      !address.city ||
-      !address.zipCode
-    ) {
-      toast.error("Please fill in all required shipping address fields.");
-      return;
-    }
-
     if (!agreeTerms) {
       toast.error("Please accept the user agreement terms to place the order.");
       return;
@@ -548,56 +392,34 @@ export default function CheckoutPage() {
     const orderToast = toast.loading("Opening Razorpay Magic Checkout...");
 
     try {
-      // Save address profile for next time
-      localStorage.setItem("user_shipping_address", JSON.stringify(address));
-
       const orderItems = checkoutItems.map(item => ({
         productId: item.productId,
         quantity: item.quantity || 1,
         customizationData: item.customizationData || item.variation || null,
-        metadata: {
-          previewImage: item.previewImage || item.image,
-          addonsTotal: Number(item.addonsTotal || 0),
-          basePrice: Number(item.basePrice || item.price || 0),
-          deliveryDate,
-          deliveryTime,
-        },
+        metadata: getOrderItemMetadata(item, deliveryDate, deliveryTime),
       }));
 
       const orderPayload = {
         items: orderItems,
-        shippingAddress: address,
-        billingAddress: address,
         couponCode: appliedCoupon?.coupon.code || undefined,
         notes: checkoutMode === "direct"
           ? `Variant: ${checkoutItems[0].selectedVariantId || "Default"}. Style: ${checkoutItems[0].selectedStyleVariantId || "Default"}. Est Delivery: ${deliveryDate} @ ${deliveryTime}.`
           : `Cart Checkout of ${checkoutItems.length} items. Est Delivery: ${deliveryDate} @ ${deliveryTime}.`,
       };
 
-      // Call backend to create order
       const resData = await createRazorpayOrder(orderPayload, token);
-      const { order, razorpayOrder, keyId } = resData;
+      const { checkoutSession, razorpayOrder, keyId } = resData;
 
       toast.success("Redirecting to secure gateway...", { id: orderToast });
 
       await openRazorpayCheckout({
         razorpayOrder,
         keyId,
-        orderNumber: order.orderNumber,
+        orderNumber: checkoutSession?.receipt || razorpayOrder.id,
         customer: {
-          name: `${address.firstName} ${address.lastName}`,
-          email: address.email,
-          phone: address.phone,
-        },
-        shippingAddress: {
-          line1: address.addressLine1,
-          line2: address.addressLine2 || "",
-          city: address.city,
-          state: address.state,
-          zipcode: address.zipCode,
-          country: address.country || "India",
-          first_name: address.firstName,
-          last_name: address.lastName,
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone,
         },
         logoUrl: IMAGES.Logo2 ? IMAGES.Logo2.src : undefined,
         appliedCoupon: appliedCoupon
@@ -611,7 +433,6 @@ export default function CheckoutPage() {
           try {
             const verifiedOrder = await verifyPayment(
               {
-                orderId: order.id,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpaySignature: response.razorpay_signature,
@@ -653,7 +474,7 @@ export default function CheckoutPage() {
       <div className="page-content bg-light">
         <Toaster position="top-center" richColors closeButton />
         
-        <CommanBanner parentText="Home" currentText="Checkout" mainText="Checkout" image={IMAGES.BackBg1.src} />
+        <CommanBanner parentText="Home" currentText="Checkout" mainText="Checkout"  />
         
         <section className="content-inner shop-account">
           <div className="container">
@@ -681,228 +502,26 @@ export default function CheckoutPage() {
                     </button>
                   </div>
 
-                  <h4 className="title m-b20">1. Shipping & Billing Details</h4>
-                  
-                  {showAddressForm ? (
-                    // Add/Edit Address Form View
-                    <div className="p-4 border rounded bg-white m-b30">
-                      <h5 className="mb-4 fw-bold text-slate-800">
-                        {editingAddressId ? "Edit Address Details" : "Add New Address"}
-                      </h5>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="form-group m-b20">
-                            <label className="label-title">First Name <span className="text-danger">*</span></label>
-                            <input
-                              type="text"
-                              name="firstName"
-                              value={addressForm.firstName}
-                              onChange={handleAddressFormChange}
-                              className="form-control"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="form-group m-b20">
-                            <label className="label-title">Last Name <span className="text-danger">*</span></label>
-                            <input
-                              type="text"
-                              name="lastName"
-                              value={addressForm.lastName}
-                              onChange={handleAddressFormChange}
-                              className="form-control"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="form-group m-b20">
-                            <label className="label-title">Phone <span className="text-danger">*</span></label>
-                            <input
-                              type="tel"
-                              name="phone"
-                              value={addressForm.phone}
-                              onChange={handleAddressFormChange}
-                              className="form-control"
-                              placeholder="e.g. 9876543210"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="form-group m-b20">
-                            <label className="label-title">E-mail <span className="text-danger">*</span></label>
-                            <input
-                              type="email"
-                              name="email"
-                              value={addressForm.email}
-                              onChange={handleAddressFormChange}
-                              className="form-control"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="row">
-                        <div className="col-md-12">
-                          <div className="form-group m-b20">
-                            <label className="label-title">Street Address <span className="text-danger">*</span></label>
-                            <input
-                              type="text"
-                              name="addressLine1"
-                              value={addressForm.addressLine1}
-                              onChange={handleAddressFormChange}
-                              className="form-control m-b10"
-                              placeholder="House/flat number, street name, landmark"
-                              required
-                            />
-                            <input
-                              type="text"
-                              name="addressLine2"
-                              value={addressForm.addressLine2 || ""}
-                              onChange={handleAddressFormChange}
-                              className="form-control"
-                              placeholder="Apartment, suite, unit (optional)"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="form-group m-b20">
-                            <label className="label-title">City <span className="text-danger">*</span></label>
-                            <input
-                              type="text"
-                              name="city"
-                              value={addressForm.city}
-                              onChange={handleAddressFormChange}
-                              className="form-control"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-3">
-                          <div className="form-group m-b20">
-                            <label className="label-title">State <span className="text-danger">*</span></label>
-                            <input
-                              type="text"
-                              name="state"
-                              value={addressForm.state}
-                              onChange={handleAddressFormChange}
-                              className="form-control"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-3">
-                          <div className="form-group m-b20">
-                            <label className="label-title">Postcode / ZIP <span className="text-danger">*</span></label>
-                            <input
-                              type="text"
-                              name="zipCode"
-                              value={addressForm.zipCode}
-                              onChange={handleAddressFormChange}
-                              className="form-control"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="d-flex justify-content-end gap-2 mt-4">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowAddressForm(false);
-                            setEditingAddressId(null);
-                          }}
-                          className="btn btn-sm btn-outline-secondary px-4 py-2 text-uppercase font-bold text-xs"
-                          style={{ borderRadius: "5px" }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleSaveAddress}
-                          className="btn btn-sm btn-secondary px-4 py-2 text-uppercase font-bold text-xs"
-                          style={{ borderRadius: "5px" }}
-                        >
-                          {editingAddressId ? "Update Address" : "Save Address"}
-                        </button>
+                  <div className="p-4 border rounded bg-white m-b30">
+                    <h4 className="title m-b15">Delivery Address</h4>
+                    <div className="d-flex align-items-start gap-3">
+                      <i className="fa-solid fa-truck text-primary mt-1" aria-hidden="true" />
+                      <div>
+                        <p className="mb-2 text-slate-700 small">
+                          Your delivery address will be collected securely inside Razorpay Magic Checkout
+                          when you click <strong>Pay with Razorpay</strong>.
+                        </p>
+                        <p className="mb-0 text-muted small">
+                          You can enter a new address or use a saved Razorpay address during payment.
+                          {(customerName || customerEmail || customerPhone) && (
+                            <> Contact details from your account may be pre-filled.</>
+                          )}
+                        </p>
                       </div>
                     </div>
-                  ) : (
-                    // Saved Addresses List View
-                    <div className="m-b30">
-                      <div className="row g-3">
-                        {savedAddresses.map((addr) => {
-                          const isSelected = selectedAddressId === addr.id;
-                          return (
-                            <div key={addr.id} className="col-md-6">
-                              <div 
-                                onClick={() => handleSelectAddress(addr.id || "")}
-                                className={`p-4 rounded border h-100 position-relative d-flex flex-column justify-content-between transition-all cursor-pointer ${isSelected ? 'border-secondary bg-slate-100 bg-opacity-5' : 'border-slate-200 bg-white hover:border-slate-300'}`}
-                                style={{ borderWidth: isSelected ? '2px' : '1px' }}
-                              >
-                                <div>
-                                  <div className="d-flex align-items-center justify-content-between mb-3">
-                                    <h6 className="mb-0 text-secondary fw-black" style={{ fontSize: '15px' }}>{addr.firstName} {addr.lastName}</h6>
-                                    {isSelected && (
-                                      <span className="badge bg-secondary text-white text-[9px] uppercase font-black tracking-wider px-2 py-1 rounded">
-                                        DELIVER HERE
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-slate-600 text-xs mb-1 font-semibold">{addr.addressLine1}</p>
-                                  {addr.addressLine2 && <p className="text-slate-600 text-xs mb-1 font-semibold">{addr.addressLine2}</p>}
-                                  <p className="text-slate-600 text-xs mb-2 font-semibold">{addr.city}, {addr.state} - {addr.zipCode}</p>
-                                  <p className="text-slate-800 text-xs mb-0 font-black"><i className="fa-solid fa-phone text-muted me-1.5" />Mo: {addr.phone}</p>
-                                </div>
-                                <div className="d-flex justify-content-end gap-2 mt-4 pt-2 border-top border-slate-100">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => handleEditAddressClick(addr, e)}
-                                    className="btn btn-xs btn-outline-secondary py-1 px-3 text-xs font-bold"
-                                    style={{ fontSize: '10px', height: '24px', lineHeight: '22px' }}
-                                  >
-                                    <i className="fa-solid fa-pen me-1" /> Edit
-                                  </button>
-                                  {savedAddresses.length > 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => handleDeleteAddress(addr.id || "", e)}
-                                      className="btn btn-xs btn-outline-danger py-1 px-3 text-xs font-bold"
-                                      style={{ fontSize: '10px', height: '24px', lineHeight: '22px' }}
-                                    >
-                                      <i className="fa-solid fa-trash me-1" /> Delete
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="mt-4 text-start">
-                        <button
-                          type="button"
-                          onClick={handleAddNewAddressClick}
-                          className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 font-black text-uppercase px-4 py-2 border border-slate-300 text-xs"
-                          style={{ borderRadius: "5px" }}
-                        >
-                          <i className="fa-solid fa-plus" /> Add New Address
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  </div>
 
-                  <h4 className="title m-b20 m-t20">2. Delivery Schedule</h4>
+                  <h4 className="title m-b20">1. Delivery Schedule</h4>
                   
                   <div className="row">
                     <div className="col-md-6">
@@ -932,7 +551,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <h4 className="title m-b20 m-t20">3. Coupon Code</h4>
+                  <h4 className="title m-b20 m-t20">2. Coupon Code</h4>
 
                   <div className="m-b25">
                     {appliedCoupon ? (
@@ -959,6 +578,7 @@ export default function CheckoutPage() {
                             value={couponInput}
                             onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                             className="form-control"
+                            style={{ borderRadius: "150px" }}
                             placeholder="Enter coupon code"
                             onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
                           />
@@ -1038,13 +658,39 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  <h4 className="title m-b20">4. Payment</h4>
+                  <h4 className="title m-b20">3. Payment</h4>
                   
                   <div className="p-4 border rounded bg-light m-b25">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="bg-white border rounded p-2 px-3 fw-bold text-primary">Razorpay Magic Checkout</div>
-                      <p className="mb-0 text-muted small">
-                        One-click checkout with UPI, cards, saved addresses, and in-checkout coupons.
+                    <label className="label-title text-muted mb-3 small fw-bold tracking-wider uppercase d-block">
+                      Payment Mode
+                    </label>
+
+                    <div className="p-3 bg-white border rounded mb-3 d-flex align-items-center gap-3">
+                      <input
+                        className="form-check-input m-0 flex-shrink-0"
+                        type="radio"
+                        name="paymentMode"
+                        id="payment-razorpay"
+                        checked
+                        readOnly
+                      />
+                      <div className="flex-grow-1">
+                        <label htmlFor="payment-razorpay" className="fw-bold mb-1 d-block">
+                          Razorpay Magic Checkout
+                        </label>
+                        <p className="mb-0 text-muted small">
+                          UPI · Credit / Debit Cards · Net Banking · Wallets
+                        </p>
+                      </div>
+                      <span className="badge bg-primary text-white px-3 py-2 d-none d-sm-inline">Secure</span>
+                    </div>
+
+                    <div className="d-flex align-items-start gap-2 p-3 rounded border bg-white">
+                      <i className="fa-solid fa-circle-info text-primary mt-1" aria-hidden="true" />
+                      <p className="mb-0 small text-muted">
+                        Click <strong className="text-dark">Pay with Razorpay</strong> in your order summary to proceed.
+                        Razorpay will collect your delivery address, apply coupons, and process payment of{" "}
+                        <strong className="text-dark">₹{grandTotal.toFixed(2)}</strong> securely.
                       </p>
                     </div>
                   </div>
@@ -1075,14 +721,14 @@ export default function CheckoutPage() {
                             </span>
                           </div>
                           <span className="price font-semibold" style={{ whiteSpace: "nowrap" }}>
-                            ₹{((Number(item.basePrice || item.price || 0) + Number(item.addonsTotal || 0)) * item.quantity).toFixed(2)}
+                            ₹{(getCheckoutLineUnitPrice(item) * item.quantity).toFixed(2)}
                           </span>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <table className="table mb-4">
+                  <table className="table mb-4" >
                     <tbody>
                       <tr>
                         <td className="border-0">Subtotal</td>
@@ -1099,10 +745,6 @@ export default function CheckoutPage() {
                       <tr>
                         <td>Shipping</td>
                         <td className="price text-success font-semibold">Free</td>
-                      </tr>
-                      <tr>
-                        <td>GST (10%)</td>
-                        <td className="price">₹{tax.toFixed(2)}</td>
                       </tr>
                       <tr className="total">
                         <td><h5 className="mb-0">Total</h5></td>
@@ -1127,7 +769,7 @@ export default function CheckoutPage() {
                       disabled={loading}
                       className="btn btn-secondary w-100 py-3 text-uppercase font-bold tracking-wider"
                     >
-                      {loading ? "Processing..." : "Pay with Magic Checkout"}
+                      {loading ? "Processing..." : "Pay with Razorpay"}
                     </button>
                   </div>
 

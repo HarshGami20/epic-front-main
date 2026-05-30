@@ -9,7 +9,7 @@ export default function AccountCancellationRequests() {
     return (
         <CommanLayout>
             <div className="page-content bg-light">
-                <CommanBanner image={IMAGES.BackBg1.src} mainText="Cancellation Requests" parentText="Home" currentText="Cancellation Requests" />
+                <CommanBanner mainText="Cancellation Requests" parentText="Home" currentText="Cancellation Requests" />
                 <div className="content-inner-1">
                     <div className="container">
                         <div className="row">

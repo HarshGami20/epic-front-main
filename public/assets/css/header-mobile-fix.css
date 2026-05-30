@@ -471,3 +471,37 @@
     font-size: 12px !important;
   }
 }
+
+/* ============================================================
+   Account sidebar logout button
+   ============================================================ */
+.account-sidebar .account-nav ul li .account-logout-btn {
+  padding: 8px 20px;
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 15px;
+  color: #dc3545;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.account-sidebar .account-nav ul li .account-logout-btn:hover,
+.account-sidebar .account-nav ul li .account-logout-btn:focus {
+  background-color: rgba(220, 53, 69, 0.08);
+  color: #b02a37;
+  outline: none;
+}
+
+/* Shared solid breadcrumb bg — matches shop page-content bg-light */
+.dz-bnr-inr.banner-solid-bg {
+  background-color: #BABABA !important;
+  background-image: none !important;
+}
+
+.dz-bnr-inr.banner-solid-bg:before {
+  content: none !important;
+}

@@ -9,7 +9,7 @@ export default function AccountPaymentMethods() {
     return (
         <CommanLayout>
             <div className="page-content bg-light">
-                <CommanBanner image={IMAGES.BackBg1.src} mainText="Review" parentText="Home" currentText="Review" />
+                <CommanBanner mainText="Review" parentText="Home" currentText="Review" />
                 <div className="content-inner-1">
                     <div className="container">
                         <div className="row">

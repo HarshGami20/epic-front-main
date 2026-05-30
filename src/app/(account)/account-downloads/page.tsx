@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import CommanBanner from "@/components/CommanBanner";
-import IMAGES from "@/constant/theme";
 import CommanSidebar from "@/elements/MyAccount/CommanSidebar";
 import CommanLayout from "@/components/CommanLayout";
 import { fetchUserOrders } from "@/lib/ordersApi";
@@ -211,7 +210,6 @@ export default function AccountDownloads() {
       <div className="page-content bg-light">
         <Toaster position="top-center" richColors closeButton />
         <CommanBanner
-          image={IMAGES.BackBg1.src}
           mainText="Downloads"
           parentText="Home"
           currentText="Downloads"

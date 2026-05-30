@@ -7,7 +7,6 @@ import Image from "next/image";
 
 import IMAGES from "@/constant/theme";
 import FeaturedBlog from "@/components/FeaturedBlog";
-import AnimatedLogo from "@/components/AnimatedLogo";
 import AboutusBlog from "@/elements/Home/AboutusBlog";
 import AllProduction from "@/elements/Home/AllProduction";
 import BlockbusterDeal from "@/elements/Home/BlockbusterDeal";
@@ -16,7 +15,7 @@ import DzTextSlider from "@/elements/Home/DzTextSlider";
 import FeaturedNowSlider from "@/elements/Home/FeaturedNowSlider";
 import GreatSaving from "@/elements/Home/GreatSaving";
 import HottestBlog from "@/elements/Home/HottestBlog";
-import MainBannerSlider2 from "@/elements/Home/MainbannerSlider2";
+import MainBannerSlider2, { prefetchHeroVideos } from "@/elements/Home/MainbannerSlider2";
 import OffersectionSlider from "@/elements/Home/OffersectionSlider";
 import ProductSection from "@/elements/Home/ProductSection";
 import ShortListBlog from "@/elements/Home/ShortListBlog";
@@ -31,6 +30,7 @@ import TrandingSlider from "@/elements/Home2/TrandingSlider";
 import VideoSection from "@/elements/Home2/VideoSection";
 import { getImageUrl } from "@/lib/imageUtils";
 import { getPublicApiUrl } from "@/lib/env";
+import HomeSkeleton from "./HomeSkeleton";
 
 /** CMS explore / modal video URL (string path or `{ url }` from upload). */
 function resolveExploreVideoSrc(video: unknown): string {
@@ -362,7 +362,7 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
         const btnLink = typeof data?.buttonLink === 'string' && data.buttonLink.trim() ? data.buttonLink : "/shop-cart";
 
         return (
-            <section className="content-inner-1 overflow-hidden pt-0 m-b30">
+            <section className="content-inner-1 overflow-hidden ">
                 <div className="container">
                     <div className="row justify-content-md-between align-items-center">
                         <div className="col-lg-6 col-md-8 col-sm-12">
@@ -404,7 +404,7 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
         </section>
     ),
     makeyourcustomize: ({ data }) => (
-        <section className="content-inner overflow-hidden">
+        <section className="content-inner overflow-hidden !pt-0">
             <div className="container">
                 <MakeYoursCustomize data={data} />
             </div>
@@ -413,14 +413,74 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
 };
 
 const DEFAULT_EXPLORE_VIDEO = "/assets/images/video.mp4";
+const INITIAL_LOADER_KEY = "epiclance-initial-loader-seen";
+
+function hasSeenInitialLoader(): boolean {
+    if (typeof window === "undefined") return false;
+    try {
+        return sessionStorage.getItem(INITIAL_LOADER_KEY) === "true";
+    } catch {
+        return false;
+    }
+}
+
+function markInitialLoaderSeen(): void {
+    if (typeof window === "undefined") return;
+    try {
+        sessionStorage.setItem(INITIAL_LOADER_KEY, "true");
+    } catch {
+        // ignore storage errors
+    }
+}
+
+function PageLoaderOverlay() {
+    return (
+        <div
+            className="d-flex flex-column justify-content-center align-items-center bg-white"
+            style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 99999 }}
+        >
+            <div className="d-flex flex-column align-items-center gap-3">
+                <img
+                    src="/loadding.gif"
+                    alt="Loading..."
+                    style={{ width: "120px", height: "120px", objectFit: "contain" }}
+                />
+                <div
+                    className="mt-10"
+                    style={{
+                        width: 185,
+                        height: 55,
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginTop: "-50px",
+                    }}
+                >
+                    <Image
+                        src="/logo.svg"
+                        alt="Epiclance"
+                        width={185}
+                        height={55}
+                        priority
+                        style={{ objectFit: "contain", width: "100%", height: "100%" }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
 
 const MainSection = () => {
     const [openVideo, setOpenVideo] = useState(false);
     const [exploreModalVideoSrc, setExploreModalVideoSrc] = useState<string>(DEFAULT_EXPLORE_VIDEO);
     const [sections, setSections] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isDataLoading, setIsDataLoading] = useState(true);
+    const [showSplash, setShowSplash] = useState(() => !hasSeenInitialLoader());
 
     useEffect(() => {
+        const shouldShowSplash = !hasSeenInitialLoader();
+
         const fetchHomeLayout = async () => {
             const startTime = Date.now();
             try {
@@ -455,6 +515,11 @@ const MainSection = () => {
 
                 if (populatedSections) {
                     setSections(populatedSections);
+                    const bannerSection = populatedSections.find(
+                        (sec: { type?: string; data?: { slides?: unknown[] } }) =>
+                            sec.type === "mainBannerSlider2",
+                    );
+                    prefetchHeroVideos(bannerSection?.data?.slides);
                 } else {
                     setSections(DEFAULT_LAYOUT);
                 }
@@ -463,30 +528,29 @@ const MainSection = () => {
                 setSections(DEFAULT_LAYOUT);
             }
 
-            // Enforce minimum delay of 2.5 seconds (2500ms)
-            const elapsedTime = Date.now() - startTime;
-            const remainingTime = Math.max(0, 2500 - elapsedTime);
-            setTimeout(() => {
-                setIsLoading(false);
-            }, remainingTime);
+            if (shouldShowSplash) {
+                // Enforce minimum delay of 2.5 seconds (2500ms) on first visit only
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, 2500 - elapsedTime);
+                setTimeout(() => {
+                    markInitialLoaderSeen();
+                    setShowSplash(false);
+                    setIsDataLoading(false);
+                }, remainingTime);
+            } else {
+                setIsDataLoading(false);
+            }
         };
 
         fetchHomeLayout();
     }, []);
 
-    if (isLoading) {
-        return (
-            <div className="d-flex flex-column justify-content-center align-items-center bg-white" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 99999 }}>
-                <div className="d-flex flex-column align-items-center gap-3">
-                    <img 
-                        src="/loadding.gif" 
-                        alt="Loading..." 
-                        style={{ width: '120px', height: '120px', objectFit: 'contain' }} 
-                    />
-                    <AnimatedLogo animationType={9} width={185} height={55} />
-                </div>
-            </div>
-        );
+    if (showSplash) {
+        return <PageLoaderOverlay />;
+    }
+
+    if (isDataLoading) {
+        return <HomeSkeleton />;
     }
 
     const layout = (sections && sections.length > 0) ? sections : DEFAULT_LAYOUT;

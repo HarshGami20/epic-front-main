@@ -12,6 +12,7 @@ import HeaderSideShoppingCard from "./HeaderSideShopingCard";
 import CategoryMenuItem from "./CategoryMenuItem";
 import AnimatedLogo from "./AnimatedLogo";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
+import { readStoredUser, USER_LOGOUT_EVENT, USER_UPDATED_EVENT } from "@/lib/userUtils";
 
 interface DesignType {
     design: string
@@ -92,8 +93,18 @@ const Header = ({ design }: DesignType) => {
     const [hover, setHover] = useState(false);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) setUser(JSON.parse(storedUser));
+        const syncUser = () => setUser(readStoredUser());
+        syncUser();
+
+        window.addEventListener(USER_UPDATED_EVENT, syncUser);
+        window.addEventListener(USER_LOGOUT_EVENT, syncUser);
+        window.addEventListener("storage", syncUser);
+
+        return () => {
+            window.removeEventListener(USER_UPDATED_EVENT, syncUser);
+            window.removeEventListener(USER_LOGOUT_EVENT, syncUser);
+            window.removeEventListener("storage", syncUser);
+        };
     }, []);
 
     const scrollHandler = () => {

@@ -21,7 +21,7 @@ function AccountOrderConfirmContent() {
     return (
         <CommanLayout>
             <div className="page-content bg-light">
-                <CommanBanner image={IMAGES.BackBg1.src} mainText="Order Confirmation" parentText="Home" currentText="Order Confirmation" />
+                <CommanBanner mainText="Order Confirmation" parentText="Home" currentText="Order Confirmation" />
                 <div className="content-inner-1">
                     <div className="container">
                         <div className="row">

@@ -83,6 +83,8 @@ export interface ProductForEditor {
   id?: string;
   name?: string;
   slug?: string;
+  basePrice?: number;
+  price?: number;
   customization?: ProductCustomizationPayload | null;
   variation?: Array<{ id: string; color?: string; colorCode?: string; colorImage?: string }>;
 }

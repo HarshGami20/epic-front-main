@@ -2,7 +2,7 @@ import BgShape from '../../public/assets/images/background/bg-shape.jpg';
 import BackBg2 from '../../public/assets/images/background/bg2.jpg';
 // import BgVideoMp4 from '../../public/assets/images/background/bg-video.mp4';
 // import BgVideoMp4 from '../../public/assets/images/background/video.mp4';
-import logo from '../../public/assets/images/logo.svg';
+import logo from '../../public/logo.svg';
 import logopng from '../../public/assets/images/logo.png';
 import logodpng from '../../public/assets/images/logod.png';
 import LogoWhite from '../../public/assets/images/logo-white.png';

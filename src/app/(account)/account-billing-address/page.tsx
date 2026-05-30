@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CommanBanner from "@/components/CommanBanner";
 import CommanLayout from "@/components/CommanLayout";
-import IMAGES from "@/constant/theme";
 import CommanSidebar from "@/elements/MyAccount/CommanSidebar";
 import { toast, Toaster } from "sonner";
 
@@ -88,7 +87,7 @@ export default function AccountBillingAddress() {
     return (
         <CommanLayout>
             <div className="page-content bg-light">
-                <CommanBanner image={IMAGES.BackBg1.src} mainText="Billing Address" parentText="Home" currentText="Billing Address" />
+                <CommanBanner mainText="Billing Address" parentText="Home" currentText="Billing Address" />
                 <div className="content-inner-1">
                     <div className="container">
                         <div className="row">

@@ -4,6 +4,7 @@ import CountdownBlog from "./CountdownBlog";
 import { Fragment, useReducer, useEffect, useState } from "react";
 import { accountMenuItem, menuData2, menuData3, menuData4, menuDataOne, portfolioMenu } from "../constant/Alldata";
 import Image from "next/image";
+import { readStoredUser, USER_LOGOUT_EVENT, USER_UPDATED_EVENT } from "@/lib/userUtils";
 
 // Pages Menu Items
 // interface MenuItem4 {
@@ -67,10 +68,18 @@ export default function Menus() {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+        const syncUser = () => setUser(readStoredUser());
+        syncUser();
+
+        window.addEventListener(USER_UPDATED_EVENT, syncUser);
+        window.addEventListener(USER_LOGOUT_EVENT, syncUser);
+        window.addEventListener("storage", syncUser);
+
+        return () => {
+            window.removeEventListener(USER_UPDATED_EVENT, syncUser);
+            window.removeEventListener(USER_LOGOUT_EVENT, syncUser);
+            window.removeEventListener("storage", syncUser);
+        };
     }, []);
 
     return (

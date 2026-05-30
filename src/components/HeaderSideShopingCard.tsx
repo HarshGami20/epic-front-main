@@ -99,7 +99,13 @@ export default function HeaderSideShoppingCard(props: propType) {
                                                 </div>
                                             </div>
                                         </div>
-                                        <Link href="/checkout" className="btn btn-outline-secondary btn-block m-b20">Checkout</Link>
+                                        <Link
+                                            href="/checkout?mode=cart"
+                                            className="btn btn-outline-secondary btn-block m-b20"
+                                            onClick={() => localStorage.removeItem("checkout_item")}
+                                        >
+                                            Checkout
+                                        </Link>
                                         <Link href="/shop-cart" className="btn btn-secondary btn-block">View Cart</Link>
                                     </div>
                                 </>

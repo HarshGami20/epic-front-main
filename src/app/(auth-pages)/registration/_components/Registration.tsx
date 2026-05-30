@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { registerUser } from "@/lib/authApi";
+import { persistUser } from "@/lib/userUtils";
 
 export default function Registration() {
     const [firstName, setFirstName] = useState("");
@@ -27,7 +28,7 @@ export default function Registration() {
             const data = await registerUser({ firstName, lastName, email, phone, password });
             if (data?.token) {
                 localStorage.setItem("token", data.token);
-                localStorage.setItem("user", JSON.stringify(data.user));
+                persistUser(data.user);
             }
             toast.success("Registration successful! You can now log in.");
 

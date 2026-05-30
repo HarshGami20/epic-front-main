@@ -9,7 +9,7 @@ export default function AccountReturnRequestDetails() {
     return (
         <CommanLayout>
             <div className="page-content bg-light">
-                <CommanBanner image={IMAGES.BackBg1.src} mainText="Return Request Detail" parentText="Home" currentText="Return Request Detail" />
+                <CommanBanner mainText="Return Request Detail" parentText="Home" currentText="Return Request Detail" />
                 <div className="content-inner-1">
                     <div className="container">
                         <div className="row">

@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import CommanBanner from "@/components/CommanBanner";
-import IMAGES from "@/constant/theme";
 import CommanSidebar from "@/elements/MyAccount/CommanSidebar";
 import {
   fetchUserProfile,
@@ -147,7 +146,6 @@ export default function AccountProfile() {
   return (
     <div className="page-content bg-light">
       <CommanBanner
-        image={IMAGES.BackBg1.src}
         mainText="Profile"
         parentText="Home"
         currentText="Account Profile"

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import CommanBanner from "@/components/CommanBanner";
-import IMAGES from "@/constant/theme";
 import CommanSidebar from "@/elements/MyAccount/CommanSidebar";
 import CommanLayout from "@/components/CommanLayout";
 import { fetchUserOrders } from "@/lib/ordersApi";
@@ -47,7 +46,7 @@ export default function AccountOrder() {
     return (
         <CommanLayout>
             <div className="page-content bg-light">
-                <CommanBanner image={IMAGES.BackBg1.src} mainText="Orders" parentText="Home" currentText="Orders" />
+                <CommanBanner mainText="Orders" parentText="Home" currentText="Orders" />
                 <div className="content-inner-1">
                     <div className="container">
                         <div className="row">

@@ -189,7 +189,7 @@ export default function MakeYoursCustomize({ data }: { data: MakeYoursCustomizeD
 
   return (
     <div className="row g-4 g-xl-5 align-items-start container">
-      <div className=''>
+      <div className='mt-0'>
         <h2 className="title mb-1" style={{  color: ACCENT }}>
           {data?.heading || "Make Yours Now!"}
         </h2>

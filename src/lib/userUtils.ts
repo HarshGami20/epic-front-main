@@ -12,6 +12,7 @@ export interface UserProfile {
 }
 
 export const USER_UPDATED_EVENT = "epiclance-user-updated";
+export const USER_LOGOUT_EVENT = "epiclance-user-logout";
 
 export function getUserDisplayName(user?: UserProfile | null): string {
   if (!user) return "User";
@@ -46,4 +47,19 @@ export function persistUser(user: UserProfile): void {
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("token");
+}
+
+export function clearAuthSession(): void {
+  if (typeof window === "undefined") return;
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("checkout_item");
+
+  window.dispatchEvent(new CustomEvent(USER_LOGOUT_EVENT));
+  window.dispatchEvent(new CustomEvent(USER_UPDATED_EVENT, { detail: null }));
+}
+
+export function logoutUser(): void {
+  clearAuthSession();
 }

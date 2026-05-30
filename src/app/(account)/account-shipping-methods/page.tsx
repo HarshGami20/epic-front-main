@@ -9,7 +9,7 @@ export default function AccountShippingMethods() {
     return (
         <CommanLayout>
             <div className="page-content bg-light">
-                <CommanBanner image={IMAGES.BackBg1.src} mainText="Shipping Methods" parentText="Home" currentText="Shipping Methods" />
+                <CommanBanner mainText="Shipping Methods" parentText="Home" currentText="Shipping Methods" />
                 <div className="content-inner-1">
                     <div className="container">
                         <div className="row">

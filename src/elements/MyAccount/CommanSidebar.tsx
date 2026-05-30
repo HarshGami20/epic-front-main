@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import {
   getUserAvatarUrl,
   getUserDisplayName,
+  logoutUser,
   readStoredUser,
+  USER_LOGOUT_EVENT,
   USER_UPDATED_EVENT,
   type UserProfile,
 } from "@/lib/userUtils";
@@ -37,18 +39,19 @@ export default function CommanSidebar() {
     syncUser();
 
     window.addEventListener(USER_UPDATED_EVENT, syncUser);
+    window.addEventListener(USER_LOGOUT_EVENT, syncUser);
     window.addEventListener("storage", syncUser);
 
     return () => {
       window.removeEventListener(USER_UPDATED_EVENT, syncUser);
+      window.removeEventListener(USER_LOGOUT_EVENT, syncUser);
       window.removeEventListener("storage", syncUser);
     };
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    router.push("/login");
+    logoutUser();
+    router.replace("/login");
   };
 
   const avatarSrc = getUserAvatarUrl(user);
@@ -101,16 +104,9 @@ export default function CommanSidebar() {
               ))}
               <li>
                 <button
+                  type="button"
                   onClick={handleLogout}
-                  className="bg-transparent border-0 text-start w-100 p-0 text-danger hover-logout-btn"
-                  style={{
-                    font: "inherit",
-                    fontSize: "15px",
-                    padding: "12px 20px",
-                    display: "block",
-                    width: "100%",
-                    transition: "all 0.3s",
-                  }}
+                  className="account-logout-btn"
                 >
                   <i className="fa-solid fa-right-from-bracket me-2" />
                   Logout

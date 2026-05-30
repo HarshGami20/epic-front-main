@@ -393,7 +393,7 @@ export default function AccountOrderDetails() {
   if (loading) {
     return (
       <div className="page-content bg-light min-h-screen">
-        <CommanBanner image={IMAGES.BackBg1.src} mainText="Order Details" parentText="Home" currentText="Order Details" />
+        <CommanBanner mainText="Order Details" parentText="Home" currentText="Order Details" />
         <div className="content-inner-1 text-center py-16">
           <p className="font-semibold text-slate-500">Loading order info...</p>
         </div>
@@ -404,7 +404,7 @@ export default function AccountOrderDetails() {
   if (!order) {
     return (
       <div className="page-content bg-light min-h-screen">
-        <CommanBanner image={IMAGES.BackBg1.src} mainText="Order Details" parentText="Home" currentText="Order Details" />
+        <CommanBanner mainText="Order Details" parentText="Home" currentText="Order Details" />
         <div className="content-inner-1 text-center py-16">
           <p className="text-slate-500 font-semibold mb-4">Order details could not be retrieved.</p>
           <Link href="/account-orders" className="btn btn-secondary px-4">Back to Orders</Link>
@@ -429,7 +429,7 @@ export default function AccountOrderDetails() {
 
   return (
     <div className="page-content bg-light">
-      <CommanBanner image={IMAGES.BackBg1.src} mainText="Order Details" parentText="Home" currentText="Order Details" />
+      <CommanBanner mainText="Order Details" parentText="Home" currentText="Order Details" />
       <div className="content-inner-1">
         <div className="container">
           <div className="row">

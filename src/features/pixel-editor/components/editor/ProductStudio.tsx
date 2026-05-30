@@ -491,8 +491,8 @@ export const ProductStudio: React.FC = () => {
     }
   };
 
-  // Pricing calculations
-  const basePrice = 299.0;
+  // Pricing calculations — use product base price from catalog (not a fixed amount)
+  const basePrice = Number(editorProduct?.basePrice ?? editorProduct?.price ?? 0) || 0;
   const logoUploadPrice = editorProduct?.customization?.logoUploadPrice ?? 0;
   const logoCharge = hasUserUploadedLogo ? Number(logoUploadPrice) : 0;
   const activeStyle = styleVariantsForPicker.find((s) => s.id === selectedStyleVariantId);
