@@ -105,7 +105,9 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
             id: cartId,
             productId: product.id,
             name: product.name,
-            price: price,
+            price: currentPrice,
+            originalPrice: price,
+            quantityDiscounts: product.quantityDiscounts,
             quantity: quantity,
             image: Array.isArray(product.thumbImage) ? product.thumbImage[0] : product.thumbImage,
             slug: product.slug,
@@ -143,16 +145,34 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
     const comparePrice =
         product?.originPrice != null ? Number(product.originPrice) : null;
 
+    // Calculate quantity discount
+    const quantityDiscounts = product?.quantityDiscounts || [];
+    let quantityDiscountPercent = 0;
+    if (Array.isArray(quantityDiscounts)) {
+        for (const d of quantityDiscounts) {
+            if (quantity >= d.minQuantity && d.discountPercent > quantityDiscountPercent) {
+                quantityDiscountPercent = d.discountPercent;
+            }
+        }
+    }
+    const currentPrice = price * (1 - quantityDiscountPercent / 100);
+
     let discount = 0;
-    if (comparePrice != null && Number.isFinite(comparePrice) && comparePrice > price) {
-        discount = Math.round(((comparePrice - price) / comparePrice) * 100);
+    if (comparePrice != null && Number.isFinite(comparePrice) && comparePrice > currentPrice) {
+        discount = Math.round(((comparePrice - currentPrice) / comparePrice) * 100);
+    } else if (quantityDiscountPercent > 0) {
+        discount = quantityDiscountPercent;
     }
     return (
         <>
             <div className="dz-content">
                 <div className="dz-content-footer">
                     <div className="dz-content-start">
-                        {discount > 0 && <span className="badge bg-secondary mb-2">SALE {discount}% Off</span>}
+                        {discount > 0 && (
+                            <span className="badge bg-secondary mb-2">
+                                {quantityDiscountPercent > 0 ? `BULK ${quantityDiscountPercent}% Off` : `SALE ${discount}% Off`}
+                            </span>
+                        )}
 
 
                         <h4 className="title mb-1">{name}</h4>
@@ -175,7 +195,19 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
 
                 <div className="meta-content m-b20 mt-3">
                     <span className="form-label">Price</span>
-                    <span className="price">₹{price} {comparePrice && <del className="text-muted ms-2" style={{ fontSize: '16px' }}>₹{comparePrice}</del>}</span>
+                    <span className="price">
+                        {quantityDiscountPercent > 0 ? (
+                            <>
+                                ₹{currentPrice.toFixed(2)}
+                                <del className="text-muted ms-2" style={{ fontSize: '16px' }}>₹{price}</del>
+                            </>
+                        ) : (
+                            <>
+                                ₹{price}
+                                {comparePrice && <del className="text-muted ms-2" style={{ fontSize: '16px' }}>₹{comparePrice}</del>}
+                            </>
+                        )}
+                    </span>
                 </div>
                 <div className="product-num product-detail-options d-flex  flex-lg-row align-items-start flex-wrap gap-4 gap-xl-5 w-100">
                     <div className="btn-quantity light d-flex flex-column gap-2  product-detail-option">
@@ -247,6 +279,37 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                         </div>
                     )}
                 </div>
+                {/* Bulk Discount Tiers */}
+                {quantityDiscounts && quantityDiscounts.length > 0 && (
+                    <div 
+                        className="p-3 mb-4 rounded-md border border-dashed border-primary mt-4"
+                        style={{ border: '1px dashed #243c5a', backgroundColor: '#f8fafc' }}
+                    >
+                        <h6 className="d-flex align-items-center gap-2 mb-2 font-semibold text-slate-800" style={{ fontSize: '15px' }}>
+                             Bulk Purchase Discounts
+                        </h6>
+                        <div className="row g-2">
+                            {quantityDiscounts.map((discount: any, idx: number) => {
+                                const isActive = quantity >= discount.minQuantity;
+                                return (
+                                    <div key={idx} className="col-6 col-sm-4">
+                                        <div 
+                                            className={`p-2 rounded-lg text-center border transition-all duration-300 ${isActive ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white border-slate-200 text-slate-700'}`}
+                                            style={isActive ? { transform: 'scale(1.03)', color: '#ffffff', backgroundColor: '#0f172a', borderColor: '#0f172a' } : { backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
+                                        >
+                                            <div className={`text-xs ${isActive ? 'text-white' : 'text-slate-500'}`} style={{ fontSize: '11px' }}>
+                                                Buy {discount.minQuantity}+
+                                            </div>
+                                            <div className="font-bold text-sm" style={{ fontSize: '13px' }}>
+                                                {discount.discountPercent}% Off
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
                 <div 
                     className="btn-group cart-btn mt-4 flex-wrap gap-2"
                     style={isMobile ? { display: 'flex', flexDirection: 'column', width: '100%', gap: '10px' } : undefined}

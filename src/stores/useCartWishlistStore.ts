@@ -11,6 +11,8 @@ export interface CartItem {
   image: string;
   variation?: any;
   slug: string;
+  originalPrice?: number;
+  quantityDiscounts?: any[];
 }
 
 export interface WishlistItem {
@@ -87,15 +89,40 @@ export const useCartWishlistStore = create<CartWishlistState>()(
         const existingItem = currentCart.find((item) => item.id === newItem.id);
 
         if (existingItem) {
+          const newQty = existingItem.quantity + newItem.quantity;
+          const basePrice = existingItem.originalPrice ?? existingItem.price;
+          const discounts = existingItem.quantityDiscounts ?? [];
+          let discountPercent = 0;
+          if (Array.isArray(discounts)) {
+            for (const d of discounts) {
+              if (newQty >= d.minQuantity && d.discountPercent > discountPercent) {
+                discountPercent = d.discountPercent;
+              }
+            }
+          }
+          const price = basePrice * (1 - discountPercent / 100);
+
           set({
             cart: currentCart.map((item) =>
               item.id === newItem.id
-                ? { ...item, quantity: item.quantity + newItem.quantity }
+                ? { ...item, quantity: newQty, price }
                 : item
             ),
           });
         } else {
-          set({ cart: [...currentCart, newItem] });
+          const basePrice = newItem.originalPrice ?? newItem.price;
+          const discounts = newItem.quantityDiscounts ?? [];
+          let discountPercent = 0;
+          if (Array.isArray(discounts)) {
+            for (const d of discounts) {
+              if (newItem.quantity >= d.minQuantity && d.discountPercent > discountPercent) {
+                discountPercent = d.discountPercent;
+              }
+            }
+          }
+          const price = basePrice * (1 - discountPercent / 100);
+
+          set({ cart: [...currentCart, { ...newItem, price }] });
         }
         get().syncWithBackend();
       },
@@ -108,9 +135,23 @@ export const useCartWishlistStore = create<CartWishlistState>()(
       updateQuantity: (id, quantity) => {
         if (quantity < 1) return;
         set({
-          cart: get().cart.map((item) =>
-            item.id === id ? { ...item, quantity } : item
-          ),
+          cart: get().cart.map((item) => {
+            if (item.id === id) {
+              const basePrice = item.originalPrice ?? item.price;
+              const discounts = item.quantityDiscounts ?? [];
+              let discountPercent = 0;
+              if (Array.isArray(discounts)) {
+                for (const d of discounts) {
+                  if (quantity >= d.minQuantity && d.discountPercent > discountPercent) {
+                    discountPercent = d.discountPercent;
+                  }
+                }
+              }
+              const price = basePrice * (1 - discountPercent / 100);
+              return { ...item, quantity, price };
+            }
+            return item;
+          }),
         });
         get().syncWithBackend();
       },
