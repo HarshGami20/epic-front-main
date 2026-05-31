@@ -100,6 +100,7 @@ export interface EditableZoneCanvas extends SelectionArea {
   maxElements?: number;
   allowedColors?: string[];
   allowedFonts?: string[];
+  allowedImages?: string[];
   fontSize?: number;
   textColor?: string;
   fontFamily?: string;

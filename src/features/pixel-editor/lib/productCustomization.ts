@@ -41,6 +41,7 @@ export interface EditableAreaDef {
   maxElements?: number;
   allowedColors?: string[];
   allowedFonts?: string[];
+  allowedImages?: string[];
   imageUrl?: string;
   textFields?: CustomTextFieldDef[];
 }
@@ -157,6 +158,7 @@ export function resolveStorefrontCustomization(
           maxElements: a.maxElements ?? rootA.maxElements,
           allowedColors: (a.allowedColors && a.allowedColors.length > 0) ? a.allowedColors : rootA.allowedColors,
           allowedFonts: (a.allowedFonts && a.allowedFonts.length > 0) ? a.allowedFonts : rootA.allowedFonts,
+          allowedImages: (a.allowedImages && a.allowedImages.length > 0) ? a.allowedImages : rootA.allowedImages,
           fontFamily: a.fontFamily || rootA.fontFamily,
           fontSize: a.fontSize || rootA.fontSize,
           textColor: a.textColor || rootA.textColor,

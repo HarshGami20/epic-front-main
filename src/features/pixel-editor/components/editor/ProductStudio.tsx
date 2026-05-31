@@ -108,7 +108,7 @@ export const ProductStudio: React.FC = () => {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          setPresetImages(data.filter((img) => img.isActive !== false));
+          setPresetImages(data);
         }
       })
       .catch((err) => console.error("Error fetching preset images", err));
@@ -184,6 +184,16 @@ export const ProductStudio: React.FC = () => {
       return allowedColors;
     }
     return DEFAULT_COLORS;
+  };
+
+  const getDisplayPresetImages = () => {
+    if (!activeZone) return [];
+    const allowed = activeZone.allowedImages;
+    const hasAll = !allowed || allowed.length === 0 || allowed.includes('all');
+    if (hasAll) {
+      return presetImages;
+    }
+    return presetImages.filter((img) => img.url && allowed.includes(img.url));
   };
 
   // Helper to find canvas Textbox by textFieldId or zoneId
@@ -877,7 +887,7 @@ export const ProductStudio: React.FC = () => {
                       </button>
 
                       {/* Admin preset images */}
-                      {presetImages.map((img, idx) => (
+                      {getDisplayPresetImages().map((img, idx) => (
                         <button
                           key={img.id || idx}
                           type="button"
