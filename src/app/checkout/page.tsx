@@ -502,7 +502,7 @@ export default function CheckoutPage() {
                     </button>
                   </div>
 
-                  <div className="p-4 border rounded bg-white m-b30">
+                  {/* <div className="p-4 border rounded bg-white m-b30">
                     <h4 className="title m-b15">Delivery Address</h4>
                     <div className="d-flex align-items-start gap-3">
                       <i className="fa-solid fa-truck text-primary mt-1" aria-hidden="true" />
@@ -519,9 +519,9 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
-                  <h4 className="title m-b20">1. Delivery Schedule</h4>
+                  {/* <h4 className="title m-b20">1. Delivery Schedule</h4>
                   
                   <div className="row">
                     <div className="col-md-6">
@@ -549,9 +549,9 @@ export default function CheckoutPage() {
                         </select>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
-                  <h4 className="title m-b20 m-t20">2. Coupon Code</h4>
+                  <h4 className="title m-b20 m-t20">1. Coupon Code</h4>
 
                   <div className="m-b25">
                     {appliedCoupon ? (
@@ -604,7 +604,7 @@ export default function CheckoutPage() {
                                     <div className={`p-3 border rounded h-100 d-flex flex-column justify-content-between transition-all ${isApplied ? 'border-success bg-success bg-opacity-5' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
                                       <div>
                                         <div className="d-flex align-items-center justify-content-between mb-2">
-                                          <span className={`px-2.5 py-1 rounded text-xs font-black border border-dashed tracking-wider ${isApplied ? 'bg-success text-white border-success' : 'bg-slate-50 text-slate-700 border-slate-300'}`}>
+                                          <span className={`px-3 py-1 rounded text-xs font-black border border-dashed tracking-wider ${isApplied ? 'bg-success text-white border-success' : 'bg-slate-50 text-slate-700 border-slate-300'}`}>
                                             {coupon.code}
                                           </span>
                                           {coupon.type === "PERCENTAGE" ? (
@@ -657,8 +657,8 @@ export default function CheckoutPage() {
                       </div>
                     )}
                   </div>
-
-                  <h4 className="title m-b20">3. Payment</h4>
+{/* 
+                  <h4 className="title m-b20">2. Payment</h4>
                   
                   <div className="p-4 border rounded bg-light m-b25">
                     <label className="label-title text-muted mb-3 small fw-bold tracking-wider uppercase d-block">
@@ -693,7 +693,7 @@ export default function CheckoutPage() {
                         <strong className="text-dark">₹{grandTotal.toFixed(2)}</strong> securely.
                       </p>
                     </div>
-                  </div>
+                  </div> */}
 
                 </form>
               </div>
@@ -706,13 +706,22 @@ export default function CheckoutPage() {
                   <div className="m-b30 max-h-[350px] overflow-y-auto pr-1">
                     {checkoutItems.map((item, idx) => (
                       <div key={item.id || idx} className="cart-item style-1">
-                        <div className="dz-media" style={{ width: "60px", height: "60px", minWidth: "60px", position: "relative" }}>
-                          <img
-                            src={getImageUrl(item.previewImage || item.image)}
-                            alt={item.name}
-                            className="object-contain w-100 h-100 rounded"
-                          />
-                        </div>
+                        <div
+                          className="dz-media overflow-hidden rounded"
+                          role="img"
+                          aria-label={item.name}
+                          style={{
+                            width: "60px",
+                            height: "60px",
+                            minWidth: "60px",
+                            minHeight: "60px",
+                            position: "relative",
+                            backgroundImage: `url(${getImageUrl(item.previewImage || item.image)})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            backgroundRepeat: "no-repeat",
+                          }}
+                        />
                         <div className="dz-content">
                           <div className="me-2">
                             <h6 className="title mb-0" style={{ fontSize: "14px" }}>{item.name}</h6>

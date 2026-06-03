@@ -22,6 +22,7 @@ const CommanBanner = ({ image, mainText, parentText, currentText }: texttype) =>
   const [cmsBanners, setCmsBanners] = useState<{
     shopBanner?: string;
     blogBanner?: string;
+    checkoutBanner?: string;
     accountBanner?: string;
   } | null>(null);
 
@@ -46,7 +47,11 @@ const CommanBanner = ({ image, mainText, parentText, currentText }: texttype) =>
     bgUrl = typeof image === "string" ? image : image.src;
   } else if (cmsBanners) {
     const path = pathname || "";
-    if (path.includes("/shop") || path.includes("/categories") || mainText.toLowerCase().includes("shop")) {
+    if (path.includes("/checkout") || mainText.toLowerCase().includes("checkout")) {
+      if (cmsBanners.checkoutBanner) {
+        bgUrl = getImageUrl(cmsBanners.checkoutBanner);
+      }
+    } else if (path.includes("/shop") || path.includes("/categories") || mainText.toLowerCase().includes("shop")) {
       if (cmsBanners.shopBanner) {
         bgUrl = getImageUrl(cmsBanners.shopBanner);
       }
@@ -56,7 +61,6 @@ const CommanBanner = ({ image, mainText, parentText, currentText }: texttype) =>
       }
     } else if (
       path.includes("/account") ||
-      path.includes("/checkout") ||
       path.includes("/shop-cart") ||
       path.includes("/returns") ||
       path.includes("/wishlist") ||
@@ -70,7 +74,6 @@ const CommanBanner = ({ image, mainText, parentText, currentText }: texttype) =>
       mainText.toLowerCase().includes("shipping") ||
       mainText.toLowerCase().includes("payment") ||
       mainText.toLowerCase().includes("review") ||
-      mainText.toLowerCase().includes("checkout") ||
       mainText.toLowerCase().includes("cart") ||
       mainText.toLowerCase().includes("confirmation")
     ) {

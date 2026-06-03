@@ -320,10 +320,94 @@ export const ProductStudio: React.FC = () => {
     toast.success("Canvas reset to default");
   };
 
+  const activeZoneIndex = editableZones.findIndex((z) => z.id === activeEditableZoneId);
+
+  const validateZone = (zone: any): { valid: boolean; error?: string } => {
+    if (zone.type === "text") {
+      if (zone.textFields && zone.textFields.length > 0) {
+        for (let i = 0; i < zone.textFields.length; i++) {
+          const tf = zone.textFields[i];
+          const tb = getTextboxForField(tf.id, zone.id);
+          const val = (tb ? tb.text : tf.text || "").trim();
+          
+          if (!val) {
+            return { 
+              valid: false, 
+              error: `Please fill in the "${tf.label || `Text Line ${i + 1}`}" field in the "${zone.label || 'Text'}" section.` 
+            };
+          }
+          
+          const defaultLabel = (tf.label || "Enter text here").trim().toLowerCase();
+          const defaultText = (tf.text || "").trim().toLowerCase();
+          const valLower = val.toLowerCase();
+          if (valLower === defaultLabel || (defaultText && valLower === defaultText)) {
+            return { 
+              valid: false, 
+              error: `Please change the default template text for "${tf.label || `Text Line ${i + 1}`}" in the "${zone.label || 'Text'}" section.` 
+            };
+          }
+        }
+      } else {
+        const tb = getTextboxForField(undefined, zone.id);
+        const val = (tb ? tb.text : "").trim();
+        
+        if (!val) {
+          return { 
+            valid: false, 
+            error: `Please fill in the "${zone.label || "Text Line"}" field in the "${zone.label || 'Text'}" section.` 
+          };
+        }
+        
+        const defaultLabel = (zone.label || "Enter text here").trim().toLowerCase();
+        const valLower = val.toLowerCase();
+        if (valLower === defaultLabel) {
+          return { 
+            valid: false, 
+            error: `Please change the default template text for "${zone.label || "Text Line"}" in the "${zone.label || 'Text'}" section.` 
+          };
+        }
+      }
+    } else if (zone.type === "image") {
+      const existing = canvas?.getObjects().find((o) => (o as any).editableZoneId === zone.id);
+      if (!existing) {
+        return { 
+          valid: false, 
+          error: `Please upload or select an image in the "${zone.label || "Image"}" section.` 
+        };
+      }
+    }
+    return { valid: true };
+  };
+
+  const handleNextSection = () => {
+    if (!activeZone) return;
+    const { valid, error } = validateZone(activeZone);
+    if (!valid) {
+      toast.error(error);
+      return;
+    }
+    
+    toast.success(`"${activeZone.label || activeZone.type}" section validated successfully!`);
+
+    if (activeZoneIndex < editableZones.length - 1) {
+      setActiveEditableZoneId(editableZones[activeZoneIndex + 1].id);
+    }
+  };
+
   const handleCheckout = () => {
     if (!canvas) {
       toast.error("Editor canvas is not ready yet.");
       return;
+    }
+
+    // Validate all zones before proceeding to checkout
+    for (const zone of editableZones) {
+      const { valid, error } = validateZone(zone);
+      if (!valid) {
+        toast.error(error);
+        setActiveEditableZoneId(zone.id);
+        return;
+      }
     }
 
     const toastId = toast.loading("Capturing your design details...");
@@ -510,7 +594,7 @@ export const ProductStudio: React.FC = () => {
   const grandTotal = basePrice + addonsTotal + logoCharge;
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-slate-900 flex flex-col font-sans pb-16 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-[#FFFAF3] text-slate-900 flex flex-col font-sans pb-16 selection:bg-indigo-500 selection:text-white">
       {/* Hidden file input for image upload */}
       <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
 
@@ -614,7 +698,7 @@ export const ProductStudio: React.FC = () => {
             <h2 className="text-center text-base font-bold tracking-wide text-slate-900 uppercase">
               Creative Canvas
             </h2>
-            <div className="relative border-0 sm:border-2 border-solid border-black rounded-none sm:rounded-3xl overflow-hidden bg-black shadow-none sm:shadow-xl sm:shadow-slate-200/30 aspect-[4/3] -mx-4 sm:mx-auto w-[calc(100%+2rem)] sm:w-full max-w-2xl flex flex-col group">
+            <div className="relative border-0 sm:border-1 border-solid border-black rounded-none sm:rounded-3xl overflow-hidden bg-slate-50 shadow-none sm:shadow-xl sm:shadow-slate-200/30 aspect-[4/3] -mx-4 sm:mx-auto w-[calc(100%+2rem)] sm:w-full max-w-2xl flex flex-col group">
               {/* Reset shortcut over canvas */}
               <button 
                 onClick={handleReset} 
@@ -653,14 +737,14 @@ export const ProductStudio: React.FC = () => {
                       key={z.id}
                       onClick={() => setActiveEditableZoneId(z.id)}
                       className={cn(
-                        "px-4 py-2 rounded-md text-xs font-bold transition-all duration-300 border shadow-sm cursor-pointer uppercase tracking-wider active:scale-95",
+                        "px-4 py-2 rounded-sm text-xs font-bold transition-all duration-300 border shadow-sm cursor-pointer uppercase tracking-wider active:scale-95",
                         isImg
                           ? isActive
                             ? "bg-[#a3e635] border-[#a3e635] text-slate-900 shadow-sm"
-                            : "bg-white border-[#a3e635] text-[#65a30d] hover:bg-[#a3e635]/10"
+                            : "bg-transparent border-[#a3e635] text-[#65a30d] hover:bg-[#a3e635]/10"
                           : isActive
                             ? "bg-[#2b99ff] border-[#2b99ff] text-white shadow-sm"
-                            : "bg-white border-[#2b99ff] text-[#2b99ff] hover:bg-[#2b99ff]/10"
+                            : "bg-transparent border-[#2b99ff] text-[#2b99ff] hover:bg-[#2b99ff]/10"
                       )}
                     >
                       {label}
@@ -672,7 +756,8 @@ export const ProductStudio: React.FC = () => {
 
             {/* Active Zone Config Card */}
             {activeZone ? (
-              <div className="border border-slate-200 bg-white rounded-3xl p-6 sm:p-7 shadow-md space-y-6 transition-all">
+              <>
+              <div className="border  border-slate-200 bg-transparent outline outline-1 outline-black rounded-md p-4 sm:p-4 shadow-md space-y-6 transition-all">
                 
                 {activeZone.type === "text" ? (
                   activeZone.textFields && activeZone.textFields.length > 0 ? (
@@ -716,7 +801,7 @@ export const ProductStudio: React.FC = () => {
                                       key={fontName}
                                       type="button"
                                       className={cn(
-                                        "h-9 rounded-md border text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-sm active:scale-95",
+                                        "h-9 rounded-sm border text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-sm active:scale-95",
                                         isSelected
                                           ? "bg-slate-900 text-white border-slate-900 shadow-sm"
                                           : "bg-white text-slate-800 border-slate-200 hover:border-slate-300"
@@ -776,7 +861,7 @@ export const ProductStudio: React.FC = () => {
                         </div>
                         <input
                           type="text"
-                          className="w-full h-11 px-4 rounded-md border border-slate-200 text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm bg-slate-50/10"
+                          className="w-full bg-transparent  h-11 px-2 rounded-sm border-[1.5px] border-black text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition-all shadow-sm "
                           value={getTextboxForField(undefined, activeZone.id)?.text || ""}
                           placeholder={activeZone.label || "Enter text here"}
                           onChange={(e) => handleTextChange(e.target.value, undefined, activeZone.id)}
@@ -785,7 +870,7 @@ export const ProductStudio: React.FC = () => {
 
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-800">
-                          Select Font :
+                          Select Font : 
                         </label>
                         <div className="grid grid-cols-4 gap-2">
                           {getDisplayFonts(activeZone.allowedFonts).map((fontName) => {
@@ -798,10 +883,10 @@ export const ProductStudio: React.FC = () => {
                                 key={fontName}
                                 type="button"
                                 className={cn(
-                                  "h-9 rounded-md border text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95",
+                                  "h-10 rounded-sm border text-lg font-bold outline outline-1 outline-black transition-all flex items-center justify-center cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95 ",
                                   isSelected
-                                    ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                                    : "bg-white text-slate-800 border-slate-200 hover:border-slate-300"
+                                    ? "bg-slate-900 text-white  shadow-sm"
+                                    : "bg-transparent text-slate-800 border-slate-200 hover:border-slate-300"
                                 )}
                                 style={{ fontFamily: fontName }}
                                 onClick={() => handleFontChange(fontName, undefined, activeZone.id)}
@@ -821,21 +906,21 @@ export const ProductStudio: React.FC = () => {
                           {getDisplayColors(activeZone.allowedColors).map((colVal) => {
                             const tb = getTextboxForField(undefined, activeZone.id);
                             const currentColor = tb ? tb.fill : activeZone.textColor || "#000000";
-                            const isSelected = currentColor === colVal;
+                            const isSelected = (currentColor || "").toLowerCase() === (colVal || "").toLowerCase();
 
                             return (
                               <button
                                 key={colVal}
                                 type="button"
                                 className={cn(
-                                  "w-8 h-8 rounded-full border transition-all cursor-pointer shadow-sm active:scale-95 relative flex items-center justify-center hover:scale-115",
-                                  isSelected ? "border-slate-850 ring-2 ring-slate-800/20 scale-110" : "border-slate-200"
+                                  "w-8 h-8 rounded-full border transition-all cursor-pointer shadow-sm active:scale-95 relative flex items-center justify-center hover:scale-110",
+                                  isSelected ? "border-slate-800 ring-2 ring-slate-800/20 scale-110" : "border-slate-200"
                                 )}
                                 style={{ backgroundColor: colVal }}
                                 onClick={() => handleColorChange(colVal, undefined, activeZone.id)}
                               >
                                 {isSelected && (
-                                  <span className={cn("text-xs font-bold", colVal.toLowerCase() === "#ffffff" ? "text-slate-950" : "text-white")}>
+                                  <span className={cn("text-xs font-bold", (colVal || "").toLowerCase() === "#ffffff" ? "text-slate-900" : "text-white")}>
                                     ✓
                                   </span>
                                 )}
@@ -849,7 +934,7 @@ export const ProductStudio: React.FC = () => {
                 ) : (
                   <div className="space-y-5">
                     <label className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                      <span className="text-red-500 text-sm">*</span> Image Options :
+                      <span className="text-red-500 text-sm">*</span> Image Options : 
                     </label>
 
                     <div className="grid grid-cols-3 gap-3">
@@ -857,7 +942,20 @@ export const ProductStudio: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center p-3.5 border border-dashed border-slate-200 hover:border-blue-500 rounded-lg hover:bg-blue-50/20 transition-all aspect-square group cursor-pointer shadow-sm bg-white"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: 0,
+                          border: '1px dashed black',
+                          borderRadius: '0.75rem',
+                          transition: 'all 0.2s ease',
+                          aspectRatio: '1 / 1',
+                          cursor: 'pointer',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          backgroundColor: 'transparent',
+                        }}
                       >
                         <Upload className="w-6 h-6 text-slate-400 group-hover:text-blue-500 mb-1.5 transition-colors" />
                         <span className="text-[10px] font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
@@ -870,29 +968,44 @@ export const ProductStudio: React.FC = () => {
 
                       {/* Admin preset images */}
                       {getDisplayPresetImages().map((img, idx) => (
-                        <button
-                          key={img.id || idx}
-                          type="button"
-                          onClick={() => addPresetImage(img.url, img.name)}
-                          className="flex flex-col items-center justify-center p-2 border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-slate-50/80 transition-all aspect-square group cursor-pointer shadow-sm overflow-hidden bg-white"
-                        >
-                          <img
-                            src={getImageUrl(img.url)}
-                            alt={img.name || ""}
-                            className="w-10 h-10 object-contain mb-1.5 group-hover:scale-105 transition-transform"
-                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
-                          />
-                          <span className="text-[9px] font-bold text-slate-705 truncate w-full text-center px-1">
+                        <div key={img.id || idx} className="flex flex-col items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => addPresetImage(img.url, img.name)}
+                            className="group flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border-1 border-black bg-transparent p-4 shadow-sm transition duration-200 hover:shadow-md active:scale-[0.98]"
+                          >
+                            <img
+                              src={getImageUrl(img.url)}
+                              alt={img.name || ""}
+                              className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-105"
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+                            />
+                          </button>
+                          <span className="max-w-full text-[10px] font-semibold text-slate-700 truncate text-center px-1">
                             {img.name?.replace(/\.[^/.]+$/, "") || `Preset ${idx + 1}`}
                           </span>
-                        </button>
+                        </div>
+
                       ))}
 
                       {/* Blank / Clear */}
                       <button
                         type="button"
                         onClick={clearZoneImage}
-                        className="flex flex-col items-center justify-center p-3.5 border border-slate-200 rounded-lg hover:border-red-300 hover:bg-red-50/30 transition-all aspect-square group cursor-pointer shadow-sm bg-white"
+                        className="cursor-pointer group"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '0.875rem',
+                          border: '1px solid #000000',
+                          borderRadius: '0.75rem',
+                          backgroundColor: 'transparent',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          transition: 'all 0.2s ease',
+                          aspectRatio: '1 / 1',
+                        }}
                       >
                         <div className="w-6 h-6 rounded-full border border-slate-350 flex items-center justify-center mb-1 text-slate-400 group-hover:text-red-500 group-hover:border-red-500 transition-colors text-xs font-bold">
                           ✕
@@ -905,6 +1018,19 @@ export const ProductStudio: React.FC = () => {
                   </div>
                 )}
 
+                {/* Next Section Button */}
+                {editableZones.length > 0 && activeZoneIndex < editableZones.length - 1 && (
+                  <div className="pt-4 border-t border-slate-200 mt-4">
+                    <button
+                      type="button"
+                      onClick={handleNextSection}
+                      className="w-full h-10 bg-slate-800 hover:bg-slate-700 active:scale-[0.99] text-white font-extrabold rounded-md shadow-sm transition-all flex items-center justify-center text-xs tracking-wider uppercase cursor-pointer"
+                    >
+                      Next Section
+                    </button>
+                  </div>
+                )}
+              </div>
                 {/* Grand Total Section */}
                 <div className="flex justify-between items-start pt-5 border-t border-slate-200 mt-6">
                   <span className="text-sm font-extrabold text-slate-800">Grand Total :</span>
@@ -926,9 +1052,8 @@ export const ProductStudio: React.FC = () => {
                     Confirm & Checkout
                   </button>
                 </div>
-
-              </div>
-            ) : (
+              </> 
+            ) : ( 
               <div className="border border-slate-200 bg-white rounded-3xl p-6 text-center shadow-sm">
                 <p className="text-slate-500 text-sm">No customizer zones found on this product.</p>
               </div>
