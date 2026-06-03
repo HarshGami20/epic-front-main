@@ -1154,7 +1154,7 @@ export const EditorCanvas: React.FC = () => {
           flexShrink: 0,
         }}
       >
-        <canvas ref={canvasRef} className="absolute inset-0" />
+        <canvas ref={canvasRef} className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
 
         {editableZones.map((zone) => {
           const bleed = zone.bleed;

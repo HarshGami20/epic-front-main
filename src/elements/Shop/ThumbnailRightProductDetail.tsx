@@ -10,6 +10,7 @@ import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 import { fetchPublicProductReviews } from "@/lib/publicProductReviewsApi";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 import { toast } from "react-toastify";
+import { getImageUrl } from "@/lib/imageUtils";
 
 interface thumbnailCardtype {
     productData?: any;
@@ -279,30 +280,115 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                         </div>
                     )}
                 </div>
+                {/* Related Sibling Variants Options - shown before bulk discounts */}
+                {props.relatedVariants && props.relatedVariants.length > 0 && (
+                    <div className="related-variants-wrapper mb-4 mt-4">
+                        <h6 className="d-flex align-items-center gap-2 mb-2.5 font-semibold text-slate-800" style={{ fontSize: '15px' }}>
+                             Product Options / Sibling Styles
+                        </h6>
+                        <div className="d-flex flex-column gap-2">
+                            {props.relatedVariants.map((item: any, idx: number) => {
+                                const itemPrice = Number(item.basePrice ?? item.price ?? 0);
+                                const itemComparePrice = item.originPrice ? Number(item.originPrice) : null;
+                                let itemDiscount = 0;
+                                if (itemComparePrice && itemComparePrice > itemPrice) {
+                                    itemDiscount = Math.round(((itemComparePrice - itemPrice) / itemComparePrice) * 100);
+                                }
+                                const itemImage = getImageUrl(Array.isArray(item.thumbImage) ? item.thumbImage[0] : (item.thumbImage || ''));
+
+                                return (
+                                    <Link 
+                                        key={item.id || idx}
+                                        href={`/products/${item.slug}`}
+                                        className="d-flex align-items-center gap-3 p-2.5 rounded border transition-all text-decoration-none text-dark hover-shadow"
+                                        style={{ borderColor: '#e2e8f0', backgroundColor: '#ffffff' }}
+                                    >
+                                        <div 
+                                            className="rounded bg-light overflow-hidden flex-shrink-0 border"
+                                            style={{ width: '55px', height: '55px', borderColor: '#f1f5f9' }}
+                                        >
+                                            <img 
+                                                src={itemImage} 
+                                                alt={item.name} 
+                                                className="w-100 h-100 object-fit-cover"
+                                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+                                            />
+                                        </div>
+                                        <div className="flex-grow-1 min-w-0">
+                                            <div className="text-sm fw-semibold text-truncate mb-0.5 text-slate-850" style={{ fontSize: '13px' }}>
+                                                {item.name}
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                {itemDiscount > 0 && (
+                                                    <span className="text-danger small fw-bold" style={{ fontSize: '11px' }}>
+                                                        -{itemDiscount}%
+                                                    </span>
+                                                )}
+                                                <span className="fw-bold text-slate-900" style={{ fontSize: '13px' }}>
+                                                    ₹{itemPrice.toFixed(2)}
+                                                </span>
+                                                {itemComparePrice && (
+                                                    <del className="text-muted small" style={{ fontSize: '11px' }}>
+                                                        ₹{itemComparePrice.toFixed(2)}
+                                                    </del>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex-shrink-0 text-primary small fw-bold pe-1" style={{ fontSize: '12px' }}>
+                                            View Options →
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {/* Bulk Discount Tiers */}
                 {quantityDiscounts && quantityDiscounts.length > 0 && (
                     <div 
-                        className="p-3 mb-4 rounded-md border border-dashed border-primary mt-4"
-                        style={{ border: '1px dashed #243c5a', backgroundColor: '#f8fafc' }}
+                        className="p-3 mb-4 rounded-md border mt-4"
+                        style={{ border: '1px solid #e2e8f0', backgroundColor: '#ffffff' }}
                     >
-                        <h6 className="d-flex align-items-center gap-2 mb-2 font-semibold text-slate-800" style={{ fontSize: '15px' }}>
+                        <h6 className="d-flex align-items-center gap-2 mb-3 font-semibold text-slate-800" style={{ fontSize: '15px' }}>
                              Bulk Purchase Discounts
                         </h6>
-                        <div className="row g-2">
+                        <div className="d-flex flex-column gap-2">
                             {quantityDiscounts.map((discount: any, idx: number) => {
                                 const isActive = quantity >= discount.minQuantity;
                                 return (
-                                    <div key={idx} className="col-6 col-sm-4">
-                                        <div 
-                                            className={`p-2 rounded-lg text-center border transition-all duration-300 ${isActive ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white border-slate-200 text-slate-700'}`}
-                                            style={isActive ? { transform: 'scale(1.03)', color: '#ffffff', backgroundColor: '#0f172a', borderColor: '#0f172a' } : { backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}
-                                        >
-                                            <div className={`text-xs ${isActive ? 'text-white' : 'text-slate-500'}`} style={{ fontSize: '11px' }}>
-                                                Buy {discount.minQuantity}+
-                                            </div>
-                                            <div className="font-bold text-sm" style={{ fontSize: '13px' }}>
+                                    <div 
+                                        key={idx} 
+                                        className="d-flex align-items-center justify-content-between p-2 px-3 rounded border transition-all"
+                                        style={isActive ? { 
+                                            backgroundColor: '#f0fdf4', 
+                                            borderColor: '#86efac', 
+                                            borderLeft: '4px solid #16a34a',
+                                            transform: 'translateX(2px)'
+                                        } : { 
+                                            backgroundColor: '#ffffff',
+                                            borderColor: '#e2e8f0' 
+                                        }}
+                                    >
+                                        <div className="d-flex align-items-center">
+                                            <span 
+                                                className={`badge me-2 ${isActive ? 'bg-success' : 'bg-secondary'}`}
+                                                style={isActive ? { backgroundColor: '#16a34a' } : { backgroundColor: '#64748b' }}
+                                            >
+                                                {isActive ? 'Active' : `Min. Qty`}
+                                            </span>
+                                            <span className="fw-medium text-slate-700" style={{ fontSize: '13px' }}>Buy {discount.minQuantity}+ units</span>
+                                        </div>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <span className="text-slate-500 small" style={{ fontSize: '11px' }}>
+                                                (Save ₹{(price * (discount.discountPercent / 100)).toFixed(2)}/unit)
+                                            </span>
+                                            <span 
+                                                className={`fw-bold ${isActive ? 'text-success' : 'text-slate-800'}`}
+                                                style={isActive ? { color: '#16a34a', fontSize: '14px' } : { fontSize: '13px' }}
+                                            >
                                                 {discount.discountPercent}% Off
-                                            </div>
+                                            </span>
                                         </div>
                                     </div>
                                 );
