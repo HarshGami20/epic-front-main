@@ -778,7 +778,7 @@ export default function CheckoutPage() {
                       disabled={loading}
                       className="btn btn-secondary w-100 py-3 text-uppercase font-bold tracking-wider"
                     >
-                      {loading ? "Processing..." : "Pay with Razorpay"}
+                      {loading ? "Processing..." : "Checkout With Razorpay"}
                     </button>
                   </div>
 
