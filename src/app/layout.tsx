@@ -24,6 +24,30 @@ export default function RootLayout({children,}: Readonly<{children: React.ReactN
   const pathname = usePathname();
 
   useEffect(() => {
+    if (typeof window !== "undefined" && !(window as any).__fetch_patched) {
+      (window as any).__fetch_patched = true;
+      const originalFetch = window.fetch;
+      window.fetch = async function (...args) {
+        const response = await originalFetch(...args);
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("checkout_item");
+
+          window.dispatchEvent(new CustomEvent("epiclance-user-logout"));
+          window.dispatchEvent(new CustomEvent("epiclance-user-updated", { detail: null }));
+
+          const currentPath = window.location.pathname;
+          if (!["/login", "/registration", "/forget-password"].includes(currentPath)) {
+            window.location.href = `/login?expired=true&redirect=${encodeURIComponent(currentPath + window.location.search)}`;
+          }
+        }
+        return response;
+      };
+    }
+  }, []);
+
+  useEffect(() => {
     if (typeof window !== "undefined" && pathname && !["/login", "/registration", "/forget-password"].includes(pathname)) {
       sessionStorage.setItem("last_non_auth_page", pathname + window.location.search);
     }

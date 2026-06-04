@@ -1202,8 +1202,8 @@ export const EditorCanvas: React.FC = () => {
                   isZoneActive
                     ? 'ring-2 ring-primary ring-offset-2 ring-offset-slate-100 bg-primary/8 shadow-md'
                     : zone.type === 'text'
-                      ? 'bg-red-500/[0.07] border-2 border-dashed border-sky-500/50'
-                      : 'bg-emerald-500/[0.07] border-2 border-dashed border-emerald-500/50'
+                      ? 'bg-transparent border-2 border-dashed border-sky-500/50'
+                      : 'bg-transparent border-2 border-dashed border-emerald-500/50'
                 )}
                 style={{
                   left: `${inner.left - outer.left}px`,

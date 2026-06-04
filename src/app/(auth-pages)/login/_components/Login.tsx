@@ -4,7 +4,7 @@ import Link from "next/link";
 import IMAGES from "@/constant/theme";
 import PasswordInputBox from "@/components/PasswordInputBox";
 import AuthSlider from "@/components/AuthSlider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { loginUser } from "@/lib/authApi";
@@ -17,6 +17,17 @@ export default function Login() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get("redirect") || (typeof window !== "undefined" && sessionStorage.getItem("last_non_auth_page")) || "/account-orders";
+
+    useEffect(() => {
+        if (searchParams.get("expired") === "true") {
+            const timer = setTimeout(() => {
+                toast.error("Your session has expired. Please log in again.", {
+                    id: "session-expired-toast"
+                });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [searchParams]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

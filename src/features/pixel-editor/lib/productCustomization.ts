@@ -65,6 +65,7 @@ export interface ProductCustomizationPayload {
   textOnly?: boolean;
   allowedFonts?: string[];
   logoUploadPrice?: number;
+  enableLogoUpload?: boolean;
   /** Logical design stage in px (from admin crop / canvas). */
   designWidth?: number;
   designHeight?: number;

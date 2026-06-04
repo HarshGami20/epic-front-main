@@ -368,13 +368,8 @@ export const ProductStudio: React.FC = () => {
         }
       }
     } else if (zone.type === "image") {
-      const existing = canvas?.getObjects().find((o) => (o as any).editableZoneId === zone.id);
-      if (!existing) {
-        return { 
-          valid: false, 
-          error: `Please upload or select an image in the "${zone.label || "Image"}" section.` 
-        };
-      }
+      // Image zones are optional: selecting "Blank" or leaving them without an image is allowed
+      return { valid: true };
     }
     return { valid: true };
   };
@@ -626,33 +621,33 @@ export const ProductStudio: React.FC = () => {
         </Button>
       </header>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-8 space-y-8 animate-fade-in">
-        
-        {/* Premium Addons Section */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-0 sm:px-6 pt-8 space-y-8 animate-fade-in">
+               {/* Premium Addons Section */}
         {styleVariantsForPicker.length > 0 && (
-          <section className="space-y-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-sm font-extrabold tracking-wider text-slate-800 uppercase flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-ping"></span>
+          <section className="space-y-4 bg-transparent px-3 py-4 mx-3 rounded-md border-1 border-black shadow-sm">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-sm font-semibold tracking-widest text-slate-900 uppercase flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-slate-900 animate-pulse"></span>
                 Premium Addons
               </h2>
               {selectedStyleVariantId && (
-                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+                <span className="text-[10px] font-black text-white bg-slate-900 px-2 py-0.5 rounded-md uppercase tracking-wider">
                   Option Selected
                 </span>
               )}
             </div>
-            <div className="w-full mx-auto py-2">
+            <div className="w-full mx-auto py-1">
               <Swiper
                 modules={[Autoplay]}
-                spaceBetween={16}
-                slidesPerView={3}
+                spaceBetween={8}
+                slidesPerView={7.5}
                 autoplay={{ delay: 3500, disableOnInteraction: false }}
-                loop={styleVariantsForPicker.length > 3}
+                loop={styleVariantsForPicker.length > 7}
                 breakpoints={{
-                  320: { slidesPerView: 2, spaceBetween: 12 },
-                  640: { slidesPerView: 3, spaceBetween: 16 },
-                  1024: { slidesPerView: 4, spaceBetween: 16 },
+                  320: { slidesPerView: 3, spaceBetween: 6 },
+                  480: { slidesPerView: 3, spaceBetween: 6 },
+                  768: { slidesPerView: 6.5, spaceBetween: 8 },
+                  1024: { slidesPerView: 7.5, spaceBetween: 8 },
                 }}
                 className="pb-2 pt-1 px-1"
               >
@@ -664,22 +659,26 @@ export const ProductStudio: React.FC = () => {
                       <button
                         onClick={() => setSelectedStyleVariantId(s.id)}
                         className={cn(
-                          "w-full rounded-md border-2 p-1.5 text-left transition-all duration-300 flex flex-col bg-white shadow-sm hover:shadow-md cursor-pointer group",
+                          "w-full rounded-[10px] border p-0 overflow-hidden text-left transition-all duration-300 flex flex-col bg-transparent cursor-pointer group",
                           isActive
-                            ? "border-pink-500 ring-4 ring-pink-500/10 bg-pink-50/20"
-                            : "border-slate-100 hover:border-slate-200"
+                            ? "border-[0px] border-[#CC0E39] ring-offset-1 ring-2 ring-[#CC0E39] bg-white"
+                            : "border-[1.5px] border-slate-355 hover:border-slate-800 bg-white/50"
                         )}
                       >
-                        <div className="relative w-full aspect-square rounded-md overflow-hidden bg-slate-50 group-hover:scale-[1.01] transition-transform duration-300">
+                        <div className="relative w-full aspect-square rounded-[0px] overflow-hidden bg-slate-50 group-hover:scale-[1] transition-transform duration-300 ">
                           <img src={mockup} alt="" className="absolute inset-0 w-full h-full object-cover" />
                         </div>
-                        <div className="flex-1 flex flex-col justify-between min-h-0 p-2.5">
-                          <div className="text-xs font-extrabold text-slate-800 leading-snug line-clamp-1">
+                        <div className="p-1 flex flex-col justify-between flex-grow min-h-[40px] w-full px-2">
+                          <div className="text-[9px] font-black uppercase text-slate-900 leading-tight line-clamp-1 w-full mt-1">
                             {s.title || "Option"}
                           </div>
-                          <div className="text-[11px] font-black text-indigo-600 mt-1 flex items-center justify-between">
-                            <span>{s.priceAddon > 0 ? `+ ₹${Number(s.priceAddon).toFixed(2)}` : "Free"}</span>
-                            {isActive && <span className="text-[10px] bg-indigo-100 px-1.5 py-0.5 rounded text-indigo-700">Active</span>}
+                          <div className="text-[8px] font-black text-slate-800 mt-1 flex items-center justify-between gap-1 w-full">
+                            <span>{s.priceAddon > 0 ? `+ ₹${Number(s.priceAddon).toFixed(0)}` : "Free"}</span>
+                            {/* {isActive && (
+                              <span className="text-[7px] bg-slate-900 text-white px-1.5 py-0.5 rounded-md font-black uppercase tracking-wider">
+                                Active
+                              </span>
+                            )} */}
                           </div>
                         </div>
                       </button>
@@ -691,10 +690,10 @@ export const ProductStudio: React.FC = () => {
           </section>
         )}
 
-        <div className="w-full flex flex-col lg:flex-row items-start justify-center gap-8">
+        <div className="w-full flex flex-col  lg:flex-row items-start justify-center gap-8">
           
           {/* Creative Canvas Section */}
-          <section className="space-y-4 flex-1 w-full sticky top-16 lg:top-24 z-30 bg-[#faf9f6] pb-4">
+          <section className="space-y-4 flex-1 w-full sticky top-16 lg:top-24 z-30 bg-[#faf9f6] sm:bg-transparent pb-4 sm:border-0 border-1 border-y-blck">
             <h2 className="text-center text-base font-bold tracking-wide text-slate-900 uppercase">
               Creative Canvas
             </h2>
@@ -716,7 +715,7 @@ export const ProductStudio: React.FC = () => {
           </section>
 
           {/* Add Details Section */}
-          <section className="space-y-4 w-full lg:max-w-[460px] shrink-0">
+          <section className="space-y-4 w-full px-3 lg:max-w-[460px] shrink-0">
             <h2 className="text-center text-base font-bold tracking-wide text-slate-900 uppercase">
               Add Details
             </h2>
@@ -800,11 +799,18 @@ export const ProductStudio: React.FC = () => {
                                     <button
                                       key={fontName}
                                       type="button"
-                                      className={cn(
-                                        "h-9 rounded-sm border text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-sm active:scale-95",
+                                      // className={cn(
+                                      //   "h-9 rounded-sm border text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-sm active:scale-95",
+                                      //   isSelected
+                                      //     ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                                      //     : "bg-white text-slate-800 border-slate-200 hover:border-slate-300"
+                                      // )}
+
+                                       className={cn(
+                                        "h-10 rounded-sm border text-sm font-bold outline outline-1 outline-black transition-all flex items-center justify-center cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95 ",
                                         isSelected
-                                          ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                                          : "bg-white text-slate-800 border-slate-200 hover:border-slate-300"
+                                          ? "bg-slate-900 text-white  shadow-sm"
+                                          : "bg-transparent text-slate-800 border-slate-200 hover:border-slate-300"
                                       )}
                                       style={{ fontFamily: fontName }}
                                       onClick={() => handleFontChange(fontName, tf.id, activeZone.id)}
@@ -883,7 +889,7 @@ export const ProductStudio: React.FC = () => {
                                 key={fontName}
                                 type="button"
                                 className={cn(
-                                  "h-10 rounded-sm border text-lg font-bold outline outline-1 outline-black transition-all flex items-center justify-center cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95 ",
+                                  "h-10 rounded-sm border text-sm font-bold outline outline-1 outline-black transition-all flex items-center justify-center cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95 ",
                                   isSelected
                                     ? "bg-slate-900 text-white  shadow-sm"
                                     : "bg-transparent text-slate-800 border-slate-200 hover:border-slate-300"
@@ -939,32 +945,34 @@ export const ProductStudio: React.FC = () => {
 
                     <div className="grid grid-cols-3 gap-3">
                       {/* Upload your own */}
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: 0,
-                          border: '1px dashed black',
-                          borderRadius: '0.75rem',
-                          transition: 'all 0.2s ease',
-                          aspectRatio: '1 / 1',
-                          cursor: 'pointer',
-                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                          backgroundColor: 'transparent',
-                        }}
-                      >
-                        <Upload className="w-6 h-6 text-slate-400 group-hover:text-blue-500 mb-1.5 transition-colors" />
-                        <span className="text-[10px] font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                          Your Logo
-                        </span>
-                        <span className="text-[9px] text-pink-600 font-bold mt-0.5">
-                          + ₹{logoUploadPrice}
-                        </span>
-                      </button>
+                      {editorProduct?.customization?.enableLogoUpload !== false && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 0,
+                            border: '1px dashed black',
+                            borderRadius: '0.75rem',
+                            transition: 'all 0.2s ease',
+                            aspectRatio: '1 / 1',
+                            cursor: 'pointer',
+                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                            backgroundColor: 'transparent',
+                          }}
+                        >
+                          <Upload className="w-6 h-6 text-slate-400 group-hover:text-blue-500 mb-1.5 transition-colors" />
+                          <span className="text-[10px] font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
+                            Your Logo
+                          </span>
+                          <span className="text-[9px] text-pink-600 font-bold mt-0.5">
+                            + ₹{logoUploadPrice}
+                          </span>
+                        </button>
+                      )}
 
                       {/* Admin preset images */}
                       {getDisplayPresetImages().map((img, idx) => (
@@ -1037,7 +1045,7 @@ export const ProductStudio: React.FC = () => {
                   <div className="text-xs font-bold text-slate-500 space-y-1.5 text-right">
                     <div>Base Price : ₹ {basePrice.toFixed(2)}</div>
                     <div>Addons Total : ₹ {addonsTotal.toFixed(2)}</div>
-                    <div>Other Charges : ₹ 0.00</div>
+                    <div>Other Charges : ₹ {logoCharge.toFixed(2)}</div>
                     <div className="text-sm font-black text-slate-900 pt-1.5 border-t mt-1">Total : ₹ {grandTotal.toFixed(2)}</div>
                   </div>
                 </div>
@@ -1047,7 +1055,7 @@ export const ProductStudio: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleCheckout}
-                    className="w-full h-12 bg-slate-900 hover:bg-slate-850 active:scale-[0.99] text-white font-extrabold rounded-md shadow-md transition-all flex items-center justify-center text-xs tracking-wider uppercase cursor-pointer"
+                    className="w-full h-12 bg-[#CC0E39] hover:bg-[#A50B2E] active:scale-[0.99] text-white font-extrabold rounded-md shadow-md transition-all flex items-center justify-center text-xs tracking-wider uppercase cursor-pointer"
                   >
                     Confirm & Checkout
                   </button>
