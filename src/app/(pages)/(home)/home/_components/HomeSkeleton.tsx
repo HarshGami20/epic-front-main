@@ -7,21 +7,24 @@ function HomeSkeleton() {
         <>
             <style>{`
                 .home-sk .home-sk-line,
-                .home-sk .home-sk-block {
-                    background: linear-gradient(90deg, #e8ecf3 0%, #f4f6fa 40%, #e8ecf3 80%);
-                    background-size: 220% 100%;
-                    animation: homeSkShimmer 1.35s ease-in-out infinite;
-                    border: 1px solid rgba(255, 255, 255, 0.65);
+                .home-sk .home-sk-block,
+                .home-sk .home-sk-hero-media,
+                .home-sk .home-sk-card,
+                .home-sk .home-sk-banner,
+                .home-sk .home-sk-pill {
+                    background-color: currentColor !important;
+                    background-image: none !important;
+                    opacity: 0.12;
+                    animation: placeholder-glow 2s ease-in-out infinite;
+                    border: none !important;
                 }
-                @keyframes homeSkShimmer {
-                    0% { background-position: 120% 0; }
-                    100% { background-position: -120% 0; }
+                @keyframes placeholder-glow {
+                    0%, 100% { opacity: 0.15; }
+                    50% { opacity: 0.08; }
                 }
                 .home-sk .home-sk-hero-media {
                     height: clamp(700px, 71vh, 650px);
                     border-radius: 40px;
-                    background: linear-gradient(165deg, #eef1f7 0%, #e4e9f2 45%, #dce2ec 100%);
-                    border: 1px solid rgba(0, 0, 0, 0.04);
                     width: 100%;
                 }
                 @media only screen and (max-width: 991.98px) {
@@ -32,14 +35,10 @@ function HomeSkeleton() {
                 .home-sk .home-sk-card {
                     aspect-ratio: 3 / 4;
                     border-radius: 0.75rem;
-                    background: linear-gradient(145deg, #eceff6 0%, #e2e7f0 100%);
-                    border: 1px solid rgba(0, 0, 0, 0.04);
                 }
                 .home-sk .home-sk-banner {
                     min-height: 180px;
                     border-radius: 0.75rem;
-                    background: linear-gradient(120deg, #e9edf5 0%, #dfe5ef 100%);
-                    border: 1px solid rgba(0, 0, 0, 0.04);
                 }
                 .home-sk .home-sk-pill {
                     height: 2.25rem;

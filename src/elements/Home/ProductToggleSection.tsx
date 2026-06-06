@@ -55,7 +55,7 @@ const ProductToggleSection = ({ data }: ProductToggleSectionProps) => {
                 setLoading(false);
             }
         };
-        fetchProducts();
+        fetchProducts(); 
     }, [category]);
 
     const handleHide = () => {
