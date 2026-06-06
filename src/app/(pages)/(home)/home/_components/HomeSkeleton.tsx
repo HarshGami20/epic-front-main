@@ -18,10 +18,16 @@ function HomeSkeleton() {
                     100% { background-position: -120% 0; }
                 }
                 .home-sk .home-sk-hero-media {
-                    min-height: clamp(290px, 42vh, 650px);
+                    height: clamp(700px, 71vh, 650px);
                     border-radius: 40px;
                     background: linear-gradient(165deg, #eef1f7 0%, #e4e9f2 45%, #dce2ec 100%);
                     border: 1px solid rgba(0, 0, 0, 0.04);
+                    width: 100%;
+                }
+                @media only screen and (max-width: 991.98px) {
+                    .home-sk .home-sk-hero-media {
+                        height: clamp(290px, 42vh, 380px);
+                    }
                 }
                 .home-sk .home-sk-card {
                     aspect-ratio: 3 / 4;
@@ -49,37 +55,69 @@ function HomeSkeleton() {
                 {/* Hero */}
                 <div className="main-slider-wrapper">
                     <div className="slider-inner">
-                        <div className="row main-slide g-4 align-items-center">
-                            <div className="col-lg-6">
+                        <div className="row main-slide align-items-center">
+                            <div className="col-lg-6 slider-main">
                                 <span className={line} style={{ height: "0.85rem", width: "140px" }} />
                                 <span className={`${line} mt-3`} style={{ height: "2.75rem", width: "92%", maxWidth: "420px" }} />
                                 <span className={`${line} mt-2`} style={{ height: "2.75rem", width: "72%", maxWidth: "320px" }} />
                                 <span className={`${line} mt-4`} style={{ height: "1rem", width: "100px" }} />
                                 <span className={`${line} mt-2`} style={{ height: "1.5rem", width: "160px" }} />
                                 <div className="d-flex gap-3 mt-4 flex-wrap">
-                                    <span className={`${line} home-sk-pill`} />
-                                    <span className={`${line} home-sk-pill`} style={{ width: "8.5rem" }} />
+                                    <span className={`${line} home-sk-pill`} style={{ width: "9rem", height: "3.25rem", borderRadius: "30px" }} />
+                                    <span className={`${line} home-sk-pill`} style={{ width: "9.5rem", height: "3.25rem", borderRadius: "30px" }} />
                                 </div>
                             </div>
                             <div className="col-lg-6">
-                                <div className="home-sk-hero-media home-sk-block" />
+                                <div className="slider-thumbs py-2 pe-3">
+                                    <div className="row g-3 flex-nowrap overflow-hidden">
+                                        <div className="col-6">
+                                            <div className="home-sk-hero-media home-sk-block" />
+                                        </div>
+                                        <div className="col-6">
+                                            <div className="home-sk-hero-media home-sk-block" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Featured strip */}
-                <section className="shop-section overflow-hidden py-4">
-                    <div className="container-fluid px-3 px-lg-4">
-                        <div className="row g-3">
-                            {[0, 1, 2, 3].map((i) => (
-                                <div className="col-6 col-md-3" key={i}>
-                                    <div className="home-sk-banner home-sk-block" />
+                {/* Featured Categories (featuredBlog) */}
+                <section className="shop-section overflow-hidden p-0">
+                    <div className="container-fluid p-0">
+                        <div className="row g-0">
+                            <div className="col-lg-8 left-box d-flex align-items-center">
+                                <div className="d-flex gap-4 flex-nowrap overflow-hidden w-100 justify-content-between px-3 px-lg-5">
+                                    {[0, 1, 2, 3, 4].map((i) => (
+                                        <div key={i} className="flex-shrink-0 text-center" style={{ width: "160px" }}>
+                                            <div className="shop-box style-1 mb-0">
+                                                <div className="dz-media" style={{ marginBottom: "30px", display: "flex", justifyContent: "center" }}>
+                                                    <div className="home-sk-block" style={{ width: "160px", height: "170px", borderRadius: "20px" }} />
+                                                </div>
+                                                <div className="product-name" style={{ background: "#fff", border: "1px solid #000" }}>
+                                                    <span className={line} style={{ height: "0.85rem", width: "70px", margin: "0 auto" }} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
+                            <div className="col-lg-4 right-box text-start px-4 px-lg-5 justify-content-center">
+                                <div className="w-100 px-lg-4">
+                                    <span className={`${line}`} style={{ height: "2.25rem", width: "80%", maxWidth: "280px", opacity: 0.15 }} />
+                                    <span className={`${line} mt-3`} style={{ height: "1rem", width: "90%", maxWidth: "320px", opacity: 0.15 }} />
+                                    <span className={`${line} mt-2`} style={{ height: "1rem", width: "60%", maxWidth: "200px", opacity: 0.15 }} />
+                                    <div className="d-flex gap-3 mt-4">
+                                        <span className={`${line}`} style={{ width: "2.5rem", height: "2.5rem", borderRadius: "50%", opacity: 0.15 }} />
+                                        <span className={`${line}`} style={{ width: "2.5rem", height: "2.5rem", borderRadius: "50%", opacity: 0.15 }} />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
+
 
                 {/* About block */}
                 <section className="content-inner overflow-hidden">

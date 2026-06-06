@@ -60,7 +60,7 @@ const ActiveVideoPlayer = ({ isActive, item, openReels }: { isActive: boolean; i
                 </div>
 
                 <div className="d-flex align-items-center justify-content-between mt-3">
-                    {item.price && <h5 className="text-white m-0">${item.price}</h5>}
+                    {item.price && <h5 className="text-white m-0">₹{item.price}</h5>}
                     {item.productUrl && (
                         <Link href={item.productUrl} className="btn btn-primary btn-sm rounded-pill px-4 py-2 fw-bold">
                             View Product

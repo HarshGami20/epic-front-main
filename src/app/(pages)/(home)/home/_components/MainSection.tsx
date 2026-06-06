@@ -28,6 +28,7 @@ import MoreCollectionBlog from "@/elements/Home/MoreCollectionBlog";
 import VideoReels from "@/elements/Home/VideoReels";
 import TrandingSlider from "@/elements/Home2/TrandingSlider";
 import VideoSection from "@/elements/Home2/VideoSection";
+import ProductToggleSection from "@/elements/Home/ProductToggleSection";
 import { getImageUrl } from "@/lib/imageUtils";
 import { getPublicApiUrl } from "@/lib/env";
 import HomeSkeleton from "./HomeSkeleton";
@@ -409,6 +410,9 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
                 <MakeYoursCustomize data={data} />
             </div>
         </section>
+    ),
+    productToggleSection: ({ data }) => (
+        <ProductToggleSection data={data} />
     ),
 };
 
