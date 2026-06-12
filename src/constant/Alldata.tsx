@@ -129,12 +129,12 @@ export const WidgetData = [
 ];
 
 export const UsefulLinks = [
-    { name: 'Privacy Policy' },
-    { name: 'Returns' },
-    { name: 'Terms & Conditions' },
-    { name: 'Contact Us' },
-    { name: 'Latest News' },
-    { name: 'Our Sitemap' },
+    { name: 'Privacy Policy', href: '/privacy-policy' },
+    { name: 'Returns & Refunds', href: '/return-policy' },
+    { name: 'Terms & Conditions', href: '/terms-conditions' },
+    { name: 'Shipping Policy', href: '/shipping-policy' },
+    { name: 'Cancellation Policy', href: '/cancellation-policy' },
+    { name: 'Contact Us', href: '/contact-us' },
 ];
 
 export const FooterMenu = [
