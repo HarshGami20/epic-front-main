@@ -2,7 +2,7 @@ import { getPublicApiUrl } from "@/lib/env";
 
 export interface InquiryPayload {
   name: string;
-  email: string;
+  email?: string;
   mobile?: string;
   message: string;
   from: string;

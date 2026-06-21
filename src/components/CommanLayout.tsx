@@ -1,5 +1,6 @@
 import Header from "./Header";
 import Footer from "./Footer";
+import SubscribeModal from "@/constant/SubscribeModal";
 
 interface Props {
     children: React.ReactNode 
@@ -12,6 +13,7 @@ const CommanLayout = ({children} : Props) => {
             <Header design=""/>
                 {children}
             <Footer />
+            <SubscribeModal />
         </div>
     )
 }
