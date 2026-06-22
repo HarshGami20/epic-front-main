@@ -15,7 +15,7 @@ export default function FeatureBoxSection(){
                     </div>
                 </div>
             ))}            
-            <Link href="https://www.instagram.com/dexignzone/" className="instagram-link">
+            <Link href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" className="instagram-link">
                 <div className="follow-link  wow bounceIn" data-wow-delay="0.1s">
                     <div className="follow-link-icon">
                         <Image src={IMAGES.InstaFollow} alt="follow" />

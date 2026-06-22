@@ -138,7 +138,7 @@ export const UsefulLinks = [
 ];
 
 export const FooterMenu = [
-    { name: 'Instagram profile' },
+    { name: 'Instagram profile', href: 'https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1' },
     { name: 'New Collection' },
     { name: 'Woman Dress' },
     { name: 'Contact Us' },
@@ -658,7 +658,7 @@ export const FooterStyleCode3 = `
                             </div>
                         </div>
                     ))}                                    
-                    <Link to={"#"} className="instagram-link">
+                    <Link to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank" className="instagram-link">
                         <div className="follow-link bg-white wow bounceIn" data-wow-delay="0.1s">
                             <div className="follow-link-icon">
                                 <Image src={IMAGES.InstaFollow} alt="follow" />
@@ -1010,11 +1010,11 @@ export const FooterStyleCode7 = `
                             <li><Link to="/contact-us-1">Contact Us</Link></li>
                         </ul>
                         <ul className="nav-inline">
-                            <li><Link to={"#"} target="_blank" className="site-button-link facebook hover"><i className="fab fa-facebook-f"/></Link></li>
+                            <li><Link to="https://www.facebook.com/share/1BZbUoktNg/" target="_blank" className="site-button-link facebook hover"><i className="fab fa-facebook-f"/></Link></li>
                             <li><Link to={"#"} target="_blank" className="site-button-link google-plus hover"><i className="fab fa-google-plus-g"/></Link></li>
                             <li><Link to={"#"} target="_blank" className="site-button-link linkedin hover"><i className="fab fa-linkedin-in"/></Link></li>
-                            <li><Link to={"#"} target="_blank" className="site-button-link instagram hover"><i className="fab fa-instagram"/></Link></li>
-                            <li><Link to={"#"} target="_blank" className="site-button-link twitter hover"><i className="fab fa-twitter"/></Link></li>
+                            <li><Link to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank" className="site-button-link instagram hover"><i className="fab fa-instagram"/></Link></li>
+                            <li><Link to="https://x.com/epiclane_in" target="_blank" className="site-button-link twitter hover"><i className="fab fa-twitter"/></Link></li>
                         </ul>
                     </div>
                 </div>

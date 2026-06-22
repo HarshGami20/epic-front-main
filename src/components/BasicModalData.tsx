@@ -74,10 +74,10 @@ export default function BasicModalData(){
                         </ul>
                         <div className="dz-social-icon">
                             <ul>
-                                <li><Link target="_blank" className="text-dark" href="https://www.facebook.com/dexignzone">
+                                <li><Link target="_blank" className="text-dark" href="https://www.facebook.com/share/1BZbUoktNg/">
                                     <i className="fab fa-facebook-f"/>
                                 </Link></li>
-                                <li><Link target="_blank" className="text-dark" href="https://twitter.com/dexignzones">	
+                                <li><Link target="_blank" className="text-dark" href="https://x.com/epiclane_in">	
                                     <i className="fab fa-twitter"/>
                                 </Link></li>
                                 <li><Link target="_blank" className="text-dark" href="https://www.youtube.com/@dexignzone1723">
@@ -86,7 +86,7 @@ export default function BasicModalData(){
                                 <li><Link target="_blank" className="text-dark" href="https://www.linkedin.com/showcase/3686700/admin/">
                                     <i className="fa-brands fa-linkedin-in"/>
                                 </Link></li>
-                                <li><Link target="_blank" className="text-dark" href="https://www.instagram.com/dexignzone/">
+                                <li><Link target="_blank" className="text-dark" href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1">
                                     <i className="fab fa-instagram"/>
                                 </Link></li>
                             </ul>

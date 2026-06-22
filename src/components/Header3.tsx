@@ -460,13 +460,13 @@ export default function Header3({ setOpenSidebar, openSidebar }: any) {
                     </ul>
                     <ul>
                         <li>
-                            <Link href={"#"}>Instagram</Link>
+                            <Link href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank">Instagram</Link>
                         </li>
                         <li>
-                            <Link href={"#"}>Facebook</Link>
+                            <Link href="https://www.facebook.com/share/1BZbUoktNg/" target="_blank">Facebook</Link>
                         </li>
                         <li>
-                            <Link href={"#"}>twitter</Link>
+                            <Link href="https://x.com/epiclane_in" target="_blank">twitter</Link>
                         </li>
                     </ul>
                 </div>

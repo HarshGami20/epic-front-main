@@ -245,10 +245,9 @@ const Header = ({ design }: DesignType) => {
                                 </ul>
                                 <div className="dz-social-icon">
                                     <ul>
-                                        <li><Link className="fab fa-facebook-f" target="_blank" href="https://www.facebook.com/dexignzone"></Link></li>
-                                        <li><Link className="fab fa-twitter" target="_blank" href="https://twitter.com/dexignzones"></Link></li>
-                                        <li><Link className="fab fa-linkedin-in" target="_blank" href="https://www.linkedin.com/showcase/3686700/admin/"></Link></li>
-                                        <li><Link className="fab fa-instagram" target="_blank" href="https://www.instagram.com/dexignzone/"></Link></li>
+                                        <li><Link className="fab fa-facebook-f" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/share/1BZbUoktNg/"></Link></li>
+                                        <li><Link className="fab fa-twitter" target="_blank" rel="noopener noreferrer" href="https://x.com/epiclane_in"></Link></li>
+                                        <li><Link className="fab fa-instagram" target="_blank" rel="noopener noreferrer" href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1"></Link></li>
                                     </ul>
                                 </div>
                             </div>

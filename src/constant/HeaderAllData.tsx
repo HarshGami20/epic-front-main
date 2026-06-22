@@ -39,10 +39,10 @@ export const HeaderOne = `
                 {/* All menus item end*/}
                 <div className="dz-social-icon">
                     <ul>
-                        <li><Link className="fab fa-facebook-f" target="_blank" to="https://www.facebook.com/dexignzone"></Link></li>
-                        <li><Link className="fab fa-twitter" target="_blank" to="https://twitter.com/dexignzones"></Link></li>
+                        <li><Link className="fab fa-facebook-f" target="_blank" to="https://www.facebook.com/share/1BZbUoktNg/"></Link></li>
+                        <li><Link className="fab fa-twitter" target="_blank" to="https://x.com/epiclane_in"></Link></li>
                         <li><Link className="fab fa-linkedin-in" target="_blank" to="https://www.linkedin.com/showcase/3686700/admin/"></Link></li>
-                        <li><Link className="fab fa-instagram" target="_blank" to="https://www.instagram.com/dexignzone/"></Link></li>
+                        <li><Link className="fab fa-instagram" target="_blank" to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1"></Link></li>
                     </ul>
                 </div>
             </div>
@@ -228,10 +228,10 @@ export const HeaderTwo = `
                     </ul>
                     <div className="dz-social-icon">
                         <ul>
-                            <li><Link className="fab fa-facebook-f" target="_blank" to="https://www.facebook.com/dexignzone"></Link></li>
-                            <li><Link className="fab fa-twitter" target="_blank" to="https://twitter.com/dexignzones"></Link></li>
+                            <li><Link className="fab fa-facebook-f" target="_blank" to="https://www.facebook.com/share/1BZbUoktNg/"></Link></li>
+                            <li><Link className="fab fa-twitter" target="_blank" to="https://x.com/epiclane_in"></Link></li>
                             <li><Link className="fab fa-linkedin-in" target="_blank" to="https://www.linkedin.com/showcase/3686700/admin/"></Link></li>
-                            <li><Link className="fab fa-instagram" target="_blank" to="https://www.instagram.com/dexignzone/"></Link></li>
+                            <li><Link className="fab fa-instagram" target="_blank" to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1"></Link></li>
                         </ul>
                     </div>
                 </div>
@@ -616,13 +616,13 @@ export const HeaderThree = `
         </ul>	
         <ul>
             <li>
-                <Link to={"#"}>Instagram</Link>
+                <Link to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank">Instagram</Link>
             </li>
             <li>
-                <Link to={"#"}>Facebook</Link>
+                <Link to="https://www.facebook.com/share/1BZbUoktNg/" target="_blank">Facebook</Link>
             </li>
             <li>
-                <Link to={"#"}>twitter</Link>
+                <Link to="https://x.com/epiclane_in" target="_blank">twitter</Link>
             </li>
         </ul>
     </div>
@@ -697,10 +697,10 @@ export const HeaderSix = `
                     <div className="dz-topbar-right">
                         <ul>
                             <li><span>Share:</span></li>
-                            <li><Link to="https://www.facebook.com/dexignzone" target="_blank"><i className="fa-brands fa-facebook-f"/></Link></li>
+                            <li><Link to="https://www.facebook.com/share/1BZbUoktNg/" target="_blank"><i className="fa-brands fa-facebook-f"/></Link></li>
                             <li><Link to="https://www.linkedin.com/showcase/3686700/admin/" target="_blank"><i className="fa-brands fa-linkedin-in"/></Link></li>
-                            <li><Link to="https://www.instagram.com/dexignzone/" target="_blank"><i className="fa-brands fa-instagram"/></Link></li>
-                            <li><Link to="https://twitter.com/dexignzones" target="_blank"><i className="fa-brands fa-twitter"/></Link></li>
+                            <li><Link to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank"><i className="fa-brands fa-instagram"/></Link></li>
+                            <li><Link to="https://x.com/epiclane_in" target="_blank"><i className="fa-brands fa-twitter"/></Link></li>
                         </ul>					
                     </div>
                 </div>
@@ -731,10 +731,10 @@ export const HeaderSix = `
                     
                     <div className="dz-social-icon">
                         <ul>
-                            <li><Link className="fab fa-facebook-f" target="_blank" to="https://www.facebook.com/dexignzone"></Link></li>
-                            <li><Link className="fab fa-twitter" target="_blank" to="https://twitter.com/dexignzones"></Link></li>
+                            <li><Link className="fab fa-facebook-f" target="_blank" to="https://www.facebook.com/share/1BZbUoktNg/"></Link></li>
+                            <li><Link className="fab fa-twitter" target="_blank" to="https://x.com/epiclane_in"></Link></li>
                             <li><Link className="fab fa-linkedin-in" target="_blank" to="https://www.linkedin.com/showcase/3686700/admin/"></Link></li>
-                            <li><Link className="fab fa-instagram" target="_blank" to="https://www.instagram.com/dexignzone/"></Link></li>
+                            <li><Link className="fab fa-instagram" target="_blank" to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1"></Link></li>
                         </ul>
                     </div>
                 </div>
@@ -852,10 +852,10 @@ export const HeaderSeven = `
                 <div className="dz-topbar-right">
                     <ul>
                         <li><span>Share:</span></li>
-                        <li><Link to="https://www.facebook.com/dexignzone" target="_blank"><i className="fa-brands fa-facebook-f"/></Link></li>
+                        <li><Link to="https://www.facebook.com/share/1BZbUoktNg/" target="_blank"><i className="fa-brands fa-facebook-f"/></Link></li>
                         <li><Link to="https://www.linkedin.com/showcase/3686700/admin/" target="_blank"><i className="fa-brands fa-linkedin-in"/></Link></li>
-                        <li><Link to="https://www.instagram.com/dexignzone/" target="_blank"><i className="fa-brands fa-instagram"/></Link></li>
-                        <li><Link to="https://twitter.com/dexignzones" target="_blank"><i className="fa-brands fa-twitter"/></Link></li>
+                        <li><Link to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank"><i className="fa-brands fa-instagram"/></Link></li>
+                        <li><Link to="https://x.com/epiclane_in" target="_blank"><i className="fa-brands fa-twitter"/></Link></li>
                     </ul>					
                 </div>
             </div>
@@ -888,10 +888,10 @@ export const HeaderSeven = `
                 {/* All menus item end*/}
                 <div className="dz-social-icon">
                     <ul>
-                        <li><Link className="fab fa-facebook-f" target="_blank" to="https://www.facebook.com/dexignzone"></Link></li>
-                        <li><Link className="fab fa-twitter" target="_blank" to="https://twitter.com/dexignzones"></Link></li>
+                        <li><Link className="fab fa-facebook-f" target="_blank" to="https://www.facebook.com/share/1BZbUoktNg/"></Link></li>
+                        <li><Link className="fab fa-twitter" target="_blank" to="https://x.com/epiclane_in"></Link></li>
                         <li><Link className="fab fa-linkedin-in" target="_blank" to="https://www.linkedin.com/showcase/3686700/admin/"></Link></li>
-                        <li><Link className="fab fa-instagram" target="_blank" to="https://www.instagram.com/dexignzone/"></Link></li>
+                        <li><Link className="fab fa-instagram" target="_blank" to="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1"></Link></li>
                     </ul>
                 </div>
             </div>

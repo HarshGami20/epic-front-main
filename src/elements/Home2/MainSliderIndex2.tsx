@@ -74,13 +74,13 @@ export default function MainSliderIndex2(){
 				<div className="banner-social-media style-2 left">
 					<ul>
 						<li>
-							<Link href="https://www.instagram.com/dexignzone/" target="_blank">Instagram</Link>
+							<Link href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank">Instagram</Link>
 						</li>
 						<li>
-							<Link href="https://www.facebook.com/dexignzone" target="_blank">Facebook</Link>
+							<Link href="https://www.facebook.com/share/1BZbUoktNg/" target="_blank">Facebook</Link>
 						</li>
 						<li>
-							<Link href="https://twitter.com/dexignzones" target="_blank">twitter</Link>
+							<Link href="https://x.com/epiclane_in" target="_blank">twitter</Link>
 						</li>
 					</ul>
 				</div>

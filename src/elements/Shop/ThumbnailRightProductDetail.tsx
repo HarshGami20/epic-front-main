@@ -501,7 +501,7 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                     <ul className="social-icon">
                         <li><strong>Share:</strong></li>
                         <li>
-                            <Link href="/https://www.facebook.com/dexignzone" target="_blank">
+                            <Link href="https://www.facebook.com/share/1BZbUoktNg/" target="_blank">
                                 <i className="fa-brands fa-facebook-f" />
                             </Link>
                         </li>
@@ -511,12 +511,12 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                             </Link>
                         </li>
                         <li>
-                            <Link href="/https://www.instagram.com/dexignzone/" target="_blank">
+                            <Link href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank">
                                 <i className="fa-brands fa-instagram" />
                             </Link>
                         </li>
                         <li>
-                            <Link href="/https://twitter.com/dexignzones" target="_blank">
+                            <Link href="https://x.com/epiclane_in" target="_blank">
                                 <i className="fa-brands fa-twitter" />
                             </Link>
                         </li>
@@ -545,13 +545,13 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
             <div className="banner-social-media">
                 <ul>
                     <li>
-                        <Link href="https://www.instagram.com/dexignzone/">Instagram</Link>
+                        <Link href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1">Instagram</Link>
                     </li>
                     <li>
-                        <Link href="https://www.facebook.com/dexignzone">Facebook</Link>
+                        <Link href="https://www.facebook.com/share/1BZbUoktNg/">Facebook</Link>
                     </li>
                     <li>
-                        <Link href="https://twitter.com/dexignzones">twitter</Link>
+                        <Link href="https://x.com/epiclane_in">twitter</Link>
                     </li>
                 </ul>
             </div>

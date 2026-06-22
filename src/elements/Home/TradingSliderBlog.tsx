@@ -172,17 +172,17 @@ const TradingSliderBlog = ({ data }: { data?: any }) => {
                                     <Link href="#" className="share-btn" onClick={(e) => e.preventDefault()} dangerouslySetInnerHTML={{ __html: SVGICON.ArrowUp15Degree }} />
                                     <ul className="sub-team-social">
                                         <li>
-                                            <Link href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer">
+                                            <Link href="https://www.facebook.com/share/1BZbUoktNg/" target="_blank" rel="noopener noreferrer">
                                                 <i className="fab fa-facebook-f" />
                                             </Link>
                                         </li>
                                         <li>
-                                            <Link href="https://twitter.com/" target="_blank" rel="noopener noreferrer">
+                                            <Link href="https://x.com/epiclane_in" target="_blank" rel="noopener noreferrer">
                                                 <i className="fab fa-twitter" />
                                             </Link>
                                         </li>
                                         <li>
-                                            <Link href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">
+                                            <Link href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank" rel="noopener noreferrer">
                                                 <i className="fab fa-instagram" />
                                             </Link>
                                         </li>

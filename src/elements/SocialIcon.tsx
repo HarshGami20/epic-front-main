@@ -1,25 +1,21 @@
 import Link from "next/link";
+import { SOCIAL_LINKS } from "@/constant/socialLinks";
 
 export default function SocialIcon(){
     return(
         <ul>
             <li className="me-1">
-                <Link href="https://www.facebook.com/dexignzone" target="_blank">
+                <Link href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer">
                     <i className="fa-brands fa-facebook-f"/>
                 </Link>
             </li>
             <li className="me-1">
-                <Link href="https://twitter.com/dexignzones" target="_blank">
+                <Link href={SOCIAL_LINKS.twitter} target="_blank" rel="noopener noreferrer">
                     <i className="fa-brands fa-twitter"/>
                 </Link>
             </li>
-            <li className="me-1">
-                <Link href="https://www.behance.net/dexignzone" target="_blank">
-                    <i className="fa-brands fa-behance"/>
-                </Link>
-            </li>
             <li>
-                <Link href="https://www.instagram.com/dexignzone/" target="_blank">
+                <Link href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer">
                     <i className="fa-brands fa-instagram"/>
                 </Link>
             </li>

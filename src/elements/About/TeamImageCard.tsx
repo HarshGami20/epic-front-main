@@ -22,9 +22,9 @@ const TeamImageCard = ({image,name,post} : dataType) => {
                     />
                 </Link>
                 <ul className="team-social-icon">
-                    <li><Link href="https://www.facebook.com/dexignzone" target="_blank"><i className="fab fa-facebook-f" /></Link></li>
-                    <li><Link href="https://twitter.com/dexignzone" target="_blank"><i className="fab fa-twitter" /></Link></li>
-                    <li><Link href="https://www.instagram.com/dexignzone/" target="_blank"><i className="fab fa-instagram" /></Link></li>
+                    <li><Link href="https://www.facebook.com/share/1BZbUoktNg/" target="_blank"><i className="fab fa-facebook-f" /></Link></li>
+                    <li><Link href="https://x.com/epiclane_in" target="_blank"><i className="fab fa-twitter" /></Link></li>
+                    <li><Link href="https://www.instagram.com/epiclane.in?igsh=ZmFuazhnOGNibzY1" target="_blank"><i className="fab fa-instagram" /></Link></li>
                     <li><Link href="https://www.linkedin.com/in/dexignzone/" target="_blank"><i className="fa-brands fa-linkedin-in" /></Link></li>
                 </ul>
             </div>
