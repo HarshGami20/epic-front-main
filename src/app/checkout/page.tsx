@@ -439,7 +439,15 @@ export default function CheckoutPage() {
               },
               token
             );
-            toast.success("Payment verified! Your order is completed.", { id: verifyToast });
+            const isPartialCod =
+              verifiedOrder?.status === 'PARTIAL_COD' ||
+              verifiedOrder?.metadata?.paymentType === 'PARTIAL_COD';
+            toast.success(
+              isPartialCod
+                ? "Partial payment received! Pay the remaining balance on delivery."
+                : "Payment verified! Your order is completed.",
+              { id: verifyToast }
+            );
 
             if (checkoutMode === "direct") {
               localStorage.removeItem("checkout_item");

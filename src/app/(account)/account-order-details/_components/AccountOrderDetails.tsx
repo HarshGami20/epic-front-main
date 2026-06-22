@@ -492,7 +492,11 @@ export default function AccountOrderDetails() {
                     <div className="shiping-tracker-detail mb-3">
                       <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Payment Status</span>
                       <h6 className="title text-slate-800 font-bold mt-1 uppercase">
-                        {order.status === "PENDING" ? "Unpaid / Pending" : "Paid via Razorpay"}
+                        {order.status === "PENDING"
+                          ? "Unpaid / Pending"
+                          : order.status === "PARTIAL_COD" || order.metadata?.paymentType === "PARTIAL_COD"
+                            ? `Partial paid — ₹${order.metadata?.codAmountDueInr ?? "?"} due on delivery`
+                            : "Paid via Razorpay"}
                       </h6>
                     </div>
                   </div>
