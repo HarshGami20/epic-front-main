@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Nav, Tab } from "react-bootstrap";
 import { buildProductSpecRows } from "./buildProductSpecRows";
 import ProductReviewPanel from "./ProductReviewPanel";
+import SafeHtml from "@/components/SafeHtml";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -67,9 +68,9 @@ export default function ProductDetailPageTabs({ productData, routeSlug, relatedV
                   >
                     <h5 className="title mb-4">About {name}</h5>
                     {hasNarrative ? (
-                      <div
+                      <SafeHtml
                         className="para-text"
-                        dangerouslySetInnerHTML={{ __html: descriptionHTML }}
+                        html={descriptionHTML}
                         style={{ wordBreak: "break-word", width: "100%", overflowX: "hidden" }}
                       />
                     ) : (

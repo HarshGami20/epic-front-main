@@ -4,6 +4,7 @@ import CommanLayout from "@/components/CommanLayout";
 import "./blog-post-content.css";
 import { getImageUrl, rewriteHtmlImageSources } from "@/lib/imageUtils";
 import type { PublicBlog } from "@/lib/publicBlogApi";
+import SafeHtml from "@/components/SafeHtml";
 
 function stripHtml(html: string) {
     if (!html || typeof html !== "string") return "";
@@ -87,10 +88,7 @@ export default function BlogPostDetail({ blog }: { blog: PublicBlog }) {
                                 ) : null}
                                 <div className="dz-post-text">
                                     {descriptionHtml ? (
-                                        <div
-                                            className="text blog-html-content"
-                                            dangerouslySetInnerHTML={{ __html: descriptionHtml }}
-                                        />
+                                        <SafeHtml className="text blog-html-content" html={descriptionHtml} />
                                     ) : (
                                         <p>No content available for this post.</p>
                                     )}
@@ -122,10 +120,7 @@ export default function BlogPostDetail({ blog }: { blog: PublicBlog }) {
                                         </figure>
                                     ) : null}
                                     {belowHtml ? (
-                                        <div
-                                            className="text blog-html-content m-t30"
-                                            dangerouslySetInnerHTML={{ __html: belowHtml }}
-                                        />
+                                        <SafeHtml className="text blog-html-content m-t30" html={belowHtml} />
                                     ) : null}
                                 </div>
 

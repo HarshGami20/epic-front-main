@@ -32,7 +32,7 @@ export default function AccountOrderDetails() {
 
     const storedToken = localStorage.getItem("token");
     if (!storedToken) {
-      router.push("/login?redirect=`/account-order-details?orderId=${orderId}`");
+      router.push(`/login?redirect=${encodeURIComponent(`/account-order-details?orderId=${orderId}`)}`);
       return;
     }
 

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Modal } from 'react-bootstrap';
 import { getImageUrl } from '@/lib/imageUtils';
 import { getPublicApiUrl } from '@/lib/env';
+import SafeHtml from "@/components/SafeHtml";
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -47,9 +48,9 @@ const ActiveVideoPlayer = ({ isActive, item, openReels }: { isActive: boolean; i
             <div className="position-absolute bottom-0 start-0 w-100 p-4 pb-4 text-white" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)', zIndex: 10 }}>
                 <div onClick={() => setExpanded(!expanded)} style={{ cursor: 'pointer' }}>
                     <h4 className={`text-white fw-bold mb-2 ${expanded ? '' : 'text-truncate'}`}>{item.title}</h4>
-                    <div
+                    <SafeHtml
                         className="text-light mb-3"
-                        dangerouslySetInnerHTML={{ __html: item.description || '' }}
+                        html={item.description || ''}
                         style={{
                             fontSize: '15px',
                             ...(expanded

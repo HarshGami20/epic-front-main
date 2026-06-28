@@ -6,6 +6,7 @@ import TeamCreators from "@/elements/About/TeamCreators";
 import UniqueFashionBlog from "@/elements/About/UniqueFashionBlog";
 import { fetchPublicAboutUsPage, fetchPublicCmsPageBySlug } from "@/lib/publicCmsApi";
 import { resolvePublicMediaUrl } from "@/lib/imageUtils";
+import SafeHtml from "@/components/SafeHtml";
 
 type AboutStatItem = { value: string; label: string };
 
@@ -467,7 +468,7 @@ const AboutUs = () => {
                         <Link href={bannerLinkHref || DEFAULT_BANNER_LINK}>{introTitle}</Link>
                     </h3>
                     {hasHtmlBanner ? (
-                        <div className="text mb-0" dangerouslySetInnerHTML={{ __html: bannerText }} />
+                        <SafeHtml className="text mb-0" html={bannerText} />
                     ) : (
                         <p className="text mb-0">{bannerText}</p>
                     )}

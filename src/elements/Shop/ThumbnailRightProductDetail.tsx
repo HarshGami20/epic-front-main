@@ -8,6 +8,7 @@ import StarRating from "./StarRating";
 import { normalizeProductSizes, normalizeVariations } from "@/lib/productOptions";
 import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 import { fetchPublicProductReviews } from "@/lib/publicProductReviewsApi";
+import SafeHtml from "@/components/SafeHtml";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 import { toast } from "react-toastify";
 import { getImageUrl } from "@/lib/imageUtils";
@@ -188,10 +189,7 @@ export default function ThumbnailRightProductDetail(props: thumbnailCardtype) {
                 </div>
 
                 {shortHtml && (
-                    <div
-                        className="para-text mb-2"
-                        dangerouslySetInnerHTML={{ __html: shortHtml }}
-                    />
+                    <SafeHtml className="para-text mb-2" html={shortHtml} />
                 )}
 
                 <div className="meta-content m-b20 mt-3">
