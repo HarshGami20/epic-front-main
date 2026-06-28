@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { loginUser } from "@/lib/authApi";
 import { persistUser } from "@/lib/userUtils";
+import { getSafeRedirectUrl } from "@/lib/safeRedirect";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -16,7 +17,10 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectUrl = searchParams.get("redirect") || (typeof window !== "undefined" && sessionStorage.getItem("last_non_auth_page")) || "/account-orders";
+    const redirectUrl = getSafeRedirectUrl(
+        searchParams.get("redirect") ||
+            (typeof window !== "undefined" ? sessionStorage.getItem("last_non_auth_page") : null)
+    );
 
     useEffect(() => {
         if (searchParams.get("expired") === "true") {

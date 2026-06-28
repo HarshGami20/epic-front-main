@@ -18,6 +18,7 @@ import { getPublicApiUrl } from '@/lib/env';
 import { normalizePublicProductRecord } from "@/lib/publicProductNormalize";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 import { toast } from "react-toastify";
+import SafeHtml from "@/components/SafeHtml";
 
 function findCategoryBySlugOrName(nodes: any[], match: string): any | null {
     const m = match.trim();
@@ -432,9 +433,9 @@ function ShopStandardContent() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div
+                                        <SafeHtml
                                             className="para-text"
-                                            dangerouslySetInnerHTML={{ __html: selectedProduct?.description || "" }}
+                                            html={selectedProduct?.description || ""}
                                             style={{
                                                 wordBreak: 'break-word',
                                                 overflowWrap: 'break-word',
@@ -442,7 +443,7 @@ function ShopStandardContent() {
                                                 overflowX: 'hidden',
                                                 maxWidth: '95%'
                                             }}
-                                        ></div>
+                                        />
                                         <div className="meta-content m-b20 d-flex align-items-end">
                                             <div className="me-3">
                                                 <span className="form-label">Price</span>

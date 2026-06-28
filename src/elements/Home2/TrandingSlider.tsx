@@ -13,6 +13,7 @@ import IMAGES from "../../constant/theme";
 import ModalSlider from "../../components/ModalSlider";
 import ProductInputButton from "../Shop/ProductInputButton";
 import BasicModalData from "../../components/BasicModalData";
+import SafeHtml from "@/components/SafeHtml";
 
 interface trandingType {
     price: string;
@@ -309,9 +310,9 @@ function TrandingSlider({ data }: modelType) {
                                             </div>
                                         </div>
                                     </div>
-                                    <div
+                                    <SafeHtml
                                         className="para-text"
-                                        dangerouslySetInnerHTML={{ __html: selectedProduct?.description || "" }}
+                                        html={selectedProduct?.description || ""}
                                         style={{
                                             wordBreak: 'break-word',
                                             overflowWrap: 'break-word',

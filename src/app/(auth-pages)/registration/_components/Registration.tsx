@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { registerUser } from "@/lib/authApi";
 import { persistUser } from "@/lib/userUtils";
+import { getSafeRedirectUrl } from "@/lib/safeRedirect";
 
 export default function Registration() {
     const [firstName, setFirstName] = useState("");
@@ -19,7 +20,10 @@ export default function Registration() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectUrl = searchParams.get("redirect") || (typeof window !== "undefined" && sessionStorage.getItem("last_non_auth_page")) || "/account-orders";
+    const redirectUrl = getSafeRedirectUrl(
+        searchParams.get("redirect") ||
+            (typeof window !== "undefined" ? sessionStorage.getItem("last_non_auth_page") : null)
+    );
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();

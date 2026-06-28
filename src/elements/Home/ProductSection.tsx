@@ -12,6 +12,7 @@ import { getPublicApiUrl } from '@/lib/env';
 import { masonryData, headfilterData } from "../../constant/Alldata";
 import { useCartWishlistStore } from "@/stores/useCartWishlistStore";
 import { toast } from "react-toastify";
+import SafeHtml from "@/components/SafeHtml";
 
 const ProductSection = ({ data }: { data?: any }) => {
     const tabsData = data?.tabs?.length ? data.tabs : undefined;
@@ -279,9 +280,9 @@ const ProductSection = ({ data }: { data?: any }) => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div
+                                    <SafeHtml
                                         className="para-text"
-                                        dangerouslySetInnerHTML={{ __html: selectedProduct?.description || "" }}
+                                        html={selectedProduct?.description || ""}
                                         style={{
                                             wordBreak: 'break-word',
                                             overflowWrap: 'break-word',
@@ -289,7 +290,7 @@ const ProductSection = ({ data }: { data?: any }) => {
                                             overflowX: 'hidden',
                                             maxWidth: '95%'
                                         }}
-                                    ></div>
+                                    />
                                     <div className="meta-content m-b20 d-flex align-items-end">
                                         <div className="me-3">
                                             <span className="form-label">Price</span>

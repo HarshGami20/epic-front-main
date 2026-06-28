@@ -1,4 +1,5 @@
 import Image, { StaticImageData } from "next/image";
+import SafeHtml from "@/components/SafeHtml";
 
 interface ProductTabtype {
     productData?: any;
@@ -12,9 +13,9 @@ export default function ProductTabStyleOne(props: ProductTabtype) {
         <>
             <div className="detail-bx text-left" style={{ overflow: "hidden", wordWrap: "break-word", overflowWrap: "break-word", maxWidth: "100%" }}>
                 <h5 className="title mb-4">{title}</h5>
-                <div
+                <SafeHtml
                     className="para-text"
-                    dangerouslySetInnerHTML={{ __html: descriptionHTML }}
+                    html={descriptionHTML}
                     style={{ wordBreak: 'break-word', width: '100%', overflowX: 'hidden' }}
                 />
             </div>
